@@ -196,22 +196,35 @@ BOOST_AUTO_TEST_CASE ( jarray_iterator ) {
   
   OperationIterator<int> iter(arr, Dimensions(3, 3, 4, 10), 1);
 
-  BOOST_CHECK_EQUAL(*(iter += 25), JArray<int>(Dimensions(1, 5), 10, 11, 12,13, 14));
-  BOOST_CHECK_EQUAL(*(iter += 94), JArray<int>(Dimensions(1, 5), 55, 56,57,58,59));
+  for (int i = 25; i > 0; --i) ++iter;
+  BOOST_CHECK_EQUAL(**iter, JArray<int>(Dimensions(1, 5), 10, 11, 12,13, 14));
+  for (int i = 94; i > 0; --i) ++iter;
+  BOOST_CHECK_EQUAL(**iter, JArray<int>(Dimensions(1, 5), 55, 56,57,58,59));
   
   JArray<int> arr2(Dimensions(1, 3), 1, 2, 3);
   OperationIterator<int> iter2(arr2, Dimensions(3, 3, 2, 1), 0);
-  BOOST_CHECK_EQUAL(*(++iter2), JArray<int>(Dimensions(0), 1));
-  BOOST_CHECK_EQUAL(*(iter2 += 2), JArray<int>(Dimensions(0), 2));
-  BOOST_CHECK_EQUAL(*(++iter2), JArray<int>(Dimensions(0), 3));
-  BOOST_CHECK_EQUAL(*(++iter2), JArray<int>(Dimensions(0), 3));
+  BOOST_CHECK_EQUAL(**(++iter2), JArray<int>(Dimensions(0), 1));
+  ++iter2; ++iter2;
+  BOOST_CHECK_EQUAL(**iter2, JArray<int>(Dimensions(0), 2));
+  BOOST_CHECK_EQUAL(**(++iter2), JArray<int>(Dimensions(0), 3));
+  BOOST_CHECK_EQUAL(**(++iter2), JArray<int>(Dimensions(0), 3));
   
   JArray<int> arr3(Dimensions(1, 2), 1, 2);
   OperationIterator<int> iter3(arr3, Dimensions(3, 3, 3, 3), 100);
   
-  BOOST_CHECK_EQUAL(*(iter3 += 10), arr3);
-  BOOST_CHECK_EQUAL(*(iter3 += 16), arr3);
+  for (int i = 10; i > 0; --i) ++iter3;
+  BOOST_CHECK_EQUAL(**iter3, arr3);
+  for (int i = 16; i > 0; --i) ++iter3;
+  BOOST_CHECK_EQUAL(**iter3, arr3);
 } 
 
+
+BOOST_AUTO_TEST_CASE ( jarray_scalarop_iterator ) {
+  JArray<JInt> arr(Dimensions(3, 2, 3, 2), 2, 1,2, 3,3,3, 4,4,4,5,5,5);
+  
+  OperationScalarIterator<JInt> osi(arr, Dimensions(3, 2, 3, 2));
+  for (int i = 0; i < 5; ++i) ++osi;
+  BOOST_CHECK_EQUAL(*osi, 3);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

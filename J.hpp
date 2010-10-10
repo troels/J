@@ -1,7 +1,7 @@
 #ifndef J_HPP
 #define J_HPP
 
-#include "vectorcounter.hpp"
+#include "utils.hpp"
 #include "Dimensions.hpp"
 #include "JGrammar.hpp"
 #include "JNoun.hpp"

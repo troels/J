@@ -1,5 +1,5 @@
 #include "JNoun.hpp"
-#include "vectorcounter.hpp"
+#include "utils.hpp"
 
 namespace J {
 
