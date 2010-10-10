@@ -99,5 +99,5 @@ namespace J {
   std::ostream& operator<<(std::ostream& os, const Dimensions& d) {
     return (os << d.to_string());
   }
-};
+}
 

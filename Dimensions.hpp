@@ -58,6 +58,6 @@ namespace J {
 
     friend std::ostream& operator<<(std::ostream& os, const Dimensions& d);
   };
-};
+}
 #endif
 
