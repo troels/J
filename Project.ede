@@ -1,0 +1,16 @@
+;; Object J
+;; EDE project file.
+(ede-proj-project "J"
+  :name "J"
+  :file "Project.ede"
+  :targets (list 
+   (ede-proj-target-makefile-program "test"
+    :name "test"
+    :path ""
+    :source '("test.cpp" "Dimensions.cpp")
+    :auxsource '("JGrammar.hpp" "J.hpp" "Dimensions.hpp")
+    :configuration-variables 'nil
+    :ldlibs '("boost_unit_test_framework")
+    )
+   )
+  )
