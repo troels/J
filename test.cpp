@@ -228,3 +228,19 @@ BOOST_AUTO_TEST_CASE ( jarray_scalarop_iterator ) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE ( verbs )
+
+BOOST_AUTO_TEST_CASE (test_find_max_dims) {
+  shared_ptr<JNoun> arr(new JArray<int>(Dimensions(3, 2, 3, 4), shared_ptr<vector<int> >(new vector<int>(24, 0))));
+  shared_ptr<JNoun> arr2(new JArray<int>(Dimensions(3, 3, 2, 1), shared_ptr<vector<int> >(new vector<int>(6, 0))));
+  shared_ptr<JNoun> arr3(new JArray<int>(Dimensions(3, 3, 2, 10), shared_ptr<vector<int> >(new vector<int>(60, 0))));
+  
+  JResult<JInt> res(Dimensions(1, 3));
+  res.add_noun(*arr); res.add_noun(*arr2); res.add_noun(*arr3);
+
+  BOOST_CHECK_EQUAL(res.assemble_result()->get_dims(), Dimensions(4, 3, 3, 3, 10));
+}
+
+
+BOOST_AUTO_TEST_SUITE_END()

@@ -75,7 +75,9 @@ namespace J {
     iterator_increment_periodicity(content.get_rank() == 0 ? 0 : 
 				   frame.suffix(-content.get_rank()).number_of_elems()),
     counter_end(frame.number_of_elems()),
-    counter(0), ptr(content.begin()) {}
+    counter(0), ptr(content.begin()) {
+    assert(frame.prefix_match(content.get_dims()));
+  }
   
   template <typename T>
   bool OperationScalarIterator<T>::at_end() const {
@@ -89,6 +91,7 @@ namespace J {
 	counter % iterator_increment_periodicity == 0) {
       ++ptr;
     }
+
     return *this;
   }
 
