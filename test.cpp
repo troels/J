@@ -251,4 +251,22 @@ BOOST_AUTO_TEST_CASE ( test_find_frame ) {
   BOOST_CHECK_EQUAL(find_frame(0, 0, arr.get_dims(), arr.get_dims()), Dimensions(2,2,2));
 }
 
+BOOST_AUTO_TEST_CASE ( test_plus_op ) {
+  JArray<JInt> arr(Dimensions(2,2,2), 1,2,3 ,4);
+  JArray<JInt> arr2(Dimensions(3,2,2,2), 1, 2,3,4,5,6,7,8);
+  
+  PlusVerb verb;
+  BOOST_CHECK_EQUAL(JArray<JInt>(Dimensions(3,2,2,2), 2,3,5,6,8,9, 11, 12),
+		    *verb(arr, arr2));
+
+  JArray<JFloat> arr3(Dimensions(1, 2), 1.5, 2.5);
+
+  BOOST_CHECK_EQUAL(JArray<JFloat>(Dimensions(2,2,2), 2.5, 3.5, 5.5, 6.5),
+		    *verb(arr, arr3));
+
+  BOOST_CHECK_EQUAL(JArray<JInt>(Dimensions(2,2,2), 2, 4, 6, 8),
+		    *verb(arr, arr));
+  
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -86,9 +86,8 @@ namespace J {
     int get_dyad_rrank() const { return dyad->get_rrank(); }
     int get_monad_rank() const { return monad->get_rank(); }
   };
-  
-  template <typename OpType, typename LArg, typename RArg, typename Res>
-  shared_ptr<JArray<Res> > scalar_dyadic_apply(const JArray<LArg>& larg, const JArray<RArg>& rarg);
+
+
 }
 
 #endif

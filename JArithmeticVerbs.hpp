@@ -2,25 +2,27 @@
 #define JARITMETICVERBS_HPP
 
 #include "JVerbs.hpp"
+#include "JExceptions.hpp"
+#include "VerbHelpers.hpp"
+#include <functional>
 
 namespace J {
   class PlusVerb: public JVerb { 
-    class PlusMonad: public Monad { 
-    public:
+    struct PlusMonad: public Monad { 
       PlusMonad(): Monad(0) {}
       shared_ptr<JNoun> operator()(const JNoun& arg) const {
 	return arg.clone();
       }
     };
     
-    class PlusDyad: public Dyad {
-      template <typename T> 
-      shared_ptr<JNoun> apply(const JArray<T>& larg, const JArray<T>& rarg) const;
-
-    public:
-      PlusDyad(): Dyad(0, 0) {}
-      shared_ptr<JNoun> operator()(const JNoun& larg, const JNoun& rarg) const;
+    template <typename LArg, typename RArg, typename Res>
+    struct DyadOp: std::binary_function<LArg, RArg, Res> {
+      Res operator()(LArg larg, RArg rarg) const {
+	return larg + rarg;
+      }
     };
+
+    struct PlusDyad: public ScalarDyad<DyadOp> {};
       
   public:
     PlusVerb();

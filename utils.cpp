@@ -100,9 +100,12 @@ namespace J {
     shared_ptr<vector<JFloat> > v(new vector<JFloat>(d.number_of_elems()));
     
     copy(arr.begin(), arr.end(), v->begin());
-    return JArray<JFloat>(d, v);
+    JArray<JFloat> arr2(d, v);
+    return arr2;
   }
 
   template class OperationScalarIterator<JInt>;
+  template class OperationScalarIterator<JFloat>;
   template class OperationIterator<JInt>;
+  template class OperationIterator<JFloat>;
 }
