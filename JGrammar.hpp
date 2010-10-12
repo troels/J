@@ -26,6 +26,12 @@ namespace J {
     static JInt base_elem() { return 0; }
     static const j_value_type value_type = j_value_type_int;
   };
+
+  template <>
+  struct JTypeTrait<JFloat> {
+    static JFloat base_elem() { return 0.0; }
+    static const j_value_type value_type = j_value_type_float;
+  };
 			  
   class JWord { 
     j_grammar_class grammar_class;

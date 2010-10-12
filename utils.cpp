@@ -4,7 +4,7 @@ namespace J {
   VectorCounter::VectorCounter(const Dimensions &dims): 
     dims(dims), v(vector<int>(dims.get_rank(), 0)) {}
   
-  pair<int, int> add_row(VectorCounter &one, VectorCounter& two) { 
+  pair<int, int> add_row(VectorCounter& one, VectorCounter& two) { 
     assert(one.get_rank() == two.get_rank());
     int onerank = one.get_rank();
     int tworank = two.get_rank();
@@ -93,6 +93,14 @@ namespace J {
     }
 
     return *this;
+  }
+
+  JArray<JFloat> jarray_int_to_float(const JArray<JInt>& arr) {
+    Dimensions d(arr.get_dims());
+    shared_ptr<vector<JFloat> > v(new vector<JFloat>(d.number_of_elems()));
+    
+    copy(arr.begin(), arr.end(), v->begin());
+    return JArray<JFloat>(d, v);
   }
 
   template class OperationScalarIterator<JInt>;

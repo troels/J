@@ -114,7 +114,7 @@ namespace J {
     content_string(ss, get_field_width());
     return ss.str();
   }
-
+    
   template <typename T> 
   void JArray<T>::content_string(std::stringstream &ss, int field_width) const {
     if (get_rank() == 0) {
@@ -167,6 +167,11 @@ namespace J {
       equal(begin(), end(), static_cast< const JArray<T>& >(other).begin());
   }
 
+  template <typename T>
+  int JArray<T>::get_field_width() const { 
+    return 0;
+  }
+
   template <>
   int JArray<int>::get_field_width() const {
     iter max = std::max_element(begin(), end());
@@ -178,11 +183,12 @@ namespace J {
     return std::max(max_len, min_len);
   }
 
-  template class JArray<JInt>;
-
   std::ostream& operator<<(std::ostream& os, const JNoun& noun) {
     return (os << noun.to_string());
   }
+
+  template class JArray<JInt>;
+  template class JArray<JFloat>;
 }
     
   

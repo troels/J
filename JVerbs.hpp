@@ -3,7 +3,9 @@
 
 #include "JExceptions.hpp"
 #include "JNoun.hpp"
+#include "utils.hpp"
 #include <cassert>
+#include <algorithm>
 #include <boost/optional.hpp>
 
 namespace J {
@@ -39,6 +41,54 @@ namespace J {
   };
     
   Dimensions find_frame(int lrank, int rrank, const Dimensions& larg, const Dimensions& rarg);
+
+  class Dyad {
+    int lrank,  rrank;
+  public:
+    virtual ~Dyad() {};
+    Dyad(int lrank, int rrank): lrank(lrank), rrank(rrank) {}
+    
+    int get_lrank() const { return lrank; }
+    int get_rrank() const { return rrank; }
+
+    virtual shared_ptr<JNoun> operator()(const JNoun& larg, const JNoun& rarg) const = 0;
+  };
+
+  class Monad { 
+    int rank;
+  public:
+    virtual ~Monad()  {}
+    Monad(int rank): rank(rank) {}
+    
+    int get_rank() const { return rank;}
+    
+    virtual shared_ptr<JNoun> operator()(const JNoun& arg) const = 0;
+  };
+
+  class JVerb: public JWord {
+    shared_ptr<Monad> monad;
+    shared_ptr<Dyad> dyad;
+
+  public:
+    virtual ~JVerb() {}
+    JVerb(shared_ptr<Monad> monad, shared_ptr<Dyad> dyad):
+      JWord(grammar_class_verb), monad(monad), dyad(dyad) {}
+    
+    shared_ptr<JNoun> operator()(const JNoun& larg, const JNoun& rarg) const {
+      return (*dyad)(larg, rarg);
+    }
+    
+    shared_ptr<JNoun> operator()(const JNoun& arg) const { 
+      return (*monad)(arg);
+    }
+
+    int get_dyad_lrank() const { return dyad->get_lrank(); }
+    int get_dyad_rrank() const { return dyad->get_rrank(); }
+    int get_monad_rank() const { return monad->get_rank(); }
+  };
+  
+  template <typename OpType, typename LArg, typename RArg, typename Res>
+  shared_ptr<JArray<Res> > scalar_dyadic_apply(const JArray<LArg>& larg, const JArray<RArg>& rarg);
 }
 
 #endif

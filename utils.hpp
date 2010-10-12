@@ -17,7 +17,7 @@ namespace J {
     int get_rank() const { return dims.get_rank(); }
 
     friend pair<int, int> add_row(VectorCounter &one, VectorCounter& two);
-    friend int add_pos(VectorCounter &one, VectorCounter& two, int pos);
+    friend int add_pos(VectorCounter& one, VectorCounter& two, int pos);
   };
 
   class OperationIteratorBase {
@@ -79,8 +79,8 @@ namespace J {
     T operator*() const { return *ptr; }
   };
     
-      
   
+  JArray<JFloat> jarray_int_to_float(const JArray<JInt>& arr);
 }
 
 

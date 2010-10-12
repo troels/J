@@ -7,8 +7,8 @@
    (ede-proj-target-makefile-program "test"
     :name "test"
     :path ""
-    :source '("test.cpp" "Dimensions.cpp" "JNoun.cpp" "utils.cpp" "JVerbs.cpp")
-    :auxsource '("JGrammar.hpp" "J.hpp" "Dimensions.hpp" "JNoun.hpp" "utils.hpp" "JVerbs.hpp" "JExceptions.hpp")
+    :source '("test.cpp" "Dimensions.cpp" "JNoun.cpp" "utils.cpp" "JVerbs.cpp" "JArithmeticVerbs.cpp")
+    :auxsource '("JGrammar.hpp" "J.hpp" "Dimensions.hpp" "JNoun.hpp" "utils.hpp" "JVerbs.hpp" "JExceptions.hpp" "JArithmeticVerbs.hpp")
     :configuration-variables 'nil
     :ldlibs '("boost_unit_test_framework")
     )

@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE ( jarray_index ) {
     
   JArray<JInt> arr(Dimensions(3, 3, 4, 5), v);
   BOOST_CHECK_EQUAL(arr[1], 
-		    JArray<int>(Dimensions(2, 4, 5), 20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39));
+		    JArray<JInt>(Dimensions(2, 4, 5), 20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39));
 }
 
 BOOST_AUTO_TEST_CASE ( jarray_deep_coordinate ) {
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE ( jarray_deep_coordinate ) {
     *iter = i;
   }
     
-  JArray<int> arr(Dimensions(3, 3, 4, 5), v);
+  JArray<JInt> arr(Dimensions(3, 3, 4, 5), v);
   
   BOOST_CHECK_EQUAL(arr[1], *arr.coordinate(1, 1));
   BOOST_CHECK_EQUAL(arr[2][3], *arr.coordinate(2, 2, 3));
@@ -149,10 +149,10 @@ BOOST_AUTO_TEST_CASE ( jarray_extend ) {
     *iter = i;
   }
     
-  JArray<int> arr(Dimensions(3, 3, 4, 5), v);
+  JArray<JInt> arr(Dimensions(3, 3, 4, 5), v);
 
   BOOST_CHECK_EQUAL(*(arr.extend(Dimensions(3,4,6, 10))),
-		    JArray<int>(Dimensions(3,4, 6, 10),
+		    JArray<JInt>(Dimensions(3,4, 6, 10),
 				0, 1, 2, 3, 4, 0, 0, 0, 0, 0, 
 				5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 
 				10, 11, 12, 13, 14, 0, 0, 0, 0, 0, 
@@ -174,15 +174,15 @@ BOOST_AUTO_TEST_CASE ( jarray_extend ) {
 				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 				
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
-  BOOST_CHECK_EQUAL(*JArray<int>(Dimensions(1, 5), 1, 2, 3, 4, 5).extend(Dimensions(1, 10)),
-		    JArray<int>(Dimensions(1, 10), 1, 2, 3, 4, 5, 0, 0, 0, 0, 0));
+  BOOST_CHECK_EQUAL(*JArray<JInt>(Dimensions(1, 5), 1, 2, 3, 4, 5).extend(Dimensions(1, 10)),
+		    JArray<JInt>(Dimensions(1, 10), 1, 2, 3, 4, 5, 0, 0, 0, 0, 0));
 }
 
 BOOST_AUTO_TEST_CASE ( jarray_iterator ) {
@@ -192,24 +192,24 @@ BOOST_AUTO_TEST_CASE ( jarray_iterator ) {
     *iter = i;
   }
     
-  JArray<int> arr(Dimensions(3, 3, 4, 5), v);
+  JArray<JInt> arr(Dimensions(3, 3, 4, 5), v);
   
   OperationIterator<int> iter(arr, Dimensions(3, 3, 4, 10), 1);
 
   for (int i = 25; i > 0; --i) ++iter;
-  BOOST_CHECK_EQUAL(**iter, JArray<int>(Dimensions(1, 5), 10, 11, 12,13, 14));
+  BOOST_CHECK_EQUAL(**iter, JArray<JInt>(Dimensions(1, 5), 10, 11, 12,13, 14));
   for (int i = 94; i > 0; --i) ++iter;
-  BOOST_CHECK_EQUAL(**iter, JArray<int>(Dimensions(1, 5), 55, 56,57,58,59));
+  BOOST_CHECK_EQUAL(**iter, JArray<JInt>(Dimensions(1, 5), 55, 56,57,58,59));
   
-  JArray<int> arr2(Dimensions(1, 3), 1, 2, 3);
+  JArray<JInt> arr2(Dimensions(1, 3), 1, 2, 3);
   OperationIterator<int> iter2(arr2, Dimensions(3, 3, 2, 1), 0);
-  BOOST_CHECK_EQUAL(**(++iter2), JArray<int>(Dimensions(0), 1));
+  BOOST_CHECK_EQUAL(**(++iter2), JArray<JInt>(Dimensions(0), 1));
   ++iter2; ++iter2;
-  BOOST_CHECK_EQUAL(**iter2, JArray<int>(Dimensions(0), 2));
-  BOOST_CHECK_EQUAL(**(++iter2), JArray<int>(Dimensions(0), 3));
-  BOOST_CHECK_EQUAL(**(++iter2), JArray<int>(Dimensions(0), 3));
+  BOOST_CHECK_EQUAL(**iter2, JArray<JInt>(Dimensions(0), 2));
+  BOOST_CHECK_EQUAL(**(++iter2), JArray<JInt>(Dimensions(0), 3));
+  BOOST_CHECK_EQUAL(**(++iter2), JArray<JInt>(Dimensions(0), 3));
   
-  JArray<int> arr3(Dimensions(1, 2), 1, 2);
+  JArray<JInt> arr3(Dimensions(1, 2), 1, 2);
   OperationIterator<int> iter3(arr3, Dimensions(3, 3, 3, 3), 100);
   
   for (int i = 10; i > 0; --i) ++iter3;
@@ -232,15 +232,23 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE ( verbs )
 
 BOOST_AUTO_TEST_CASE (test_find_max_dims) {
-  shared_ptr<JNoun> arr(new JArray<int>(Dimensions(3, 2, 3, 4), shared_ptr<vector<int> >(new vector<int>(24, 0))));
-  shared_ptr<JNoun> arr2(new JArray<int>(Dimensions(3, 3, 2, 1), shared_ptr<vector<int> >(new vector<int>(6, 0))));
-  shared_ptr<JNoun> arr3(new JArray<int>(Dimensions(3, 3, 2, 10), shared_ptr<vector<int> >(new vector<int>(60, 0))));
+  shared_ptr<JNoun> arr(new JArray<JInt>(Dimensions(3, 2, 3, 4), shared_ptr<vector<int> >(new vector<int>(24, 1))));
+  shared_ptr<JNoun> arr2(new JArray<JInt>(Dimensions(3, 3, 2, 5), shared_ptr<vector<int> >(new vector<int>(30, 2))));
+  shared_ptr<JNoun> arr3(new JArray<JInt>(Dimensions(3, 3, 2, 10), shared_ptr<vector<int> >(new vector<int>(60, 3))));
   
-  JResult<JInt> res(Dimensions(1, 3));
+  JResult<JInt> res(Dimensions(2, 3, 2));
+  res.add_noun(*arr); res.add_noun(*arr2); res.add_noun(*arr3);
   res.add_noun(*arr); res.add_noun(*arr2); res.add_noun(*arr3);
 
-  BOOST_CHECK_EQUAL(res.assemble_result()->get_dims(), Dimensions(4, 3, 3, 3, 10));
+  BOOST_CHECK_EQUAL(res.assemble_result()->get_dims(), Dimensions(5, 3, 2, 3, 3, 10));
+  BOOST_CHECK_EQUAL(static_cast<JArray<JInt>& >(*res.assemble_result())[0][0], 
+		    *(static_cast<JArray<JInt>* >(&*arr)->extend(Dimensions(3, 3, 3, 10))));
 }
 
+BOOST_AUTO_TEST_CASE ( test_find_frame ) {
+  JArray<JInt> arr(Dimensions(2,2,2), 1, 1,1,1);
+  
+  BOOST_CHECK_EQUAL(find_frame(0, 0, arr.get_dims(), arr.get_dims()), Dimensions(2,2,2));
+}
 
 BOOST_AUTO_TEST_SUITE_END()

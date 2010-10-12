@@ -46,7 +46,7 @@ namespace J {
     typename JNounList::const_iterator nounlist_end = get_nouns().end();
     
     int content_dims_len = content_dims.number_of_elems();
-    for (;nounlist_ptr != nounlist_ptr; ++nounlist_ptr, ptr += content_dims_len) {
+    for (;nounlist_ptr != nounlist_end; ++nounlist_ptr, ptr += content_dims_len) {
       boost::static_pointer_cast<JArray<T>, JNoun>(*nounlist_ptr)->extend_into(content_dims, ptr);
     }
     
@@ -80,6 +80,32 @@ namespace J {
     }
   }
 
+  template <typename OpType, typename LArg, typename RArg, typename Res>
+  shared_ptr<JArray<Res> > scalar_dyadic_apply(const JArray<LArg>& larg, const JArray<RArg>& rarg) {
+    OpType op;
+
+    if (larg.get_dims() == rarg.get_dims()) {
+      Dimensions d(larg.get_dims());
+      shared_ptr<vector<Res> > v(new vector<Res>(d.number_of_elems()));
+      transform(larg.begin(), larg.end(), rarg.begin(), v->begin(), op);
+      return shared_ptr<JArray<Res> >(new JArray<Res>(d, v));
+    }
+
+    Dimensions frame(find_frame(0, 0, larg.get_dims(), rarg.get_dims()));
+    
+    OperationScalarIterator<LArg> liter(larg, frame);
+    OperationScalarIterator<RArg> riter(rarg, frame);
+    
+    shared_ptr<vector<Res> > v(new vector<Res>(frame.number_of_elems()));
+    
+    typename vector<Res>::iterator output = v->begin();
+    typename vector<Res>::iterator end = v->end();
+    
+    for(;output != end; ++liter, ++riter, ++output) *output = op(*liter, *riter);
+    
+    return shared_ptr<JArray<Res> >(new JArray<Res>(frame, v));
+  }
+  
   template class JResult<JInt>;
 }
 

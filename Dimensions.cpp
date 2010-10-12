@@ -2,27 +2,27 @@
 
 namespace J {
   Dimensions::Dimensions(int rank, ...): dims(new vector<int>(rank)), 
-					 begin_iter(dims->begin()), end_iter(dims->end()),
-					 rank(rank) {
+                                         begin_iter(dims->begin()), end_iter(dims->end()),
+                                         rank(rank) {
       va_list va;
       va_start(va, rank);
       
       for (iter i = begin(); i != end(); ++i) {
-	*i = va_arg(va, int);
+        *i = va_arg(va, int);
       }
       
       va_end(va);
     }
 
   Dimensions::Dimensions(): dims(new vector<int>(0)), begin_iter(dims->begin()), 
-			    end_iter(dims->end()), rank(0) {}
+                            end_iter(dims->end()), rank(0) {}
 
   Dimensions::Dimensions(shared_ptr<vector<int> > dims): dims(dims), begin_iter(dims->begin()), 
-					     end_iter(dims->end()), rank(dims->size()) {}
+                                             end_iter(dims->end()), rank(dims->size()) {}
 
   Dimensions::Dimensions(shared_ptr<vector<int> > dims, iter begin, iter end): dims(dims), begin_iter(begin), 
-									       end_iter(end), 
-									       rank(distance(begin_iter, end_iter)) {}
+                                                                               end_iter(end), 
+                                                                               rank(distance(begin_iter, end_iter)) {}
   
   bool Dimensions::operator==(const Dimensions& d) const {
     return d.get_rank() == get_rank() && equal(begin(), end(), d.begin());
