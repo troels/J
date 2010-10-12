@@ -56,7 +56,7 @@ namespace J {
   public:
     OperationIterator(const JArray<T>& c, const Dimensions& frame, int output_rank);
 
-    shared_ptr<JNoun> operator*() const;
+    shared_ptr<JNoun > operator*() const;
   };
 
   template <typename T>

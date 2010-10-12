@@ -65,6 +65,19 @@ namespace J {
       shared_ptr<JNoun> operator()(const JNoun& arg) const;
     };
     
+    template <typename LArg, typename RArg, typename Res>
+    struct DyadOp: public std::binary_function<LArg, RArg, Res> {
+      shared_ptr<JArray<Res> > operator()(const JArray<LArg>& larg,
+					  const JArray<RArg>& rarg) const;
+    };
+
+    template <typename Arg>
+    struct DyadOp<Arg, Arg, JInt>: public std::binary_function<Arg, Arg, JInt> {
+      shared_ptr<JArray<JInt> > operator()(const JArray<Arg>& larg,
+					   const JArray<Arg>& rarg) const;
+    };
+
+
     struct IDotDyad: Dyad {
       IDotDyad(): Dyad(rank_infinity, rank_infinity) {}
       shared_ptr<JNoun> operator()(const JNoun& larg, const JNoun& rarg) const;

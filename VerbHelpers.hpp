@@ -77,7 +77,8 @@ namespace J {
     
     OperationIterator<Arg> input(arg, frame, rank);
     while (!input.at_end()) {
-      res.add_noun(*op(arg));
+      res.add_noun(*op(static_cast<JArray<Arg> &>(**input)));
+      ++input;
     }
 
     return boost::static_pointer_cast<JArray<Res> >(res.assemble_result());
@@ -145,7 +146,7 @@ namespace J {
   JArray<JInt> require_ints(const JNoun& noun); 
 
   class DimensionCounter { 
-    shared_ptr<vector<int> >reference;
+    vector<int> reference;
     vector<int> current_count;
     vector<int> suffix_array;
     bool turned_around;
@@ -153,7 +154,7 @@ namespace J {
     void increment(int pos); 
 
   public:
-    DimensionCounter(shared_ptr<vector<int> > ref);
+    DimensionCounter(const vector<int>& ref);
     
     DimensionCounter& operator++();
     int operator*() const;

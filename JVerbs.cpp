@@ -7,7 +7,7 @@ namespace J {
   
   void JResultBase::add_noun(const JNoun& noun) { 
     assert(nouns_ptr != nouns.end());
-    
+
     if (get_value_type() != noun.get_value_type()) 
       throw JIllegalValueTypeException();
     
