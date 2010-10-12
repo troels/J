@@ -267,6 +267,35 @@ BOOST_AUTO_TEST_CASE ( test_plus_op ) {
   BOOST_CHECK_EQUAL(JArray<JInt>(Dimensions(2,2,2), 2, 4, 6, 8),
 		    *verb(arr, arr));
   
+  BOOST_CHECK_EQUAL(*verb(arr), arr);
+  BOOST_CHECK_EQUAL(*verb(arr3), arr3);
+}
+
+BOOST_AUTO_TEST_CASE ( test_minus_op ) {
+  JArray<JInt> arr(Dimensions(2,2,2), 1,2 ,3,4);
+  JArray<JInt> arr2(Dimensions(2,2,2), 4,3,2,1);
+  JArray<JInt> arr3(Dimensions(0), 1);
+  
+  JArray<JFloat> arr4(Dimensions(3,4, 2, 2), 1,2,3,4,5,6,7,8,9,10,
+		      11,12,13,14,15,16);
+  MinusVerb verb;
+  BOOST_CHECK_EQUAL(*verb(arr2, arr),
+		    JArray<JInt>(Dimensions(2,2,2), 3, 1, -1, -3));
+  BOOST_CHECK_EQUAL(*verb(arr3, arr),
+		    JArray<JInt>(Dimensions(2,2,2), 0, -1, -2, -3));
+
+  BOOST_CHECK_EQUAL(*verb(arr, arr3),
+		    JArray<JInt>(Dimensions(2,2,2), 0, 1, 2, 3));
+
+  BOOST_CHECK_EQUAL(*verb(arr4, arr4), 
+		    JArray<JFloat>(Dimensions(3, 4,2,2), 
+				   0.0, 0.0, 0.0, 0.0,
+				   0.0, 0.0, 0.0, 0.0, 
+				   0.0, 0.0, 0.0, 0.0,
+				   0.0, 0.0, 0.0, 0.0));
+
+  BOOST_CHECK_EQUAL(*verb(arr),
+		    JArray<JInt>(Dimensions(2,2,2), -1, -2, -3,-4));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

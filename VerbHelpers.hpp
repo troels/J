@@ -69,7 +69,7 @@ namespace J {
   template <template <typename, typename> class OpType, typename Arg, typename Res>
   shared_ptr<JArray<Res> > monadic_apply(int rank, const JArray<Arg>& arg, OpType<Arg, Res> op) {
     if ( rank >= arg.get_rank()) {
-      return shared_ptr<JArray<Res> >(new JArray<Res>(op(arg)));
+      return op(arg);
     }
 
     Dimensions frame = arg.get_dims().prefix(-rank);
@@ -77,11 +77,12 @@ namespace J {
     
     OperationIterator<Arg> input(arg, frame, rank);
     while (!input.at_end()) {
-      res.add_noun(op(arg));
+      res.add_noun(*op(arg));
     }
 
-    return res.assemble_result();
+    return boost::static_pointer_cast<JArray<Res> >(res.assemble_result());
   }
+
 
   template <template <typename, typename, typename> class Op>
   struct ScalarDyad: public Dyad {
@@ -89,6 +90,24 @@ namespace J {
     inline shared_ptr<JNoun> operator()(const JNoun& larg, const JNoun& rarg) const;
   };
 
+  template <template <typename, typename> class Op>
+  struct ScalarMonad: public Monad { 
+    ScalarMonad(): Monad(0) {}
+    inline shared_ptr<JNoun> operator()(const JNoun& arg) const;
+  };
+
+  template <template <typename, typename> class Op>
+  inline shared_ptr<JNoun> ScalarMonad<Op>::operator()(const JNoun& arg) const {
+    if (arg.get_value_type() == j_value_type_int) {
+      return scalar_monadic_apply<Op, JInt, JInt>(static_cast<const JArray<JInt> &>(arg),
+						  Op<JInt, JInt>());
+    } else if (arg.get_value_type() == j_value_type_float) {
+      return scalar_monadic_apply<Op, JFloat, JFloat>(static_cast<const JArray<JFloat> &>(arg),
+						      Op<JFloat, JFloat>());
+    }
+    throw JIllegalValueTypeException();
+  }
+      
   template <template <typename, typename, typename> class Op>  
   inline shared_ptr<JNoun> ScalarDyad<Op>::operator()(const JNoun& larg, const JNoun& rarg) const {
     if (larg.get_value_type() == j_value_type_int && 
@@ -123,10 +142,25 @@ namespace J {
     throw JIllegalValueTypeException();
   }
 
-  template <template <typename, typename, typename> class Op>
-  struct ScalarMonad: public Monad { 
-    ScalarMonad(): Monad(0) {}
-    shared_ptr<JNoun> operator()(const JNoun& arg) const;
+  JArray<JInt> require_ints(const JNoun& noun); 
+
+  class DimensionCounter { 
+    shared_ptr<vector<int> >reference;
+    vector<int> current_count;
+    vector<int> suffix_array;
+    bool turned_around;
+
+    void increment(int pos); 
+
+  public:
+    DimensionCounter(shared_ptr<vector<int> > ref);
+    
+    DimensionCounter& operator++();
+    int operator*() const;
+    bool at_end() const { 
+      return turned_around; 
+    }
   };
 }
+
 #endif

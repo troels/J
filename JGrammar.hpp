@@ -1,7 +1,11 @@
 #ifndef JGRAMMAR_HPP
 #define JGRAMMAR_HPP
 
+#include <climits>
+
 namespace J {
+  const int rank_infinity = INT_MAX;
+
   enum j_grammar_class { 
     grammar_class_noun,
     grammar_class_verb,
