@@ -384,6 +384,19 @@ BOOST_AUTO_TEST_CASE ( test_adverb ) {
   shared_ptr<PlusVerb> plus(new PlusVerb());;
   JInsertTableAdverb adverb;
   JVerb verb(static_cast<JVerb&>(*adverb(plus)));
+  BOOST_CHECK_EQUAL(*verb(JArray<JInt>(Dimensions(1,10), 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)),
+		    JArray<JInt>(Dimensions(0), 55));
+  
+  JArray<JInt> table(Dimensions(1, 5), -2, -1, 0, 1, 2);
+  JArray<JInt> answer(Dimensions(2,5,5), 
+		      -4, -3, -2, -1,  0, 
+		      -3, -2, -1,  0,  1, 
+		      -2, -1,  0,  1,  2, 
+		      -1,  0,  1,  2,  3, 
+		      0,  1,  2,  3,  4);
+  
+  BOOST_CHECK_EQUAL(answer, *verb(table, table));
+  BOOST_CHECK_EQUAL(*verb(answer), JArray<JInt>(Dimensions(1, 5), -10, -5, 0, 5, 10));
 }
   
 BOOST_AUTO_TEST_SUITE_END()

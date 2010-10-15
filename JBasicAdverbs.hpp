@@ -19,14 +19,14 @@ namespace J {
 	
   	shared_ptr<JNoun> operator()(const JNoun& arg) const { 
   	  if (arg.is_scalar() || arg.get_dims()[0] == 1) return arg.clone();
-
+	  
   	  int first_dim = arg.get_dims()[0];
   	  if (first_dim == 0) {
   	    return verb->unit(arg.get_dims().suffix(-1));
   	  }
 
   	  shared_ptr<JNoun> res = arg.coordinate(1, first_dim - 1);
-  	  for (int i = first_dim - 2; i >= 0; ++i) {
+  	  for (int i = first_dim - 2; i >= 0; --i) {
   	    res = (*verb)(*arg.coordinate(1, i), *res);
   	  }
   	  return res;
