@@ -9,35 +9,6 @@
 #include <boost/optional.hpp>
 
 namespace J {
-  using boost::optional;
-
-  class JResult { 
-    typedef vector<shared_ptr<JNoun> > JNounList;
-
-    Dimensions frame;
-    JNounList nouns;
-    JNounList::iterator nouns_ptr;
-    shared_ptr<vector<int> > max_dims;
-    optional<int> rank;
-    optional<j_value_type> value_type;
-
-  private:
-    template <typename T>
-    shared_ptr<JNoun> assemble_result_internal() const;
-
-  public:
-    JResult(const Dimensions& frame);
-    
-    Dimensions get_frame() const { return frame; }
-    shared_ptr<vector<int> > get_max_dims() const { return max_dims; }
-    optional<j_value_type> get_value_type() const { return value_type; }
-    void add_noun(const JNoun& noun);
-    const JNounList& get_nouns() const { return nouns; }
-    shared_ptr<JNoun> assemble_result() const;
-  };
-  
-  Dimensions find_frame(int lrank, int rrank, const Dimensions& larg, const Dimensions& rarg);
-
   class Dyad {
     int lrank,  rrank;
   public:
@@ -86,7 +57,7 @@ namespace J {
       throw JNoUnitException();
     }
 
-    virtual optional<j_value_type> res_type(j_value_type larg, j_value_type rarg) const = 0;
+    virtual boost::optional<j_value_type> res_type(j_value_type larg, j_value_type rarg) const = 0;
   };
 }
 

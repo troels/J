@@ -7,6 +7,34 @@
 
 namespace J {
   using boost::shared_ptr;
+  using boost::optional;
+
+  class JResult { 
+    typedef vector<shared_ptr<JNoun> > JNounList;
+
+    Dimensions frame;
+    JNounList nouns;
+    JNounList::iterator nouns_ptr;
+    shared_ptr<vector<int> > max_dims;
+    optional<int> rank;
+    optional<j_value_type> value_type;
+
+    template <typename T>
+    shared_ptr<JNoun> assemble_result_internal() const;
+
+  public:
+    JResult(const Dimensions& frame);
+    
+    Dimensions get_frame() const { return frame; }
+    shared_ptr<vector<int> > get_max_dims() const { return max_dims; }
+    optional<j_value_type> get_value_type() const { return value_type; }
+    void add_noun(const JNoun& noun);
+    const JNounList& get_nouns() const { return nouns; }
+    shared_ptr<JNoun> assemble_result() const;
+  };
+  
+  Dimensions find_frame(int lrank, int rrank, const Dimensions& larg, const Dimensions& rarg);
+
   template <template <typename, typename, typename> class OpType, typename LArg, typename RArg, typename Res>
   shared_ptr<JArray<Res> > scalar_dyadic_apply(const JArray<LArg>& larg, const JArray<RArg>& rarg, 
 					       OpType<LArg, RArg, Res> op) {

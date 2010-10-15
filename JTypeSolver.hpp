@@ -7,7 +7,7 @@
 #include <functional>
 #include "JNoun.hpp"
 #include "JGrammar.hpp"
-#include "JVerbs.hpp"
+#include "VerbHelpers.hpp"
 #include "utils.hpp"
 #include <map>
 #include <utility>
