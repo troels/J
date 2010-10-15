@@ -76,19 +76,6 @@ namespace J {
     ConvertJArray<JInt, JFloat>::apply(test);
   }
 
-  std::auto_ptr<OperationIteratorBase> get_operation_iterator(const JNoun& arg, const Dimensions& frame, 
-							      int output_rank) { 
-    switch (arg.get_value_type()) {
-    case j_value_type_int:
-      return std::auto_ptr<OperationIteratorBase>
-	(new OperationIterator<JInt>(static_cast<const JArray<JInt>&>(arg), frame, output_rank));
-    case j_value_type_float:
-      return std::auto_ptr<OperationIteratorBase>
-	(new OperationIterator<JFloat>(static_cast<const JArray<JFloat>&>(arg), frame, output_rank));
-    default:
-      assert(0);
-    }
-  }
   
   template <typename Op>
   shared_ptr<JNoun> dyadic_apply(int lrank, int rrank, const JNoun& larg, const JNoun& rarg,

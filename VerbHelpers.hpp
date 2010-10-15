@@ -189,6 +189,9 @@ namespace J {
       return turned_around; 
     }
   };
+
+  std::auto_ptr<OperationIteratorBase> get_operation_iterator(const JNoun& arg, const Dimensions& frame, 
+							      int output_rank);
 }
 
 #endif
