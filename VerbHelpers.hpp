@@ -194,6 +194,21 @@ namespace J {
     }
   };
 
+  class VerbContainer { 
+    shared_ptr<JVerb> verb;
+
+  public:
+    shared_ptr<JNoun> operator()(const JNoun& larg, const JNoun& rarg) const {
+      return (*verb)(larg, rarg);
+    }
+    
+    shared_ptr<JNoun> operator()(const JNoun& arg) const { 
+      return (*verb)(arg);
+    }
+
+    VerbContainer(shared_ptr<JVerb> verb): verb(verb) {}
+  };
+
 }
 
 #endif
