@@ -31,7 +31,7 @@ namespace J {
     Dimensions get_frame() const { return frame; }
     shared_ptr<vector<int> > get_max_dims() const { return max_dims; }
     optional<j_value_type> get_value_type() const { return value_type; }
-    void add_noun(const JNoun& noun);
+    void add_noun(shared_ptr<JNoun> noun);
     const JNounList& get_nouns() const { return nouns; }
     shared_ptr<JNoun> assemble_result() const;
   };
@@ -99,22 +99,21 @@ namespace J {
     return shared_ptr<JArray<Res> >(new JArray<Res>(d, v));
   }
 
-  template <template <typename, typename> class OpType, typename Arg, typename Res>
-  shared_ptr<JArray<Res> > monadic_apply(int rank, const JArray<Arg>& arg, OpType<Arg, Res> op) {
+  template <typename OpType>
+  shared_ptr<JNoun > monadic_apply(int rank, const JNoun& arg, OpType op) {
     if ( rank >= arg.get_rank()) {
       return op(arg);
     }
 
     Dimensions frame = arg.get_dims().prefix(-rank);
     JResult res(frame);
-    
-    OperationIterator<Arg> input(arg, frame, rank);
-    while (!input.at_end()) {
-      res.add_noun(*op(static_cast<JArray<Arg> &>(**input)));
-      ++input;
+      
+    for (std::auto_ptr<OperationIteratorBase> input(get_operation_iterator(arg, frame, rank)); 
+	   !input->at_end(); ++(*input)) {
+	   res.add_noun(op(***input));
     }
 
-    return boost::static_pointer_cast<JArray<Res> >(res.assemble_result());
+    return res.assemble_result();
   }
 
   template <template <typename, typename, typename> class Op>

@@ -78,7 +78,7 @@ namespace J {
   class IDotVerb: public JVerb { 
     template <typename Arg, typename Res>
     struct MonadOp: public std::unary_function<Arg, Res> {
-      shared_ptr<JArray<Res> > operator()(const JArray<Arg>& arg) const;
+      shared_ptr<JNoun > operator()(const JNoun& arg) const;
     };
 
     struct IDotMonad: Monad { 

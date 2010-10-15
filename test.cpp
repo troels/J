@@ -237,8 +237,8 @@ BOOST_AUTO_TEST_CASE (test_find_max_dims) {
   shared_ptr<JNoun> arr3(new JArray<JInt>(Dimensions(3, 3, 2, 10), shared_ptr<vector<int> >(new vector<int>(60, 3))));
   
   JResult res(Dimensions(2, 3, 2));
-  res.add_noun(*arr); res.add_noun(*arr2); res.add_noun(*arr3);
-  res.add_noun(*arr); res.add_noun(*arr2); res.add_noun(*arr3);
+  res.add_noun(arr); res.add_noun(arr2); res.add_noun(arr3);
+  res.add_noun(arr); res.add_noun(arr2); res.add_noun(arr3);
 
   BOOST_CHECK_EQUAL(res.assemble_result()->get_dims(), Dimensions(5, 3, 2, 3, 3, 10));
   BOOST_CHECK_EQUAL(static_cast<JArray<JInt>& >(*res.assemble_result())[0][0], 

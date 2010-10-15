@@ -5,30 +5,30 @@ namespace J {
     frame(frame), nouns(JNounList(frame.number_of_elems())), nouns_ptr(nouns.begin()), 
     max_dims(),  rank(), value_type() {}
   
-  void JResult::add_noun(const JNoun& noun) { 
+  void JResult::add_noun(shared_ptr<JNoun> noun) { 
     assert(nouns_ptr != nouns.end());
     
-    if (get_value_type() && *get_value_type() != noun.get_value_type()) 
+    if (get_value_type() && *get_value_type() != noun->get_value_type()) 
       throw JIllegalValueTypeException();
     
     if (!rank) {
-      max_dims = shared_ptr<vector<int> >(new vector<int>(noun.get_dims().begin(), noun.get_dims().end()));
-      rank = noun.get_rank();
-      value_type = noun.get_value_type();
+      max_dims = shared_ptr<vector<int> >(new vector<int>(noun->get_dims().begin(), noun->get_dims().end()));
+      rank = noun->get_rank();
+      value_type = noun->get_value_type();
     } else {
-      if (*rank != noun.get_rank()) 
+      if (*rank != noun->get_rank()) 
 	throw JIllegalRankException();
 
       vector<int>::iterator max_dims_ptr = max_dims->begin();
-      vector<int>::iterator noun_ptr = noun.get_dims().begin();
-      vector<int>::iterator noun_end = noun.get_dims().end();
+      vector<int>::iterator noun_ptr = noun->get_dims().begin();
+      vector<int>::iterator noun_end = noun->get_dims().end();
       
       for (;noun_ptr != noun_end; ++noun_ptr, ++max_dims_ptr) {
 	*max_dims_ptr = std::max(*max_dims_ptr, *noun_ptr);
       }
     }
     
-    *nouns_ptr = noun.clone();
+    *nouns_ptr = noun;
     ++nouns_ptr;
   }
   
