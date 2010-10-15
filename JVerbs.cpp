@@ -1,19 +1,20 @@
 #include "JVerbs.hpp"
 
 namespace J {
-  JResultBase::JResultBase(const Dimensions& frame, j_value_type value_type):
-    frame(frame), value_type(value_type), nouns(JNounList(frame.number_of_elems())),
-    nouns_ptr(nouns.begin()), max_dims(),  rank() {}
+  JResult::JResult(const Dimensions& frame):
+    frame(frame), nouns(JNounList(frame.number_of_elems())), nouns_ptr(nouns.begin()), 
+    max_dims(),  rank(), value_type() {}
   
-  void JResultBase::add_noun(const JNoun& noun) { 
+  void JResult::add_noun(const JNoun& noun) { 
     assert(nouns_ptr != nouns.end());
-
-    if (get_value_type() != noun.get_value_type()) 
+    
+    if (get_value_type() && *get_value_type() != noun.get_value_type()) 
       throw JIllegalValueTypeException();
     
     if (!rank) {
-      rank = noun.get_rank();
       max_dims = shared_ptr<vector<int> >(new vector<int>(noun.get_dims().begin(), noun.get_dims().end()));
+      rank = noun.get_rank();
+      value_type = noun.get_value_type();
     } else {
       if (*rank != noun.get_rank()) 
 	throw JIllegalRankException();
@@ -31,12 +32,21 @@ namespace J {
     ++nouns_ptr;
   }
   
-  template <typename T>
-  JResult<T>::JResult(const Dimensions& frame): 
-    JResultBase(frame, JTypeTrait<T>::value_type) {}
-  
-  template <typename T>
-  shared_ptr<JNoun> JResult<T>::assemble_result() const {
+  shared_ptr<JNoun> JResult::assemble_result() const { 
+    switch(*get_value_type()) { 
+    case j_value_type_int:
+      return assemble_result_internal<JInt>();
+    case j_value_type_float:
+      return assemble_result_internal<JFloat>();
+    case j_value_type_char:
+    case j_value_type_box:
+      assert(0);
+    }
+    assert(0);
+  }
+    
+  template <typename T> 
+  shared_ptr<JNoun> JResult::assemble_result_internal() const {
     Dimensions content_dims(get_max_dims());
     Dimensions res = get_frame() + content_dims;
     shared_ptr<vector<T> > v(new vector<T>(res.number_of_elems(), JTypeTrait<T>::base_elem()));
@@ -79,9 +89,6 @@ namespace J {
       }
     }
   }
-
-  
-  template class JResult<JInt>;
 }
 
   

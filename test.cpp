@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE (test_find_max_dims) {
   shared_ptr<JNoun> arr2(new JArray<JInt>(Dimensions(3, 3, 2, 5), shared_ptr<vector<int> >(new vector<int>(30, 2))));
   shared_ptr<JNoun> arr3(new JArray<JInt>(Dimensions(3, 3, 2, 10), shared_ptr<vector<int> >(new vector<int>(60, 3))));
   
-  JResult<JInt> res(Dimensions(2, 3, 2));
+  JResult res(Dimensions(2, 3, 2));
   res.add_noun(*arr); res.add_noun(*arr2); res.add_noun(*arr3);
   res.add_noun(*arr); res.add_noun(*arr2); res.add_noun(*arr3);
 
@@ -371,8 +371,13 @@ BOOST_AUTO_TEST_CASE ( test_i_dot_monad_verb ) {
   
   BOOST_CHECK_EQUAL(JArray<JInt>(Dimensions(1, 4), 0, 2, 0, 1),
 		    *v(arr, arr2));
+
+  JArray<JInt> arr3(Dimensions(1, 4), 0,1,2,3);
+  JArray<JInt> arr4(Dimensions(0), 1);
+  BOOST_CHECK_EQUAL(*v(arr3, arr4), 
+		    JArray<JInt>(Dimensions(0), 1));
+  JArray<JInt> arr5(Dimensions(2, 4, 2), 0, 1,2,3, 3,3,3,3,0,1,2,3,4,5,6,7);
+  BOOST_CHECK_EQUAL(*v(arr5, arr4), JArray<JInt>(Dimensions(0), 4));
 }
-  
-
-
+ 
 BOOST_AUTO_TEST_SUITE_END()

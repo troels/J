@@ -30,6 +30,18 @@ namespace J {
       JException(msg, "JIllegalValuetypeException") {}
   };
 
+  class JNoUnitException: public JException {
+  public:
+    JNoUnitException(string msg = "No unit for verb"): 
+      JException(msg, "JNoUnitException") {}
+  };
+
+  class JIllegalGrammarClassException: public JException {
+  public:
+    JIllegalGrammarClassException(string msg = "Illegal grammar class given"): 
+      JException(msg, "JIllegalGrammarClassException") {}
+  };
+
   class JUnimplementedOperationException: public JException {
   public:
     JUnimplementedOperationException(string msg = "Unimplemented operation"): 

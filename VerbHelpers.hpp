@@ -34,20 +34,20 @@ namespace J {
     return shared_ptr<JArray<Res> >(new JArray<Res>(frame, v));
   }
 
-  template <template <typename, typename, typename> class OpType, typename LArg, typename RArg, typename Res>
+  template <typename OpType, typename LArg, typename RArg, typename Res>
   shared_ptr<JArray<Res> > dyadic_apply(int lrank, int rrank,
 					const JArray<LArg>& larg, const JArray<RArg>& rarg, 
-					OpType<LArg, RArg, Res> op) {
+					OpType op) {
     if (lrank >= larg.rank && rrank >= rarg.rank) {
       return shared_ptr<JArray<Res> >(new JArray<Res>(op(larg, rarg)));
     }
-
+  
     Dimensions frame = find_frame(lrank, rrank, larg.get_dims(), rarg.get_dims());
     
     OperationIterator<LArg> liter(larg, frame);
     OperationIterator<RArg> riter(rarg, frame);
     
-    JResult<Res> res(frame);
+    JResult res(frame);
     
     while (!liter.at_end() && !riter.at_end()) {
       res.add_noun(*liter, *riter);
@@ -65,7 +65,7 @@ namespace J {
     
     return shared_ptr<JArray<Res> >(new JArray<Res>(d, v));
   }
-  
+
   template <template <typename, typename> class OpType, typename Arg, typename Res>
   shared_ptr<JArray<Res> > monadic_apply(int rank, const JArray<Arg>& arg, OpType<Arg, Res> op) {
     if ( rank >= arg.get_rank()) {
@@ -73,7 +73,7 @@ namespace J {
     }
 
     Dimensions frame = arg.get_dims().prefix(-rank);
-    JResult<Res> res(frame);
+    JResult res(frame);
     
     OperationIterator<Arg> input(arg, frame, rank);
     while (!input.at_end()) {
@@ -83,7 +83,6 @@ namespace J {
 
     return boost::static_pointer_cast<JArray<Res> >(res.assemble_result());
   }
-
 
   template <template <typename, typename, typename> class Op>
   struct ScalarDyad: public Dyad {

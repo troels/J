@@ -11,35 +11,31 @@
 namespace J {
   using boost::optional;
 
-  class JResultBase { 
+  class JResult { 
     typedef vector<shared_ptr<JNoun> > JNounList;
 
     Dimensions frame;
-    j_value_type value_type;
     JNounList nouns;
     JNounList::iterator nouns_ptr;
     shared_ptr<vector<int> > max_dims;
     optional<int> rank;
+    optional<j_value_type> value_type;
+
+  private:
+    template <typename T>
+    shared_ptr<JNoun> assemble_result_internal() const;
 
   public:
-    virtual ~JResultBase() {}
-    JResultBase(const Dimensions& frame, j_value_type value_type);
+    JResult(const Dimensions& frame);
     
     Dimensions get_frame() const { return frame; }
     shared_ptr<vector<int> > get_max_dims() const { return max_dims; }
-    j_value_type get_value_type() const { return value_type; }
+    optional<j_value_type> get_value_type() const { return value_type; }
     void add_noun(const JNoun& noun);
-    virtual shared_ptr<JNoun> assemble_result() const = 0;
     const JNounList& get_nouns() const { return nouns; }
-  };
-  
-  template <typename T>
-  class JResult: public JResultBase {
-  public:
-    JResult(const Dimensions& frame);
     shared_ptr<JNoun> assemble_result() const;
   };
-    
+  
   Dimensions find_frame(int lrank, int rrank, const Dimensions& larg, const Dimensions& rarg);
 
   class Dyad {
@@ -68,7 +64,7 @@ namespace J {
   class JVerb: public JWord {
     shared_ptr<Monad> monad;
     shared_ptr<Dyad> dyad;
-
+    
   public:
     virtual ~JVerb() {}
     JVerb(shared_ptr<Monad> monad, shared_ptr<Dyad> dyad):
@@ -85,9 +81,13 @@ namespace J {
     int get_dyad_lrank() const { return dyad->get_lrank(); }
     int get_dyad_rrank() const { return dyad->get_rrank(); }
     int get_monad_rank() const { return monad->get_rank(); }
+    
+    virtual shared_ptr<JNoun> unit(const Dimensions&) const { 
+      throw JNoUnitException();
+    }
+
+    virtual optional<j_value_type> res_type(j_value_type larg, j_value_type rarg) const = 0;
   };
-
-
 }
 
 #endif

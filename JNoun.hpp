@@ -78,6 +78,13 @@ namespace J {
     iter begin() const { return begin_iter; }
     iter end() const { return end_iter; }
   };
+
+
+  template <typename T>
+  shared_ptr<JArray<T> > filled_array(const Dimensions &dims, T val) {
+    shared_ptr<vector<T> > v(new vector<T>(dims.number_of_elems(), val));
+    return shared_ptr<JArray<T> >(new JArray<T>(dims, v));
+  }
 }
 
 #endif

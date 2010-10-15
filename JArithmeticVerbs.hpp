@@ -6,9 +6,28 @@
 #include "VerbHelpers.hpp"
 #include <functional>
 #include <numeric>
+#include <map>
+#include <boost/optional.hpp>
 
 namespace J {
-  class PlusVerb: public JVerb { 
+  using boost::optional;
+
+  template <typename T>
+  class JArithmeticVerb: public JVerb {
+    typedef pair<j_value_type, j_value_type> dyad_pair;
+    typedef std::map<dyad_pair, j_value_type>  DyadTypeMap;
+
+    T unit_value;
+    DyadTypeMap dyad_type_map;
+    
+  public:
+    JArithmeticVerb(shared_ptr<Monad> monad, shared_ptr<Dyad> dyad, T unit_value);
+    optional<j_value_type> res_type(j_value_type larg, j_value_type rarg) const;
+
+    shared_ptr<JNoun> unit(const Dimensions& dims) const;
+  };
+
+  class PlusVerb: public JArithmeticVerb<JInt> { 
     template <typename Arg, typename Res>
     struct MonadOp: std::unary_function<Arg, Res> {
       Res operator()(Arg arg) const { 
@@ -28,10 +47,12 @@ namespace J {
     struct PlusDyad: public ScalarDyad<DyadOp> {};
       
   public:
-    PlusVerb(): JVerb(shared_ptr<Monad>(new PlusMonad()), shared_ptr<Dyad>(new PlusDyad())) {}
+    PlusVerb(): JArithmeticVerb(shared_ptr<Monad>(new PlusMonad()), 
+				shared_ptr<Dyad>(new PlusDyad()),
+				0) {}
   };
 
-  class MinusVerb: public JVerb { 
+  class MinusVerb: public JArithmeticVerb<JInt> { 
     template <typename Arg, typename Res>
     struct MonadOp: std::unary_function<Arg, Res> {
       Res operator()(Arg arg) const { 
@@ -49,9 +70,9 @@ namespace J {
     };
 
     struct MinusDyad: public ScalarDyad<DyadOp> {};
-      
+
   public:
-    MinusVerb(): JVerb(shared_ptr<Monad>(new MinusMonad()), shared_ptr<Dyad>(new MinusDyad())) {}
+    MinusVerb(): JArithmeticVerb(shared_ptr<Monad>(new MinusMonad()), shared_ptr<Dyad>(new MinusDyad()), 0) {}
   };    
 
   class IDotVerb: public JVerb { 
@@ -82,6 +103,10 @@ namespace J {
       IDotDyad(): Dyad(rank_infinity, rank_infinity) {}
       shared_ptr<JNoun> operator()(const JNoun& larg, const JNoun& rarg) const;
     };
+    
+    optional<j_value_type> res_type(j_value_type, j_value_type) const { 
+      return optional<j_value_type>(j_value_type_int);
+    }
 
   public:
     IDotVerb(): JVerb(shared_ptr<Monad>(new IDotMonad()), 

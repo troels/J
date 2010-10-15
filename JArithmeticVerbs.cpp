@@ -1,6 +1,34 @@
 #include "JArithmeticVerbs.hpp"
 
 namespace J {
+  template <typename T>
+  JArithmeticVerb<T>::JArithmeticVerb(shared_ptr<Monad> monad, shared_ptr<Dyad> dyad, T unit_value): 
+    JVerb(monad, dyad), unit_value(unit_value), dyad_type_map() {
+
+    dyad_type_map[dyad_pair(j_value_type_int, j_value_type_int)] = j_value_type_int;
+    dyad_type_map[dyad_pair(j_value_type_float, j_value_type_float)] = j_value_type_float;
+    dyad_type_map[dyad_pair(j_value_type_float, j_value_type_int)] = j_value_type_float;
+    dyad_type_map[dyad_pair(j_value_type_int, j_value_type_float)] = j_value_type_float;
+  }
+  
+  template <typename T>
+  optional<j_value_type> JArithmeticVerb<T>::res_type(j_value_type larg, j_value_type rarg) const { 
+    DyadTypeMap::const_iterator it = dyad_type_map.find(dyad_pair(larg, rarg));
+    
+    if (it != dyad_type_map.end()) {
+      return optional<j_value_type>(it->second);
+    } else {
+      return optional<j_value_type>();
+    }
+  }
+
+  template <typename T>
+  shared_ptr<JNoun> JArithmeticVerb<T>::unit(const Dimensions& dims) const {
+    return filled_array(dims, unit_value);
+  }
+
+  template class JArithmeticVerb<JInt>;
+  
   shared_ptr<JNoun> IDotVerb::IDotMonad::operator()(const JNoun& arg) const { 
     JArray<JInt> int_arg = require_ints(arg);
 
@@ -31,15 +59,15 @@ namespace J {
     if (larg.get_value_type() == j_value_type_int &&
 	rarg.get_value_type() == j_value_type_int) {
       return DyadOp<JInt, JInt, JInt>()(static_cast<const JArray<JInt> &>(larg),
-				      static_cast<const JArray<JInt> &>(rarg));
+					static_cast<const JArray<JInt> &>(rarg));
     } else if (larg.get_value_type() == j_value_type_float &&
 	       rarg.get_value_type() == j_value_type_float) {
       return DyadOp<JFloat, JFloat, JInt>()(static_cast<const JArray<JFloat> &>(larg),
-					      static_cast<const JArray<JFloat> &>(rarg));
+					    static_cast<const JArray<JFloat> &>(rarg));
     } else if (larg.get_value_type() == j_value_type_char &&
 	       rarg.get_value_type() == j_value_type_char) {
       return DyadOp<JChar, JChar, JInt>()(static_cast<const JArray<JChar> &>(larg),
-					   static_cast<const JArray<JChar> &>(rarg));
+					  static_cast<const JArray<JChar> &>(rarg));
     }
 
     throw JIllegalValueTypeException();
