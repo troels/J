@@ -8,5 +8,7 @@
 #include "JNoun.hpp"
 #include "JVerbs.hpp"
 #include "JArithmeticVerbs.hpp"
+#include "JAdverbs.hpp"
+#include "JBasicAdverbs.hpp"
 
 #endif

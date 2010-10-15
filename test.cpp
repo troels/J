@@ -379,5 +379,11 @@ BOOST_AUTO_TEST_CASE ( test_i_dot_monad_verb ) {
   JArray<JInt> arr5(Dimensions(2, 4, 2), 0, 1,2,3, 3,3,3,3,0,1,2,3,4,5,6,7);
   BOOST_CHECK_EQUAL(*v(arr5, arr4), JArray<JInt>(Dimensions(0), 4));
 }
- 
+
+BOOST_AUTO_TEST_CASE ( test_adverb ) { 
+  shared_ptr<PlusVerb> plus(new PlusVerb());;
+  JInsertTableAdverb adverb;
+  JVerb verb(static_cast<JVerb&>(*adverb(plus)));
+}
+  
 BOOST_AUTO_TEST_SUITE_END()

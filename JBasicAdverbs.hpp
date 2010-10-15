@@ -8,11 +8,10 @@
 
 namespace J {
   class JInsertTableAdverb: public JAdverb {
-    shared_ptr<JVerb> verb;
-
     class JInsertTableVerb: public JVerb { 
       class MyMonad: public Monad { 
   	shared_ptr<JVerb> verb;
+
       public:
   	MyMonad(shared_ptr<JVerb> verb): 
   	  Monad(rank_infinity), 
@@ -48,13 +47,21 @@ namespace J {
 	};
 
       public:
+	MyDyad(shared_ptr<JVerb> verb): Dyad(verb->get_dyad_lrank(), rank_infinity), verb(verb) {}
+
   	shared_ptr<JNoun> operator()(const JNoun& larg, const JNoun& rarg) const {
-	  return dyadic_apply(verb->get_dyad_lrank(), rank_infinity, larg, rarg, VerbContainer(verb));
+	  return dyadic_apply(get_lrank(), get_rrank(), larg, rarg, VerbContainer(verb));
 	}
       };
+
+    public:
+      JInsertTableVerb(shared_ptr<JVerb> verb): JVerb(shared_ptr<Monad>(new MyMonad(verb)),
+						      shared_ptr<Dyad>(new MyDyad(verb))) {}
+      
     };	
+
   public:
-    JInsertTableAdverb(shared_ptr<JVerb>& verb): verb(verb) {}
+    shared_ptr<JWord> operator()(shared_ptr<JWord> word) const;
   };
 }
 #endif

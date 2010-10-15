@@ -56,8 +56,6 @@ namespace J {
     virtual shared_ptr<JNoun> unit(const Dimensions&) const { 
       throw JNoUnitException();
     }
-
-    virtual boost::optional<j_value_type> res_type(j_value_type larg, j_value_type rarg) const = 0;
   };
 }
 
