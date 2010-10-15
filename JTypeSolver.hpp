@@ -76,28 +76,6 @@ namespace J {
     ConvertJArray<JInt, JFloat>::apply(test);
   }
 
-  
-  template <typename Op>
-  shared_ptr<JNoun> dyadic_apply(int lrank, int rrank, const JNoun& larg, const JNoun& rarg,
-				 Op op) {
-    if (lrank >= larg.get_rank() && rrank >= rarg.get_rank()) {
-      return op(larg, rarg)->clone();
-    }
-    
-    Dimensions frame = find_frame(lrank, rrank, larg.get_dims(), rarg.get_dims());
-    
-    std::auto_ptr<OperationIteratorBase> liter(get_operation_iterator(larg, frame, lrank));
-    std::auto_ptr<OperationIteratorBase> riter(get_operation_iterator(rarg, frame, rrank));
-    
-    JResult res(frame);
-    
-    while (!liter->at_end() && !riter->at_end()) { 
-      res.add_noun(op(*liter, *riter));
-    }
-    assert(liter->at_end() && riter->at_end());
-    
-    return res.assemble_result();
-  }
 }      
     
 									 

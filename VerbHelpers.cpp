@@ -143,7 +143,6 @@ namespace J {
     throw JIllegalValueTypeException();
   }
 
-  
   std::auto_ptr<OperationIteratorBase> get_operation_iterator(const JNoun& arg, const Dimensions& frame, 
 							      int output_rank) { 
     switch (arg.get_value_type()) {

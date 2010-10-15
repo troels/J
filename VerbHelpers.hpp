@@ -9,6 +9,9 @@ namespace J {
   using boost::shared_ptr;
   using boost::optional;
 
+  std::auto_ptr<OperationIteratorBase> get_operation_iterator(const JNoun& arg, const Dimensions& frame, 
+							      int output_rank);
+
   class JResult { 
     typedef vector<shared_ptr<JNoun> > JNounList;
 
@@ -62,25 +65,27 @@ namespace J {
     return shared_ptr<JArray<Res> >(new JArray<Res>(frame, v));
   }
 
-  template <typename OpType, typename LArg, typename RArg, typename Res>
-  shared_ptr<JArray<Res> > dyadic_apply(int lrank, int rrank,
-					const JArray<LArg>& larg, const JArray<RArg>& rarg, 
-					OpType op) {
-    if (lrank >= larg.rank && rrank >= rarg.rank) {
-      return shared_ptr<JArray<Res> >(new JArray<Res>(op(larg, rarg)));
-    }
   
+  template <typename Op>
+  shared_ptr<JNoun> dyadic_apply(int lrank, int rrank, 
+				 const JNoun& larg, const JNoun& rarg,
+				 Op op) {
+    if (lrank >= larg.get_rank() && rrank >= rarg.get_rank()) {
+      return op(larg, rarg)->clone();
+    }
+    
     Dimensions frame = find_frame(lrank, rrank, larg.get_dims(), rarg.get_dims());
     
-    OperationIterator<LArg> liter(larg, frame);
-    OperationIterator<RArg> riter(rarg, frame);
+    std::auto_ptr<OperationIteratorBase> liter(get_operation_iterator(larg, frame, lrank));
+    std::auto_ptr<OperationIteratorBase> riter(get_operation_iterator(rarg, frame, rrank));
     
     JResult res(frame);
     
-    while (!liter.at_end() && !riter.at_end()) {
-      res.add_noun(*liter, *riter);
+    for (;!liter->at_end() && !riter->at_end(); ++(*liter), ++(*riter)) {
+      res.add_noun(op(***liter, ***riter));
     }
-    
+
+    assert(liter->at_end() && riter->at_end());
     return res.assemble_result();
   }
 
@@ -190,8 +195,6 @@ namespace J {
     }
   };
 
-  std::auto_ptr<OperationIteratorBase> get_operation_iterator(const JNoun& arg, const Dimensions& frame, 
-							      int output_rank);
 }
 
 #endif
