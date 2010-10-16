@@ -7,8 +7,8 @@
    (ede-proj-target-makefile-program "test"
     :name "test"
     :path ""
-    :source '("test.cpp" "Dimensions.cpp" "JNoun.cpp" "utils.cpp" "JVerbs.cpp" "JArithmeticVerbs.cpp" "VerbHelpers.cpp" "JBasicAdverbs.cpp" "JTypeSolver.cpp" "JGrammar.cpp")
-    :auxsource '("JGrammar.hpp" "J.hpp" "Dimensions.hpp" "JNoun.hpp" "utils.hpp" "JVerbs.hpp" "JExceptions.hpp" "JArithmeticVerbs.hpp" "VerbHelpers.hpp" "JAdverbs.hpp" "JBasicAdverbs.hpp" "JTypeSolver.hpp" "JConjunctions.hpp" "JBasicConjunctions.hpp")
+    :source '("test.cpp" "Dimensions.cpp" "JNoun.cpp" "utils.cpp" "JVerbs.cpp" "JArithmeticVerbs.cpp" "VerbHelpers.cpp" "JBasicAdverbs.cpp" "JTypeSolver.cpp" "JGrammar.cpp" "JBasicConjunctions.cpp" "JMachine.cpp")
+    :auxsource '("JGrammar.hpp" "J.hpp" "Dimensions.hpp" "JNoun.hpp" "utils.hpp" "JVerbs.hpp" "JExceptions.hpp" "JArithmeticVerbs.hpp" "VerbHelpers.hpp" "JAdverbs.hpp" "JBasicAdverbs.hpp" "JTypeSolver.hpp" "JConjunctions.hpp" "JBasicConjunctions.hpp" "JMachine.hpp")
     :configuration-variables 'nil
     :ldlibs '("boost_unit_test_framework")
     )

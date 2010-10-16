@@ -36,9 +36,9 @@ namespace J {
   }
 
   JInsertTableAdverb::JInsertTableVerb::JInsertTableVerb(shared_ptr<JVerb> verb): 
-    JVerb(shared_ptr<Monad>(new MyMonad(verb)), shared_ptr<Dyad>(new MyDyad(verb))) {}
-   
-
+    JVerb(get_machine(), 
+	  shared_ptr<Monad>(new MyMonad(verb)), 
+	  shared_ptr<Dyad>(new MyDyad(verb))) {}
 }
 
 

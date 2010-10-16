@@ -1,6 +1,7 @@
 #ifndef JBASICADVERBS_HPP
 #define JBASICADVERBS_HPP
 
+#include "JMachine.hpp"
 #include "JExceptions.hpp"
 #include "JVerbs.hpp"
 #include "JAdverbs.hpp"
@@ -32,6 +33,8 @@ namespace J {
 
   public:
     shared_ptr<JWord> operator()(shared_ptr<JWord> word) const;
+    JInsertTableAdverb(weak_ptr<JMachine> jmachine): 
+      JAdverb(jmachine) {}
   };
 }
 #endif

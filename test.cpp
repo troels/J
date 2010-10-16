@@ -252,10 +252,11 @@ BOOST_AUTO_TEST_CASE ( test_find_frame ) {
 }
 
 BOOST_AUTO_TEST_CASE ( test_plus_op ) {
+  shared_ptr<JMachine> m(JMachine::new_machine());
   JArray<JInt> arr(Dimensions(2,2,2), 1,2,3 ,4);
   JArray<JInt> arr2(Dimensions(3,2,2,2), 1, 2,3,4,5,6,7,8);
   
-  PlusVerb verb;
+  PlusVerb verb(m);
   BOOST_CHECK_EQUAL(JArray<JInt>(Dimensions(3,2,2,2), 2,3,5,6,8,9, 11, 12),
 		    *verb(arr, arr2));
 
@@ -272,13 +273,14 @@ BOOST_AUTO_TEST_CASE ( test_plus_op ) {
 }
 
 BOOST_AUTO_TEST_CASE ( test_minus_op ) {
+  shared_ptr<JMachine> m(JMachine::new_machine());
   JArray<JInt> arr(Dimensions(2,2,2), 1,2 ,3,4);
   JArray<JInt> arr2(Dimensions(2,2,2), 4,3,2,1);
   JArray<JInt> arr3(Dimensions(0), 1);
   
   JArray<JFloat> arr4(Dimensions(3,4, 2, 2), 1,2,3,4,5,6,7,8,9,10,
 		      11,12,13,14,15,16);
-  MinusVerb verb;
+  MinusVerb verb(m);
   BOOST_CHECK_EQUAL(*verb(arr2, arr),
 		    JArray<JInt>(Dimensions(2,2,2), 3, 1, -1, -3));
   BOOST_CHECK_EQUAL(*verb(arr3, arr),
@@ -300,7 +302,8 @@ BOOST_AUTO_TEST_CASE ( test_minus_op ) {
 
 BOOST_AUTO_TEST_CASE ( test_i_dot_verb ) {
   JArray<JInt> arr(Dimensions(2,2,3), 1,2,3,4,-5,6);
-  IDotVerb v;
+  shared_ptr<JMachine> m(JMachine::new_machine());
+  IDotVerb v(m);
   BOOST_CHECK_EQUAL(JArray<JInt>(Dimensions(4, 2, 4, 5, 6),
 				 0,   1,   2,   0,   0,   0, 
 				 3,   4,   5,   0,   0,   0, 
@@ -367,7 +370,9 @@ BOOST_AUTO_TEST_CASE ( test_i_dot_verb ) {
 BOOST_AUTO_TEST_CASE ( test_i_dot_monad_verb ) {
   JArray<JInt> arr(Dimensions(2, 2, 4), 0,1,2,3,4,5,6,7);
   JArray<JInt> arr2(Dimensions(2, 4, 4), 0, 1,2,3, 3,3,3,3,0,1,2,3,4,5,6,7);
-  IDotVerb v;
+  shared_ptr<JMachine> m(JMachine::new_machine());
+
+  IDotVerb v(m);
   
   BOOST_CHECK_EQUAL(JArray<JInt>(Dimensions(1, 4), 0, 2, 0, 1),
 		    *v(arr, arr2));
@@ -381,8 +386,9 @@ BOOST_AUTO_TEST_CASE ( test_i_dot_monad_verb ) {
 }
 
 BOOST_AUTO_TEST_CASE ( test_adverb ) { 
-  shared_ptr<PlusVerb> plus(new PlusVerb());;
-  JInsertTableAdverb adverb;
+  shared_ptr<JMachine> m(JMachine::new_machine());
+  shared_ptr<PlusVerb> plus(new PlusVerb(m));;
+  JInsertTableAdverb adverb(m);
   JVerb verb(static_cast<JVerb&>(*adverb(plus)));
   BOOST_CHECK_EQUAL(*verb(JArray<JInt>(Dimensions(1,10), 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)),
 		    JArray<JInt>(Dimensions(0), 55));
@@ -399,4 +405,17 @@ BOOST_AUTO_TEST_CASE ( test_adverb ) {
   BOOST_CHECK_EQUAL(*verb(answer), JArray<JInt>(Dimensions(1, 5), -10, -5, 0, 5, 10));
 }
   
+BOOST_AUTO_TEST_CASE ( test_rank_conjunction ) {
+  shared_ptr<JMachine> m(JMachine::new_machine());
+  shared_ptr<PlusVerb> plus(new PlusVerb(m));
+  shared_ptr<JVerb> sum(boost::static_pointer_cast<JVerb>(JInsertTableAdverb(m)(plus)));
+  shared_ptr<JNoun> rank_array(new JArray<JInt>(Dimensions(1,3), 1, 0, 0));
+  shared_ptr<JVerb> sum_rank(boost::static_pointer_cast<JVerb>(RankConjunction(m)(sum, rank_array)));
+  
+  JArray<JInt> test_subject(Dimensions(2, 2, 5), 1,2,3,4,5,6,7,8,9,10);
+
+  BOOST_CHECK_EQUAL(*(*sum_rank)(test_subject), JArray<JInt>(Dimensions(1,2), 15, 40));
+  BOOST_CHECK_EQUAL(*(*sum)(test_subject), JArray<JInt>(Dimensions(1,5), 7,9,11,13,15));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

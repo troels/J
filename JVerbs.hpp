@@ -3,12 +3,16 @@
 
 #include "JExceptions.hpp"
 #include "JNoun.hpp"
+#include "JMachine.hpp"
 #include "utils.hpp"
 #include <cassert>
 #include <algorithm>
+#include <boost/weak_ptr.hpp>
 #include <boost/optional.hpp>
 
 namespace J {
+  using boost::weak_ptr;
+
   class Dyad {
     int lrank,  rrank;
   public:
@@ -33,13 +37,15 @@ namespace J {
   };
 
   class JVerb: public JWord {
+    weak_ptr<JMachine> jmachine;
+
     shared_ptr<Monad> monad;
     shared_ptr<Dyad> dyad;
-    
+
   public:
     virtual ~JVerb() {}
-    JVerb(shared_ptr<Monad> monad, shared_ptr<Dyad> dyad):
-      JWord(grammar_class_verb), monad(monad), dyad(dyad) {}
+    JVerb(weak_ptr<JMachine> jmachine, shared_ptr<Monad> monad, shared_ptr<Dyad> dyad):
+      JWord(grammar_class_verb), jmachine(jmachine), monad(monad), dyad(dyad) {}
     
     shared_ptr<JNoun> operator()(const JNoun& larg, const JNoun& rarg) const {
       return (*dyad)(larg, rarg);
@@ -53,6 +59,10 @@ namespace J {
     int get_dyad_rrank() const { return dyad->get_rrank(); }
     int get_monad_rank() const { return monad->get_rank(); }
     
+    shared_ptr<JMachine> get_machine() const { 
+      return jmachine.lock();
+    }
+      
     virtual shared_ptr<JNoun> unit(const Dimensions&) const { 
       throw JNoUnitException();
     }
