@@ -15,7 +15,7 @@ namespace J {
 
       public:
   	MyMonad(shared_ptr<JVerb> verb);
-  	shared_ptr<JNoun> operator()(const JNoun& arg) const;
+  	shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& arg) const;
       };
 
       class MyDyad: public Dyad {
@@ -23,7 +23,7 @@ namespace J {
 	
       public:
 	MyDyad(shared_ptr<JVerb> verb);
-  	shared_ptr<JNoun> operator()(const JNoun& larg, const JNoun& rarg) const;
+  	shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& larg, const JNoun& rarg) const;
       };
 
     public:
@@ -32,9 +32,7 @@ namespace J {
     };	
 
   public:
-    shared_ptr<JWord> operator()(shared_ptr<JWord> word) const;
-    JInsertTableAdverb(weak_ptr<JMachine> jmachine): 
-      JAdverb(jmachine) {}
+    shared_ptr<JWord> operator()(shared_ptr<JMachine> m, shared_ptr<JWord> word) const;
   };
 }
 #endif

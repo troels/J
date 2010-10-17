@@ -1,7 +1,7 @@
 #include "JBasicAdverbs.hpp"
 
 namespace J {
-  shared_ptr<JWord> JInsertTableAdverb::operator()(shared_ptr<JWord> word) const { 
+  shared_ptr<JWord> JInsertTableAdverb::operator()(shared_ptr<JMachine>, shared_ptr<JWord> word) const { 
     if (word->get_grammar_class() != grammar_class_verb)
       throw JIllegalGrammarClassException();
     
@@ -12,7 +12,8 @@ namespace J {
     Monad(rank_infinity), verb(verb) {}
 
   
-  shared_ptr<JNoun> JInsertTableAdverb::JInsertTableVerb::MyMonad::operator()(const JNoun& arg) const { 
+  shared_ptr<JNoun> JInsertTableAdverb::JInsertTableVerb::MyMonad::operator()(shared_ptr<JMachine> m, 
+									      const JNoun& arg) const { 
     if (arg.is_scalar() || arg.get_dims()[0] == 1) return arg.clone();
     
     int first_dim = arg.get_dims()[0];
@@ -22,7 +23,7 @@ namespace J {
     
     shared_ptr<JNoun> res = arg.coordinate(1, first_dim - 1);
     for (int i = first_dim - 2; i >= 0; --i) {
-      res = (*verb)(*arg.coordinate(1, i), *res);
+      res = (*verb)(m, *arg.coordinate(1, i), *res);
     }
     return res;
   }
@@ -30,14 +31,14 @@ namespace J {
   JInsertTableAdverb::JInsertTableVerb::MyDyad::MyDyad(shared_ptr<JVerb> verb): 
     Dyad(verb->get_dyad_lrank(), rank_infinity), verb(verb) {}
   
-  shared_ptr<JNoun> JInsertTableAdverb::JInsertTableVerb::MyDyad::operator()(const JNoun& larg, 
+  shared_ptr<JNoun> JInsertTableAdverb::JInsertTableVerb::MyDyad::operator()(shared_ptr<JMachine> m,
+									     const JNoun& larg, 
 									     const JNoun& rarg) const {
-    return dyadic_apply(get_lrank(), get_rrank(), larg, rarg, VerbContainer(verb));
+    return dyadic_apply(get_lrank(), get_rrank(), larg, rarg, VerbContainer(m, verb));
   }
 
   JInsertTableAdverb::JInsertTableVerb::JInsertTableVerb(shared_ptr<JVerb> verb): 
-    JVerb(get_machine(), 
-	  shared_ptr<Monad>(new MyMonad(verb)), 
+    JVerb(shared_ptr<Monad>(new MyMonad(verb)), 
 	  shared_ptr<Dyad>(new MyDyad(verb))) {}
 }
 

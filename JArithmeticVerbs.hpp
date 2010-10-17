@@ -20,7 +20,7 @@ namespace J {
     T unit_value;
     
   public:
-    JArithmeticVerb(weak_ptr<JMachine> jmachine, shared_ptr<Monad> monad, shared_ptr<Dyad> dyad, T unit_value);
+    JArithmeticVerb(shared_ptr<Monad> monad, shared_ptr<Dyad> dyad, T unit_value);
     shared_ptr<JNoun> unit(const Dimensions& dims) const;
   };
 
@@ -44,9 +44,8 @@ namespace J {
     struct PlusDyad: public ScalarDyad<DyadOp> {};
       
   public:
-    PlusVerb(weak_ptr<JMachine> jmachine): 
-      JArithmeticVerb(jmachine, 
-		      shared_ptr<Monad>(new PlusMonad()), 
+    PlusVerb(): 
+      JArithmeticVerb(shared_ptr<Monad>(new PlusMonad()), 
 		      shared_ptr<Dyad>(new PlusDyad()),
 		      0) {}
   };
@@ -71,8 +70,8 @@ namespace J {
     struct MinusDyad: public ScalarDyad<DyadOp> {};
 
   public:
-    MinusVerb(weak_ptr<JMachine> m): JArithmeticVerb(m, shared_ptr<Monad>(new MinusMonad()), 
-						     shared_ptr<Dyad>(new MinusDyad()), 0) {}
+    MinusVerb(): JArithmeticVerb(shared_ptr<Monad>(new MinusMonad()), 
+				 shared_ptr<Dyad>(new MinusDyad()), 0) {}
   };    
 
   class IDotVerb: public JVerb { 
@@ -83,7 +82,7 @@ namespace J {
 
     struct IDotMonad: Monad { 
       IDotMonad(): Monad(1) {}
-      shared_ptr<JNoun> operator()(const JNoun& arg) const;
+      shared_ptr<JNoun> operator()(shared_ptr<JMachine>, const JNoun& arg) const;
     };
     
     template <typename LArg, typename RArg, typename Res>
@@ -101,15 +100,11 @@ namespace J {
 
     struct IDotDyad: Dyad {
       IDotDyad(): Dyad(rank_infinity, rank_infinity) {}
-      shared_ptr<JNoun> operator()(const JNoun& larg, const JNoun& rarg) const;
+      shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& larg, const JNoun& rarg) const;
     };
-    
-    optional<j_value_type> res_type(j_value_type, j_value_type) const { 
-      return optional<j_value_type>(j_value_type_int);
-    }
 
   public:
-    IDotVerb(shared_ptr<JMachine> jmachine): JVerb(jmachine, shared_ptr<Monad>(new IDotMonad()), 
+    IDotVerb(): JVerb(shared_ptr<Monad>(new IDotMonad()), 
 		      shared_ptr<Dyad>(new IDotDyad())) {}
   };
       

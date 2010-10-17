@@ -2,6 +2,7 @@
 #define JGRAMMAR_HPP
 
 #include <climits>
+#include <complex>
 
 namespace J {
   const int rank_infinity = INT_MAX;
@@ -15,11 +16,14 @@ namespace J {
 
   enum j_value_type {
     j_value_type_int, j_value_type_float,
-    j_value_type_char, j_value_type_box
+    j_value_type_complex,
+    j_value_type_char, 
+    j_value_type_box
   };
   
   typedef int JInt;
   typedef double JFloat;
+  typedef std::complex<JFloat> JComplex;
   typedef char JChar;
   
   template <typename T> 
@@ -35,6 +39,12 @@ namespace J {
   struct JTypeTrait<JFloat> {
     static JFloat base_elem() { return 0.0; }
     static const j_value_type value_type = j_value_type_float;
+  };
+
+  template <>
+  struct JTypeTrait<JComplex> {
+    static JFloat base_elem() { return 0.0; }
+    static const j_value_type value_type = j_value_type_complex;
   };
 
   class JWord { 

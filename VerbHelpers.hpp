@@ -119,17 +119,17 @@ namespace J {
   template <template <typename, typename, typename> class Op>
   struct ScalarDyad: public Dyad {
     ScalarDyad(): Dyad(0, 0) {}
-    inline shared_ptr<JNoun> operator()(const JNoun& larg, const JNoun& rarg) const;
+    inline shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& larg, const JNoun& rarg) const;
   };
 
   template <template <typename, typename> class Op>
   struct ScalarMonad: public Monad { 
     ScalarMonad(): Monad(0) {}
-    inline shared_ptr<JNoun> operator()(const JNoun& arg) const;
+    inline shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& arg) const;
   };
 
   template <template <typename, typename> class Op>
-  inline shared_ptr<JNoun> ScalarMonad<Op>::operator()(const JNoun& arg) const {
+  inline shared_ptr<JNoun> ScalarMonad<Op>::operator()(shared_ptr<JMachine>, const JNoun& arg) const {
     if (arg.get_value_type() == j_value_type_int) {
       return scalar_monadic_apply<Op, JInt, JInt>(static_cast<const JArray<JInt> &>(arg),
 						  Op<JInt, JInt>());
@@ -141,7 +141,8 @@ namespace J {
   }
       
   template <template <typename, typename, typename> class Op>  
-  inline shared_ptr<JNoun> ScalarDyad<Op>::operator()(const JNoun& larg, const JNoun& rarg) const {
+  inline shared_ptr<JNoun> ScalarDyad<Op>::operator()(shared_ptr<JMachine>, const JNoun& larg, 
+						      const JNoun& rarg) const {
     if (larg.get_value_type() == j_value_type_int && 
 	rarg.get_value_type() == j_value_type_int) {
       return scalar_dyadic_apply<Op, JInt, JInt, JInt>(static_cast<const JArray<JInt>& >(larg),  
@@ -196,17 +197,17 @@ namespace J {
 
   class VerbContainer { 
     shared_ptr<JVerb> verb;
-
+    shared_ptr<JMachine> jmachine; 
   public:
     shared_ptr<JNoun> operator()(const JNoun& larg, const JNoun& rarg) const {
-      return (*verb)(larg, rarg);
+      return (*verb)(jmachine, larg, rarg);
     }
     
     shared_ptr<JNoun> operator()(const JNoun& arg) const { 
-      return (*verb)(arg);
+      return (*verb)(jmachine, arg);
     }
 
-    VerbContainer(shared_ptr<JVerb> verb): verb(verb) {}
+    VerbContainer(shared_ptr<JMachine> jmachine, shared_ptr<JVerb> verb): verb(verb), jmachine(jmachine) {}
   };
 
 }

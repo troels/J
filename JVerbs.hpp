@@ -7,12 +7,9 @@
 #include "utils.hpp"
 #include <cassert>
 #include <algorithm>
-#include <boost/weak_ptr.hpp>
 #include <boost/optional.hpp>
 
 namespace J {
-  using boost::weak_ptr;
-
   class Dyad {
     int lrank,  rrank;
   public:
@@ -22,7 +19,7 @@ namespace J {
     int get_lrank() const { return lrank; }
     int get_rrank() const { return rrank; }
 
-    virtual shared_ptr<JNoun> operator()(const JNoun& larg, const JNoun& rarg) const = 0;
+    virtual shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& larg, const JNoun& rarg) const = 0;
   };
 
   class Monad { 
@@ -33,35 +30,29 @@ namespace J {
     
     int get_rank() const { return rank;}
     
-    virtual shared_ptr<JNoun> operator()(const JNoun& arg) const = 0;
+    virtual shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& arg) const = 0;
   };
 
   class JVerb: public JWord {
-    weak_ptr<JMachine> jmachine;
-
     shared_ptr<Monad> monad;
     shared_ptr<Dyad> dyad;
 
   public:
     virtual ~JVerb() {}
-    JVerb(weak_ptr<JMachine> jmachine, shared_ptr<Monad> monad, shared_ptr<Dyad> dyad):
-      JWord(grammar_class_verb), jmachine(jmachine), monad(monad), dyad(dyad) {}
+    JVerb(shared_ptr<Monad> monad, shared_ptr<Dyad> dyad):
+      JWord(grammar_class_verb), monad(monad), dyad(dyad) {}
     
-    shared_ptr<JNoun> operator()(const JNoun& larg, const JNoun& rarg) const {
-      return (*dyad)(larg, rarg);
+    shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& larg, const JNoun& rarg) const {
+      return (*dyad)(m, larg, rarg);
     }
     
-    shared_ptr<JNoun> operator()(const JNoun& arg) const { 
-      return (*monad)(arg);
+    shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& arg) const { 
+      return (*monad)(m, arg);
     }
 
     int get_dyad_lrank() const { return dyad->get_lrank(); }
     int get_dyad_rrank() const { return dyad->get_rrank(); }
     int get_monad_rank() const { return monad->get_rank(); }
-    
-    shared_ptr<JMachine> get_machine() const { 
-      return jmachine.lock();
-    }
       
     virtual shared_ptr<JNoun> unit(const Dimensions&) const { 
       throw JNoUnitException();

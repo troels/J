@@ -40,6 +40,7 @@ namespace J {
       return assemble_result_internal<JFloat>();
     case j_value_type_char:
     case j_value_type_box:
+    case j_value_type_complex:
       assert(0);
     }
     assert(0);

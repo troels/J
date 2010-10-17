@@ -2,9 +2,8 @@
 
 namespace J {
   template <typename T>
-  JArithmeticVerb<T>::JArithmeticVerb(weak_ptr<JMachine> jmachine, shared_ptr<Monad> monad, 
-				      shared_ptr<Dyad> dyad, T unit_value): 
-    JVerb(jmachine, monad, dyad), unit_value(unit_value) {}
+  JArithmeticVerb<T>::JArithmeticVerb(shared_ptr<Monad> monad, shared_ptr<Dyad> dyad, T unit_value): 
+    JVerb(monad, dyad), unit_value(unit_value) {}
   
   template <typename T>
   shared_ptr<JNoun> JArithmeticVerb<T>::unit(const Dimensions& dims) const {
@@ -13,7 +12,7 @@ namespace J {
 
   template class JArithmeticVerb<JInt>;
   
-  shared_ptr<JNoun> IDotVerb::IDotMonad::operator()(const JNoun& arg) const { 
+  shared_ptr<JNoun> IDotVerb::IDotMonad::operator()(shared_ptr<JMachine>, const JNoun& arg) const { 
     JArray<JInt> int_arg = require_ints(arg);
 
     return monadic_apply< MonadOp<JInt, JInt> >(get_rank(), int_arg, MonadOp<JInt, JInt>());
@@ -40,7 +39,7 @@ namespace J {
     return shared_ptr<JArray<JInt> >(new JArray<JInt>(Dimensions(dims_vec), res));
   }
 
-  shared_ptr<JNoun> IDotVerb::IDotDyad::operator()(const JNoun& larg, const JNoun& rarg) const {
+  shared_ptr<JNoun> IDotVerb::IDotDyad::operator()(shared_ptr<JMachine>, const JNoun& larg, const JNoun& rarg) const {
     if (larg.get_value_type() == j_value_type_int &&
 	rarg.get_value_type() == j_value_type_int) {
       return DyadOp<JInt, JInt, JInt>()(static_cast<const JArray<JInt> &>(larg),
@@ -63,7 +62,6 @@ namespace J {
 									 const JArray<Arg>& rarg) const {
     Dimensions haystack_dims(larg.get_dims().suffix(-1));
     Dimensions frame(rarg.get_dims().prefix(-haystack_dims.get_rank()));
-    
     
     if (!rarg.get_dims().suffix_match(haystack_dims)) {
       shared_ptr<vector<JInt> > v(new vector<JInt>(frame.number_of_elems(), larg.get_dims()[0]));
