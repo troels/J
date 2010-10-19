@@ -14,4 +14,6 @@
 #include "JConjunctions.hpp"
 #include "JBasicConjunctions.hpp"
 
+#include "JParser.hpp"
+
 #endif

@@ -6,6 +6,7 @@
 #include <boost/test/unit_test.hpp>
 
 using namespace ::J;
+using namespace ::J::JParser;
 
 BOOST_AUTO_TEST_SUITE ( dimensions_tests )
 
@@ -416,6 +417,23 @@ BOOST_AUTO_TEST_CASE ( test_rank_conjunction ) {
 
   BOOST_CHECK_EQUAL(*(*sum_rank)(m, test_subject), JArray<JInt>(Dimensions(1,2), 15, 40));
   BOOST_CHECK_EQUAL(*(*sum)(m, test_subject), JArray<JInt>(Dimensions(1,5), 7,9,11,13,15));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE ( jparser_tests )
+
+BOOST_AUTO_TEST_CASE ( test_suite ) {
+  string test_string("123567");
+  vector<shared_ptr<ParserNumberBase> > v;
+  parse_number<string::const_iterator> pn(v);
+  string::const_iterator iter = test_string.begin();
+  string::const_iterator end = test_string.end();
+  shared_ptr<ParserNumberBase> res;
+
+  bool r = qi::parse(iter, end, pn, res);
+  std::cout << (*v.begin())->get_value_type() << std::endl;
+  std::cout << r << " " << res << std::endl;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
