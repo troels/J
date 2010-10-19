@@ -15,8 +15,7 @@
    (ede-proj-target-makefile-program "testparser"
     :name "testparser"
     :path ""
-    :source '("test.l")
-    :configuration-variables 'nil
+    :source '("test.ll")
     )
    )
   :variables '(("CPPFLAGS" . "-Wall -Wextra -pedantic -O2"))
