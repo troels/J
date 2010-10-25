@@ -421,3 +421,17 @@ BOOST_AUTO_TEST_CASE ( test_rank_conjunction ) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE ( test_parser )
+
+BOOST_AUTO_TEST_CASE ( test_our_parser ) {
+  NumberPtr ptr;
+  string s("_123");
+  string::iterator iter = s.begin();
+  parse_number<string::iterator> n;
+  white_space<string::iterator> ws;
+  boost::spirit::qi::phrase_parse(iter, s.end(), n, ws, ptr);
+  std::cout << (iter == s.end()) << *ptr << std::endl;
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+

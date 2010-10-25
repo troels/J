@@ -5,24 +5,31 @@
 #include <boost/shared_ptr.hpp>
 #include <vector>
 #include <boost/fusion/include/vector.hpp>
-#include <boost/spirit/include/phoenix_core.hpp>
-#include <boost/spirit/include/phoenix_function.hpp>
+#include <boost/spirit/include/phoenix.hpp>
 #include "JGrammar.hpp"
+#include <string>
+#include <sstream>
+#include <iostream>
 
 namespace J { namespace JParser {
 
 using std::vector;
+using std::string;
 using boost::shared_ptr;
 namespace qi = boost::spirit::qi;
 namespace phoenix = boost::phoenix;  
+namespace ascii = boost::spirit::ascii;
 
 class ParserNumberBase { 
   j_value_type value_type;
 public:
   ParserNumberBase(j_value_type value_type): value_type(value_type) {}
   virtual ~ParserNumberBase() {}
-
+  virtual string to_string() const = 0;
+  virtual shared_ptr<ParserNumberBase> negate() const = 0;
+  
   j_value_type get_value_type() const { return value_type; }
+  friend std::ostream& operator<<(std::ostream& os, const ParserNumberBase& p);
 };
 
 template <typename Number> 
@@ -30,7 +37,16 @@ class ParserNumber: public ParserNumberBase {
   Number nr;
 public:
   ParserNumber(Number nr): ParserNumberBase(JTypeTrait<Number>::value_type), nr(nr) {}
-  
+  shared_ptr<ParserNumberBase> negate() const { 
+    return shared_ptr<ParserNumberBase>(new ParserNumber<Number>(-nr));
+  }
+
+  string to_string() const { 
+    std::ostringstream str;
+    str << get_nr();
+    return str.str();
+  }
+
   Number get_nr() const { return nr; }
 };
 
@@ -62,53 +78,88 @@ NumberType string_to_number(Iterator begin, Iterator end, NumberType base = 10) 
   return res;
 }
 
-struct parse_int_impl { 
+template <typename T>
+struct parse_num_impl { 
   template <typename Arg>
-  struct Result { 
-    typedef ParserNumber<JInt> result;
+  struct result { 
+    typedef shared_ptr<ParserNumberBase> type;
   };
-
   
   template <typename Arg>
-  ParserNumber<JInt> operator()(Arg v) {
-    return ParserNumber<JInt> (string_to_number<JInt, vector<char>::const_iterator>(v.begin(), v.end())); 
+  shared_ptr<ParserNumberBase> operator()(const Arg& v) const {
+    return shared_ptr<ParserNumberBase>
+      (new ParserNumber<T>
+       (string_to_number<T, typename Arg::const_iterator>(v.begin(), v.end()))); 
   }
 };
 
-struct add_int { 
-  template <typename>
+template <typename T>
+struct parse_float { 
+  template <typename Arg, typename Base>
   struct result { 
-    typedef void type;
+    typedef shared_ptr<ParserNumberBase> type;
   };
   
-  add_int(vector<shared_ptr<ParserNumberBase> >& v): 
-    output(v) {}
-
-  void operator()(const vector<char>& a) const { 
-    output.push_back(shared_ptr<ParserNumberBase>());
-  };
-
-private:
-  vector<shared_ptr<ParserNumberBase> >& output;
+  template <typename Arg, typename Base>
+  shared_ptr<ParserNumberBase> operator()(const Arg& v, Base s) const {
+    return shared_ptr<ParserNumberBase>
+      (new ParserNumber<T>
+       (string_to_number<T, typename Arg::const_iterator>(v.begin(), v.end(), s))); 
+  }
 };
 
+struct ParserNumberBaseFunc {
+  template <typename Arg>
+  struct result { 
+    typedef shared_ptr<ParserNumberBase> type;
+  };
+};
+			     
+template <typename T>
+struct negate: public ParserNumberBaseFunc {
+  template <typename Arg>
+  shared_ptr<ParserNumberBase> operator()(const Arg& arg) const {
+    return arg->negate();
+  }
+};
+    
 template <typename Iterator>
-struct parse_number : qi::grammar<Iterator, shared_ptr<ParserNumberBase> > 
+struct white_space : qi::grammar<Iterator>
 {
-  parse_number(vector<shared_ptr<ParserNumberBase> >& v): 
-    parse_number::base_type(int_number), int_adder(v)
+  white_space() : white_space::base_type(start) {
+    start = qi::space;
+  }
+  
+  qi::rule<Iterator> start;
+};
+
+typedef shared_ptr<ParserNumberBase> NumberPtr;
+
+using qi::lit;
+using qi::digit;
+using qi::_1;
+using qi::_val;
+
+template <typename Iterator>
+struct parse_number : qi::grammar<Iterator, NumberPtr() > 
+{
+
+  parse_number(): parse_number::base_type(integer_type) 
   {
-    int_number =
-      ('_' >> (+qi::digit) [int_adder(qi::_1)])
-      | (+qi::digit) [int_adder(qi::_1)];
+    integer_type = 
+      (lit('_') >> (+digit) [ _val = negate_int(parse_int(_1)) ])
+      | (+digit) [ _val = parse_int(_1) ];
+    
+    float_type = (lit('_') >> (+digit) [ _val = parse_float(_1, 10.0) ]
+		  
   }   
 
-  qi::rule<Iterator, shared_ptr<ParserNumberBase> > number;
-  qi::rule<Iterator, shared_ptr<ParserNumber<JFloat> > > float_number;
-  qi::rule<Iterator, shared_ptr<ParserNumber<JComplex> > > complex_number;
-  qi::rule<Iterator, shared_ptr<ParserNumberBase> > int_number;
+  qi::rule< Iterator, NumberPtr() > integer_type;
+  qi::rule< Iterator, NumberPtr() > float_type;
 
-  phoenix::function<add_int> int_adder;
+  phoenix::function<parse_num_impl<JInt> > parse_int;
+  phoenix::function<negate<JInt> > negate_int;
+  phoenix::function<parse_float_impl<JFloat> > parse_float;
 };
 }}
 
