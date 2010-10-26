@@ -10,6 +10,39 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <cmath>
+
+
+namespace J { namespace JParser { 
+
+class ParserNumberBase;
+template <typename T> class ParserNumber;
+}}
+
+namespace boost { namespace spirit { namespace traits { 
+using boost::shared_ptr;
+using J::JParser::ParserNumberBase;
+using J::JParser::ParserNumber;
+
+typedef shared_ptr<ParserNumberBase> NumberPtr;
+
+template <typename T> 
+struct transform_attribute<T&, NumberPtr > {
+  typedef NumberPtr type;
+  static NumberPtr pre(T& v) { return NumberPtr(new ParserNumber<T>(v)); }
+  static void post(T&, const NumberPtr&) {}
+  static void fail(NumberPtr&) {}
+};
+
+template <> 
+struct transform_attribute<NumberPtr&, NumberPtr > {
+  typedef NumberPtr type;
+  static NumberPtr pre(NumberPtr& v) { return v; }
+  static void post(NumberPtr&, const NumberPtr&) {}
+  static void fail(NumberPtr&) {}
+};
+
+}}}
 
 namespace J { namespace JParser {
 
@@ -26,7 +59,6 @@ public:
   ParserNumberBase(j_value_type value_type): value_type(value_type) {}
   virtual ~ParserNumberBase() {}
   virtual string to_string() const = 0;
-  virtual shared_ptr<ParserNumberBase> negate() const = 0;
   
   j_value_type get_value_type() const { return value_type; }
   friend std::ostream& operator<<(std::ostream& os, const ParserNumberBase& p);
@@ -37,9 +69,6 @@ class ParserNumber: public ParserNumberBase {
   Number nr;
 public:
   ParserNumber(Number nr): ParserNumberBase(JTypeTrait<Number>::value_type), nr(nr) {}
-  shared_ptr<ParserNumberBase> negate() const { 
-    return shared_ptr<ParserNumberBase>(new ParserNumber<Number>(-nr));
-  }
 
   string to_string() const { 
     std::ostringstream str;
@@ -78,51 +107,31 @@ NumberType string_to_number(Iterator begin, Iterator end, NumberType base = 10) 
   return res;
 }
 
-template <typename T>
+template <typename NumberType> 
 struct parse_num_impl { 
-  template <typename Arg>
+  template <typename Arg, typename Base>
   struct result { 
-    typedef shared_ptr<ParserNumberBase> type;
+    typedef NumberType type;
   };
-  
-  template <typename Arg>
-  shared_ptr<ParserNumberBase> operator()(const Arg& v) const {
-    return shared_ptr<ParserNumberBase>
-      (new ParserNumber<T>
-       (string_to_number<T, typename Arg::const_iterator>(v.begin(), v.end()))); 
+
+  template <typename Arg, typename Base>
+  NumberType operator()(const Arg& v, Base b = 10) const { 
+    return string_to_number<NumberType, typename Arg::const_iterator>(v.begin(), v.end(), b);
   }
 };
 
-template <typename T>
-struct parse_float { 
-  template <typename Arg, typename Base>
+struct pack_number_impl { 
+  template <typename Arg>
   struct result { 
     typedef shared_ptr<ParserNumberBase> type;
   };
-  
-  template <typename Arg, typename Base>
-  shared_ptr<ParserNumberBase> operator()(const Arg& v, Base s) const {
-    return shared_ptr<ParserNumberBase>
-      (new ParserNumber<T>
-       (string_to_number<T, typename Arg::const_iterator>(v.begin(), v.end(), s))); 
+
+  template <typename Arg>
+  shared_ptr<ParserNumberBase> operator()(const Arg& arg) const { 
+    return shared_ptr<ParserNumberBase>(new ParserNumber<Arg>(arg));
   }
 };
 
-struct ParserNumberBaseFunc {
-  template <typename Arg>
-  struct result { 
-    typedef shared_ptr<ParserNumberBase> type;
-  };
-};
-			     
-template <typename T>
-struct negate: public ParserNumberBaseFunc {
-  template <typename Arg>
-  shared_ptr<ParserNumberBase> operator()(const Arg& arg) const {
-    return arg->negate();
-  }
-};
-    
 template <typename Iterator>
 struct white_space : qi::grammar<Iterator>
 {
@@ -139,6 +148,10 @@ using qi::lit;
 using qi::digit;
 using qi::_1;
 using qi::_val;
+using phoenix::val;
+using qi::_a;
+using qi::_b;
+using qi::_c;
 
 template <typename Iterator>
 struct parse_number : qi::grammar<Iterator, NumberPtr() > 
@@ -147,19 +160,29 @@ struct parse_number : qi::grammar<Iterator, NumberPtr() >
   parse_number(): parse_number::base_type(integer_type) 
   {
     integer_type = 
-      (lit('_') >> (+digit) [ _val = negate_int(parse_int(_1)) ])
-      | (+digit) [ _val = parse_int(_1) ];
+      (lit('_') >> (+digit) [ _val = pack_number(val(-1) * parse_int(_1, 10)) ])
+      | (+digit) [ _val = pack_number(parse_int(_1, 10)) ];
     
-    float_type = (lit('_') >> (+digit) [ _val = parse_float(_1, 10.0) ]
-		  
-  }   
+    float_type = 
+      ((lit('_') [ _a = val(-1.0) ] >> 
+	(*digit) [ _b = parse_float(_1, 10.0) ]) |
+       
+       (*digit) [ _a = val(1.0) ] 
+       [ _b = parse_float(_1, 10.0) ]) >> '.' >> 
+      (*digit) [ _c = parse_float(_1, 1.0/10.0) ] 
+      [ _val = pack_number(_a * (_b + _c)) ];
+  }
 
   qi::rule< Iterator, NumberPtr() > integer_type;
-  qi::rule< Iterator, NumberPtr() > float_type;
+			   qi::rule< Iterator, NumberPtr(), qi::locals<JFloat, JFloat, JFloat, JInt> > float_type;
 
   phoenix::function<parse_num_impl<JInt> > parse_int;
-  phoenix::function<negate<JInt> > negate_int;
-  phoenix::function<parse_float_impl<JFloat> > parse_float;
+  phoenix::function<parse_num_impl<JFloat> > parse_float;
+  phoenix::function<pack_number_impl> pack_number;
+  
+  // phoenix::function<parse_num_impl<JInt> > parse_int;
+  // phoenix::function<negate<JInt> > negate_int;
+  // phoenix::function<parse_float_impl<JFloat> > parse_float;
 };
 }}
 
