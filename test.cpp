@@ -476,3 +476,53 @@ BOOST_AUTO_TEST_CASE ( test_parser_or ) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE( jparser )
+
+BOOST_AUTO_TEST_CASE ( integerparse ) {
+  IntegerParser<string::iterator> parser;
+  
+  string test1("_10231");
+  string::iterator iter = test1.begin();
+  BOOST_CHECK_EQUAL(parser.parse(&iter, test1.end()), -10231);
+  BOOST_CHECK(iter == test1.end());
+
+  string test2("102131");
+  iter = test2.begin();
+  BOOST_CHECK_EQUAL(parser.parse(&iter, test2.end()), 102131);
+  BOOST_CHECK(iter == test2.end());  
+
+  string test3(" _23132");
+  string::iterator cache = iter = test3.begin();
+  BOOST_CHECK_THROW(parser.parse(&iter, test3.end()), MatchFailure);
+  BOOST_CHECK(iter ==  cache);
+}
+
+BOOST_AUTO_TEST_CASE ( floatingpointparse ) {
+  FloatingPointParser<string::iterator> parser;
+  string test1("_1023");
+  string::iterator iter = test1.begin();
+  BOOST_CHECK_THROW( parser.parse(&iter, test1.end()), MatchFailure );
+  
+  string test2 = "_1023.123";
+  iter = test2.begin();
+  BOOST_CHECK_EQUAL( parser.parse(&iter, test2.end()), -1023.123);
+
+  string test3 = "_1023e10";
+  iter = test3.begin();
+  BOOST_CHECK_EQUAL( parser.parse(&iter, test3.end()), -1023e10);
+
+  string test4 = "_1023.1234e_10";
+  iter = test4.begin();
+  BOOST_CHECK_EQUAL( parser.parse(&iter, test4.end()), -1023.1234e-10);
+
+  string test5 = "_.1";
+  iter = test5.begin();
+  BOOST_CHECK_EQUAL( parser.parse(&iter, test5.end()), -0.1);
+
+  string test6 = "_.e1";
+  iter = test6.begin();
+  BOOST_CHECK_THROW( parser.parse(&iter, test6.end()), MatchFailure);
+}
+  
+BOOST_AUTO_TEST_SUITE_END()
+
