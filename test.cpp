@@ -1,4 +1,5 @@
 #include "J.hpp"
+#include "ParserCombinators.hpp"
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE J
@@ -7,6 +8,7 @@
 
 using namespace ::J;
 using namespace ::J::JParser;
+using namespace ::ParserCombinators;
 
 BOOST_AUTO_TEST_SUITE ( dimensions_tests )
 
@@ -421,16 +423,55 @@ BOOST_AUTO_TEST_CASE ( test_rank_conjunction ) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE ( test_parser )
+BOOST_AUTO_TEST_SUITE( parsercombinators )
 
-BOOST_AUTO_TEST_CASE ( test_our_parser ) {
-  NumberPtr ptr;
-  string s("_123");
-  string::iterator iter = s.begin();
-  parse_number<string::iterator> n;
-  white_space<string::iterator> ws;
-  boost::spirit::qi::phrase_parse(iter, s.end(), n, ws, ptr);
-  std::cout << (iter == s.end()) << *ptr << std::endl;
+BOOST_AUTO_TEST_CASE( test_regex_parser ) {
+  RegexParser<string::iterator> parser("a+b+");
+  
+  string test("aaaabbbbcccc");
+  string::iterator iter = test.begin();
+  shared_ptr<vector<string> > v(parser.parse(&iter, test.end()));
+  BOOST_CHECK_EQUAL((*v)[0], "aaaabbbb");
+  BOOST_CHECK(iter == test.begin() + 8);
+
+  test = "bbbcccc";
+  iter = test.begin();
+  BOOST_CHECK_THROW( parser.parse(&iter, test.end()),  MatchFailure);
+}
+
+BOOST_AUTO_TEST_CASE ( test_constant_regexp ) {
+  ParseConstant<string::iterator> parser("a+b+");
+  string test("a+b+a+b+");
+
+  string::iterator iter = test.begin();
+  parser.parse(&iter, test.end());
+  parser.parse(&iter, test.end());
+  BOOST_CHECK_THROW( parser.parse(&iter, test.end()), MatchFailure);
+}
+
+typedef ParseOr<string::iterator, shared_ptr<vector<string> > > StringParseOr;
+typedef shared_ptr<StringParseOr> StringParseOrPtr;
+typedef shared_ptr<Parser<string::iterator, shared_ptr<vector<string> > > > ParserPtr;
+
+BOOST_AUTO_TEST_CASE ( test_parser_or ) {
+  string test("aaaabbbbbcccdddeee");
+  
+  StringParseOr::OurParserPtr parserPtr(new RegexParser<string::iterator>("bbb"));
+  StringParseOrPtr parser(new StringParseOr(parserPtr));
+  parser = parser->add_or(StringParseOr::OurParserPtr(new RegexParser<string::iterator>("aaa")));
+  parser = parser->add_or(StringParseOr::OurParserPtr(new RegexParser<string::iterator>("aaaa")));
+  parser = parser->add_or(StringParseOr::OurParserPtr(new RegexParser<string::iterator>("abbb")));
+  parser = parser->add_or(StringParseOr::OurParserPtr(new RegexParser<string::iterator>("bb")));
+  
+  string::iterator begin = test.begin();
+  parser->parse(&begin, test.end());
+  
+  BOOST_CHECK_EQUAL(distance(test.begin(), begin), 3);
+  parser->parse(&begin, test.end());
+  BOOST_CHECK_EQUAL(distance(test.begin(), begin), 7);
+  shared_ptr<vector<string> > v(parser->parse(&begin, test.end()));
+  BOOST_CHECK_EQUAL(string("bb"), (*v)[0]);
+  BOOST_CHECK_THROW(parser->parse(&begin, test.end()), MatchFailure);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
