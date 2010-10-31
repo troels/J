@@ -51,6 +51,8 @@ typedef shared_ptr<vector<string> > StringVecPtr;
 template <typename Iterator, typename Res>
 class Parser { 
 public:
+  typedef shared_ptr<Parser<Iterator, Res> > Ptr;
+
   virtual ~Parser() {}
   virtual Res parse(Iterator* begin, Iterator end) const = 0;
 };
@@ -137,21 +139,28 @@ public:
   typedef shared_ptr<OurParser> OurParserPtr;
   typedef typename ParserList<OurParser>::Ptr ParserListPtr;
 
+  static Ptr Instantiate() {
+    return Ptr(new ParseOr<Iterator, Res>());
+  }
+
 private:
-  mutable optional<ParserListPtr> reverse_list;
+  mutable ParserListPtr reverse_list;
   ParserListPtr parser_list;
 
   ParseOr(ParserListPtr parser_list): parser_list(parser_list) {} 
 
-  ParserListPtr get_reverse_list() const { 
+  ParserListPtr get_reverse_list() const {
+    if (!parser_list) return parser_list;
+
     if (!reverse_list) { 
-      reverse_list = optional<ParserListPtr>(parser_list->reverse());
+      reverse_list = parser_list->reverse();
     } 
     
-    return *reverse_list;
+    return reverse_list;
   }
 
 public:
+  ParseOr(): reverse_list(), parser_list() {} 
   ParseOr(OurParserPtr parser): reverse_list(), parser_list(new ParserList<OurParser>(parser)) {}
   
   Res parse(Iterator *begin, Iterator end) const {
@@ -159,7 +168,6 @@ public:
     Iterator cached_begin = *begin;
     
     ParserListPtr ptr = get_reverse_list();
-    assert(ptr);
     while(ptr) { 
       try {
 	return ptr->get_parser()->parse(begin, end);
@@ -173,11 +181,66 @@ public:
   }
 
   Ptr add_or(OurParserPtr parser) const {
-    return Ptr(new ParseOr<Iterator, Res>(parser_list->cons(parser)));
+    if (parser_list) 
+      return Ptr(new ParseOr<Iterator, Res>(parser_list->cons(parser)));
+    return Ptr(new ParseOr<Iterator, Res>(parser));
   }
-
 };
 
+template <typename Iterator, typename Res, typename InterRes = void>
+class InterspersedParser: public Parser<Iterator, shared_ptr<vector<Res> > > { 
+  typename Parser<Iterator, Res>::Ptr parser;
+  typename Parser<Iterator, InterRes>::Ptr inter_parser;
+
+public:
+  InterspersedParser(typename Parser<Iterator, Res>::Ptr parser, 
+		     typename Parser<Iterator, InterRes>::Ptr inter_parser): 
+    parser(parser), inter_parser(inter_parser) {}
+
+  shared_ptr<vector<Res> > parse(Iterator* begin, Iterator end) const {
+    shared_ptr<vector<Res> > output(new vector<Res>());
+    Iterator cached_begin = *begin;
+    try { 
+      output->push_back(parser->parse(begin, end));
+    } catch (MatchFailure& f) {
+      *begin = cached_begin;
+      return output;
+    }
+    
+    while (*begin != end) {
+      Iterator cached_begin = *begin;
+      try { 
+	inter_parser->parse(begin, end);
+	output->push_back(parser->parse(begin, end));
+      } catch (MatchFailure& m) {
+	*begin = cached_begin;
+	return output;
+      }
+    };
+    
+    return output;
+  }
+};
+
+template <typename Iterator, typename Res, typename InterRes = void>
+class InterspersedParser1: public Parser<Iterator, shared_ptr<vector<Res> > > { 
+  InterspersedParser<Iterator, Res, InterRes> parser;
+public:
+  InterspersedParser1(typename Parser<Iterator, Res>::Ptr parser,
+		      typename Parser<Iterator, InterRes>::Ptr inter_parser):
+    parser(parser, inter_parser) {}
+
+  shared_ptr<vector<Res> > parse(Iterator* begin, Iterator end) const { 
+    Iterator cached_begin = *begin;
+    shared_ptr<vector<Res> > res(parser.parse(begin, end));
+    if (res->size() == 0) { 
+      throw MatchFailure("Failed to match InterspersedParser1");
+    }  else {
+      return res;
+    }
+  }
+};
+  
 template <typename Iterator>
 class WhitespaceParser: public Parser<Iterator, void> {
   RegexParser<Iterator> regexp;

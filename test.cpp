@@ -474,6 +474,30 @@ BOOST_AUTO_TEST_CASE ( test_parser_or ) {
   BOOST_CHECK_THROW(parser->parse(&begin, test.end()), MatchFailure);
 }
 
+BOOST_AUTO_TEST_CASE ( test_interspersed_parser ) {
+  Parser<string::iterator, StringVecPtr>::Ptr p(new RegexParser<string::iterator>("ab\\s+"));
+  Parser<string::iterator, StringVecPtr>::Ptr i(new RegexParser<string::iterator>("-\\d+-"));
+  InterspersedParser<string::iterator, StringVecPtr, StringVecPtr> parser(p, i);
+
+  string test1("ab  -123213-ab   -232-");
+  string::iterator iter = test1.begin();
+  shared_ptr<vector<StringVecPtr > > v(parser.parse(&iter, test1.end()));
+  BOOST_CHECK(iter == test1.begin() + 17);
+  BOOST_CHECK_EQUAL(v->at(0)->at(0),"ab  ");
+  BOOST_CHECK_EQUAL(v->at(1)->at(0),"ab   ");
+
+  string test2("yadayada");
+  iter = test2.begin();
+  shared_ptr<vector<StringVecPtr > > v2(parser.parse(&iter, test2.end()));
+  BOOST_CHECK_EQUAL(v2->size(), 0);
+  BOOST_CHECK(iter == test2.begin());
+  
+  InterspersedParser1<string::iterator, StringVecPtr, StringVecPtr> parser2(p, i);
+  BOOST_CHECK_THROW(parser2.parse(&iter, test2.end()), MatchFailure);
+  
+  
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE( jparser )
@@ -523,6 +547,17 @@ BOOST_AUTO_TEST_CASE ( floatingpointparse ) {
   iter = test6.begin();
   BOOST_CHECK_THROW( parser.parse(&iter, test6.end()), MatchFailure);
 }
-  
+
+BOOST_AUTO_TEST_CASE ( numberparser ) { 
+  NumberParser<string::iterator> parser;
+  string test1("_11329");
+  string::iterator iter = test1.begin();
+  BOOST_CHECK_EQUAL(*parser.parse(&iter, test1.end()), ParsedNumber<JInt>(-11329));
+
+  string test2("123213.131e1");
+  iter = test2.begin();
+  BOOST_CHECK_EQUAL(*parser.parse(&iter, test2.end()), ParsedNumber<JFloat>(123213.131e1));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 

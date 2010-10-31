@@ -1,7 +1,6 @@
 #ifndef JPARSER_HPP
 #define JPARSER_HPP
 
-
 #include <boost/shared_ptr.hpp>
 #include <vector>
 #include <string>
@@ -20,21 +19,30 @@ using std::string;
 using boost::shared_ptr;
 
 class ParsedNumberBase { 
+public:
+  typedef shared_ptr<ParsedNumberBase> Ptr;
+
+private:
   j_value_type value_type;
+
 public:
   ParsedNumberBase(j_value_type value_type): value_type(value_type) {}
   virtual ~ParsedNumberBase() {}
   virtual string to_string() const = 0;
-  
+  virtual bool operator==(const ParsedNumberBase& that) const = 0;
   j_value_type get_value_type() const { return value_type; }
   friend std::ostream& operator<<(std::ostream& os, const ParsedNumberBase& p);
 };
 
 template <typename Number> 
-class ParserNumber: public ParsedNumberBase {
+class ParsedNumber: public ParsedNumberBase {
   Number nr;
 public:
-  ParserNumber(Number nr): ParsedNumberBase(JTypeTrait<Number>::value_type), nr(nr) {}
+  ParsedNumber(Number nr): ParsedNumberBase(JTypeTrait<Number>::value_type), nr(nr) {}
+  bool operator==(const ParsedNumberBase& that) const {
+    return get_value_type() == that.get_value_type() && 
+      static_cast<const ParsedNumber<Number>& >(that).get_nr() == get_nr();
+  }
 
   string to_string() const { 
     std::ostringstream str;
@@ -77,6 +85,23 @@ public:
 };
 
 template <typename Iterator>
+class IntegerParserWrapper: public Parser<Iterator, ParsedNumberBase::Ptr> {
+public:
+  typedef shared_ptr<IntegerParserWrapper<Iterator> > Ptr;
+  static Ptr Instantiate() { 
+    return Ptr(new IntegerParserWrapper<Iterator>());
+  }
+
+public:
+  IntegerParser<Iterator> parser;
+  
+public:
+  ParsedNumberBase::Ptr parse(Iterator *begin, Iterator end) const {
+    return ParsedNumberBase::Ptr(new ParsedNumber<JInt>(parser.parse(begin, end)));
+  }
+};
+    
+template <typename Iterator>
 class FloatingPointParser: public Parser<Iterator, JFloat> {
   RegexParser<Iterator> parser;
 public:
@@ -98,6 +123,43 @@ public:
   }
 };
 
+template <typename Iterator>
+class FloatingPointParserWrapper: public Parser<Iterator, ParsedNumberBase::Ptr> {
+public:
+  typedef shared_ptr<FloatingPointParserWrapper<Iterator> > Ptr;
+
+  static Ptr Instantiate() { 
+    return Ptr(new FloatingPointParserWrapper<Iterator>());
+  }
+
+private:
+  FloatingPointParser<Iterator> parser;
+
+public:
+  ParsedNumberBase::Ptr parse(Iterator *begin, Iterator end) const {
+    return ParsedNumberBase::Ptr(new ParsedNumber<JFloat>(parser.parse(begin, end)));
+  }
+};
+
+
+template <typename Iterator>
+class NumberParser: public Parser<Iterator, ParsedNumberBase::Ptr> {
+  typedef ParseOr<Iterator, ParsedNumberBase::Ptr> ParserType;
+  typename ParserType::Ptr parser;
+
+public:
+  NumberParser(): parser(ParserType::Instantiate()->
+			 add_or(FloatingPointParserWrapper<Iterator>::Instantiate())->
+			 add_or(IntegerParserWrapper<Iterator>::Instantiate())) {}
+  
+  ParsedNumberBase::Ptr parse(Iterator* begin, Iterator end) const { 
+    return parser->parse(begin, end);
+  }
+};
+
+// template <typename Iterator>
+// class ParseNoun: public Parser<Iterator, JNoun> { 
+// };
 }}
 
 #endif
