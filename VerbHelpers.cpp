@@ -1,4 +1,5 @@
 #include "VerbHelpers.hpp"
+#include <algorithm>
 
 namespace J {
   JResult::JResult(const Dimensions& frame):
@@ -63,19 +64,27 @@ namespace J {
     
     return shared_ptr<JNoun>(new JArray<T>(res, v));
   }
-    
-  Dimensions find_frame(int lrank, int rrank, const Dimensions& larg, const Dimensions& rarg) {
-    if (larg.get_rank() <= lrank && rarg.get_rank() <= rrank)  {
-      return Dimensions(0);
-    } else if (larg.get_rank() <= lrank) {
-      return rarg.prefix(rarg.get_rank() - rrank);
-    } else if (rarg.get_rank() <= rrank) {
-      return larg.prefix(larg.get_rank() - lrank);
-    }
-    
-    Dimensions lframe = larg.prefix(larg.get_rank() - lrank);
-    Dimensions rframe = rarg.prefix(rarg.get_rank() - rrank);
 
+
+Dimensions find_frame(int lrank, int rrank, const Dimensions& larg, const Dimensions& rarg) {
+  if (lrank < 0) {
+    lrank = std::max(0, larg.get_rank() + lrank);
+  } 
+  if (rrank < 0) {
+    rrank = std::max(0, rarg.get_rank() + rrank);
+  }
+
+  if (larg.get_rank() <= lrank && rarg.get_rank() <= rrank)  {
+    return Dimensions(0);
+  } else if (larg.get_rank() <= lrank) {
+    return rarg.prefix(rarg.get_rank() - rrank);
+  } else if (rarg.get_rank() <= rrank) {
+    return larg.prefix(larg.get_rank() - lrank);
+  }
+  
+  Dimensions lframe = larg.prefix(larg.get_rank() - lrank);
+  Dimensions rframe = rarg.prefix(rarg.get_rank() - rrank);
+  
     if (lframe.get_rank() > rframe.get_rank()) {
       if (lframe.prefix_match(rframe)) {
 	return lframe;

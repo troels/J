@@ -9,11 +9,9 @@
 #include <numeric>
 #include <map>
 #include <boost/optional.hpp>
-#include <boost/weak_ptr.hpp>
 
 namespace J {
   using boost::optional;
-  using boost::weak_ptr;
 
   template <typename T>
   class JArithmeticVerb: public JVerb {

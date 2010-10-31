@@ -22,7 +22,7 @@ namespace J {
 	(array.get_rank() == 1 && array.get_dims()[0] == 1)) {
       return shared_ptr<JWord>(new RankVerb(verb, *ptr, *ptr, *ptr));
     } else if (array.get_dims()[0] == 2) {
-      return shared_ptr<JWord>(new RankVerb(verb, *ptr, *(ptr + 1), *(ptr + 1)));
+      return shared_ptr<JWord>(new RankVerb(verb, *(ptr + 1), *ptr, *(ptr + 1)));
     } else if (array.get_dims()[0] == 3) {
       return shared_ptr<JWord>(new RankVerb(verb, *ptr, *(ptr + 1), *(ptr + 2)));
     }
