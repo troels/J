@@ -3,8 +3,10 @@
 
 #include <climits>
 #include <complex>
+#include <boost/shared_ptr.hpp>
 
 namespace J {
+using boost::shared_ptr;
   const int rank_infinity = INT_MAX;
 
   enum j_grammar_class { 
@@ -51,6 +53,8 @@ namespace J {
   class JWord { 
     j_grammar_class grammar_class;
   public:
+    typedef shared_ptr<JWord> Ptr;
+
     virtual ~JWord() {};
     JWord(j_grammar_class grammar_class): grammar_class(grammar_class) {}
     j_grammar_class get_grammar_class() const { return grammar_class; }

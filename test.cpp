@@ -281,8 +281,9 @@ BOOST_AUTO_TEST_CASE ( test_minus_op ) {
   JArray<JInt> arr2(Dimensions(2,2,2), 4,3,2,1);
   JArray<JInt> arr3(Dimensions(0), 1);
   
-  JArray<JFloat> arr4(Dimensions(3,4, 2, 2), 1,2,3,4,5,6,7,8,9,10,
-		      11,12,13,14,15,16);
+  JArray<JFloat> arr4(Dimensions(3,4, 2, 2), 1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,
+		      11.0,12.0,13.0,14.0,15.0,16.0);
+
   MinusVerb verb;
   BOOST_CHECK_EQUAL(*verb(m, arr2, arr),
 		    JArray<JInt>(Dimensions(2,2,2), 3, 1, -1, -3));
@@ -290,17 +291,17 @@ BOOST_AUTO_TEST_CASE ( test_minus_op ) {
 		    JArray<JInt>(Dimensions(2,2,2), 0, -1, -2, -3));
 
   BOOST_CHECK_EQUAL(*verb(m, arr, arr3),
-		    JArray<JInt>(Dimensions(2,2,2), 0, 1, 2, 3));
+  		    JArray<JInt>(Dimensions(2,2,2), 0, 1, 2, 3));
 
   BOOST_CHECK_EQUAL(*verb(m, arr4, arr4), 
-		    JArray<JFloat>(Dimensions(3, 4,2,2), 
-				   0.0, 0.0, 0.0, 0.0,
-				   0.0, 0.0, 0.0, 0.0, 
-				   0.0, 0.0, 0.0, 0.0,
-				   0.0, 0.0, 0.0, 0.0));
+  		    JArray<JFloat>(Dimensions(3, 4,2,2), 
+  				   0.0, 0.0, 0.0, 0.0,
+  				   0.0, 0.0, 0.0, 0.0, 
+  				   0.0, 0.0, 0.0, 0.0,
+  				   0.0, 0.0, 0.0, 0.0));
 
   BOOST_CHECK_EQUAL(*verb(m, arr),
-		    JArray<JInt>(Dimensions(2,2,2), -1, -2, -3,-4));
+  		    JArray<JInt>(Dimensions(2,2,2), -1, -2, -3,-4));
 }
 
 BOOST_AUTO_TEST_CASE ( test_i_dot_verb ) {

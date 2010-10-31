@@ -151,6 +151,13 @@ public:
     return create_jarray(highest_j_value_type, v);
   }
 };
+
+// template <typename Iteartor>
+// class SymbolParser: public Parser<Iterator, JWord::Ptr> { 
+//   RegexParser regexp;
+
+// public:
+//   SymbolParser(): 
 }}
 
 #endif

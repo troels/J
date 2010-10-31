@@ -2,15 +2,25 @@
 #define JMACHINE_HPP
 
 #include <boost/shared_ptr.hpp>
+#include <map>
+#include <string>
+#include "JGrammar.hpp"
 
 namespace J {
-  using boost::shared_ptr;
 
-  class JMachine { 
-    JMachine();
+using boost::shared_ptr;
+using std::map;
+using std::string;
 
-  public:
-    static shared_ptr<JMachine> new_machine();
-  };
+class JMachine { 
+  map<string, JWord::Ptr> operators;
+  JMachine();
+  
+public:
+  typedef shared_ptr<JMachine> Ptr;
+  static Ptr new_machine();
+};
+
+
 }
 #endif
