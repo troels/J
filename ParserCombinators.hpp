@@ -249,10 +249,8 @@ public:
 template <typename Iterator>
 class WhitespaceParser: public Parser<Iterator, void> {
 public:
-  typedef shared_ptr<WhitespaceParser<Iterator> > Ptr;
-  
-  Ptr Instantiate() {
-    return Ptr(new WhitespaceParser());
+  static typename Parser<Iterator, void>::Ptr Instantiate() {
+    return typename Parser<Iterator, void>::Ptr(new WhitespaceParser<Iterator>());
   }
 
 private:

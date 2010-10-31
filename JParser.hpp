@@ -114,9 +114,8 @@ class NumberParser: public Parser<Iterator, ParsedNumberBase::Ptr> {
   typename ParserType::Ptr parser;
 
 public:
-  typedef shared_ptr<NumberParser<Iterator> > Ptr;
-  static Ptr Instantiate() {
-    return Ptr(new NumberParser<Iterator>());
+  static typename Parser<Iterator, ParsedNumberBase::Ptr>::Ptr Instantiate() {
+    return typename Parser<Iterator, ParsedNumberBase::Ptr>::Ptr(new NumberParser<Iterator>());
   }
 
   NumberParser(): parser(ParserType::Instantiate()->
@@ -131,22 +130,22 @@ public:
 
 template <typename Iterator>
 class ParseNoun: public Parser<Iterator, JNoun::Ptr > { 
-  InterspersedParser1<Iterator, vector<ParsedNumberBase::Ptr> > parser;
+  InterspersedParser1<Iterator, ParsedNumberBase::Ptr, void> parser;
 
 public:
   ParseNoun(): parser(NumberParser<Iterator>::Instantiate(), 
-		      WhitespaceParser<Iterator>::Instantiate) {}
+		      WhitespaceParser<Iterator>::Instantiate()) {}
   
-  JNoun::Ptr parse(Iterator* begin, Iterator end) { 
+  JNoun::Ptr parse(Iterator* begin, Iterator end) const { 
     typename VecPtr<ParsedNumberBase::Ptr>::type v(parser.parse(begin, end));
     assert(v->size() > 0);
     typename vector<ParsedNumberBase::Ptr>::iterator iter = v->begin();
     
-    int highest_j_value_type = begin->get_value_type();
-    ++begin;
+    j_value_type highest_j_value_type = (*iter)->get_value_type();
+    ++iter;
 
-    for(;begin != end; ++begin) { 
-      highest_j_value_type = highest_j_value(*begin, highest_j_value_type);
+    for(;iter != v->end(); ++iter) { 
+      highest_j_value_type = highest_j_value(*iter, highest_j_value_type);
     }
 
     return create_jarray(highest_j_value_type, v);

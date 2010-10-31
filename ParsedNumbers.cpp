@@ -31,9 +31,9 @@ shared_ptr<JNoun> create_jarray(j_value_type value_type, VecPtr<ParsedNumberBase
 
   switch (value_type) { 
   case j_value_type_int:
-    return create_noun<JInt>(vec);
+    return create_noun<JInt>(v2);
   case j_value_type_float:
-    return create_noun<JFloat>(vec);
+    return create_noun<JFloat>(v2);
   default:
     throw std::logic_error("Clauses missing");
   }

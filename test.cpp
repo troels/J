@@ -559,5 +559,19 @@ BOOST_AUTO_TEST_CASE ( numberparser ) {
   BOOST_CHECK_EQUAL(*parser.parse(&iter, test2.end()), ParsedNumber<JFloat>(123213.131e1));
 }
 
+BOOST_AUTO_TEST_CASE ( noun_parser ) {
+  ParseNoun<string::iterator> parser;
+  string test1("12 12 _1234");
+  string::iterator iter = test1.begin();
+  
+  JNoun::Ptr n(parser.parse(&iter, test1.end()));
+  BOOST_CHECK_EQUAL(JArray<JInt>(Dimensions(1, 3), 12, 12, -1234), *n);
+  
+  string test2("12 12 _1234e10 _1.1 _5.3e10 3");
+  iter = test2.begin();
+  JNoun::Ptr n2(parser.parse(&iter, test2.end()));
+  BOOST_CHECK_EQUAL(JArray<JFloat>(Dimensions(1,6), 12.0, 12.0, -1234e10, -1.1, -5.3e10, 3.0), *n2);
+}
+  
 BOOST_AUTO_TEST_SUITE_END()
 
