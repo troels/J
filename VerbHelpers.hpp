@@ -91,7 +91,6 @@ shared_ptr<JNoun> dyadic_apply(int lrank, int rrank,
 
 template <template <typename, typename> class OpType, typename Arg, typename Res> 
 shared_ptr<JArray<Res> > scalar_monadic_apply(const JArray<Arg>& arg, OpType<Arg, Res> op) {
-    
   Dimensions d(arg.get_dims());
   shared_ptr<vector<Res> > v(new vector<Res>(d.number_of_elems()));
   transform(arg.begin(), arg.end(), v->begin(), op);
@@ -101,6 +100,10 @@ shared_ptr<JArray<Res> > scalar_monadic_apply(const JArray<Arg>& arg, OpType<Arg
 
 template <typename OpType>
 shared_ptr<JNoun > monadic_apply(int rank, const JNoun& arg, OpType op) {
+  if (rank < 0) {
+    rank = std::max(0, arg.get_rank() + rank);
+  }
+
   if ( rank >= arg.get_rank()) {
     return op(arg);
   }

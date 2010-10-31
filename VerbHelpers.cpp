@@ -68,7 +68,7 @@ shared_ptr<JNoun> JResult::assemble_result_internal() const {
 
 Dimensions find_frame(int lrank, int rrank, const Dimensions& larg, const Dimensions& rarg) {
   if (lrank < 0) {
-    lrank = std::max(0, larg.get_rank() + lrank);
+   lrank = std::max(0, larg.get_rank() + lrank);
   } 
   if (rrank < 0) {
     rrank = std::max(0, rarg.get_rank() + rrank);
