@@ -222,6 +222,11 @@ public:
   }
 };
 
+template <typename T>
+struct VecPtr {
+  typedef shared_ptr<vector<T> > type;
+};
+
 template <typename Iterator, typename Res, typename InterRes = void>
 class InterspersedParser1: public Parser<Iterator, shared_ptr<vector<Res> > > { 
   InterspersedParser<Iterator, Res, InterRes> parser;
@@ -243,6 +248,14 @@ public:
   
 template <typename Iterator>
 class WhitespaceParser: public Parser<Iterator, void> {
+public:
+  typedef shared_ptr<WhitespaceParser<Iterator> > Ptr;
+  
+  Ptr Instantiate() {
+    return Ptr(new WhitespaceParser());
+  }
+
+private:
   RegexParser<Iterator> regexp;
 
 public:

@@ -1,14 +1,16 @@
 #ifndef JPARSER_HPP
 #define JPARSER_HPP
 
+
 #include <boost/shared_ptr.hpp>
 #include <vector>
 #include <string>
 #include <sstream>
 #include <iostream>
 #include <cmath>
-#include <vector>
 
+
+#include "ParsedNumbers.hpp"
 #include "JGrammar.hpp"
 #include "ParserCombinators.hpp"
 
@@ -18,42 +20,6 @@ using std::vector;
 using std::string;
 using boost::shared_ptr;
 
-class ParsedNumberBase { 
-public:
-  typedef shared_ptr<ParsedNumberBase> Ptr;
-
-private:
-  j_value_type value_type;
-
-public:
-  ParsedNumberBase(j_value_type value_type): value_type(value_type) {}
-  virtual ~ParsedNumberBase() {}
-  virtual string to_string() const = 0;
-  virtual bool operator==(const ParsedNumberBase& that) const = 0;
-  j_value_type get_value_type() const { return value_type; }
-  friend std::ostream& operator<<(std::ostream& os, const ParsedNumberBase& p);
-};
-
-template <typename Number> 
-class ParsedNumber: public ParsedNumberBase {
-  Number nr;
-public:
-  ParsedNumber(Number nr): ParsedNumberBase(JTypeTrait<Number>::value_type), nr(nr) {}
-  bool operator==(const ParsedNumberBase& that) const {
-    return get_value_type() == that.get_value_type() && 
-      static_cast<const ParsedNumber<Number>& >(that).get_nr() == get_nr();
-  }
-
-  string to_string() const { 
-    std::ostringstream str;
-    str << get_nr();
-    return str.str();
-  }
-
-  Number get_nr() const { return nr; }
-};
-
-  
 template <typename Iterator, typename Res>
 Res parse_number(Iterator begin, Iterator end, Res base) { 
   Res res(0);
@@ -148,6 +114,11 @@ class NumberParser: public Parser<Iterator, ParsedNumberBase::Ptr> {
   typename ParserType::Ptr parser;
 
 public:
+  typedef shared_ptr<NumberParser<Iterator> > Ptr;
+  static Ptr Instantiate() {
+    return Ptr(new NumberParser<Iterator>());
+  }
+
   NumberParser(): parser(ParserType::Instantiate()->
 			 add_or(FloatingPointParserWrapper<Iterator>::Instantiate())->
 			 add_or(IntegerParserWrapper<Iterator>::Instantiate())) {}
@@ -157,9 +128,30 @@ public:
   }
 };
 
-// template <typename Iterator>
-// class ParseNoun: public Parser<Iterator, JNoun> { 
-// };
+
+template <typename Iterator>
+class ParseNoun: public Parser<Iterator, JNoun::Ptr > { 
+  InterspersedParser1<Iterator, vector<ParsedNumberBase::Ptr> > parser;
+
+public:
+  ParseNoun(): parser(NumberParser<Iterator>::Instantiate(), 
+		      WhitespaceParser<Iterator>::Instantiate) {}
+  
+  JNoun::Ptr parse(Iterator* begin, Iterator end) { 
+    typename VecPtr<ParsedNumberBase::Ptr>::type v(parser.parse(begin, end));
+    assert(v->size() > 0);
+    typename vector<ParsedNumberBase::Ptr>::iterator iter = v->begin();
+    
+    int highest_j_value_type = begin->get_value_type();
+    ++begin;
+
+    for(;begin != end; ++begin) { 
+      highest_j_value_type = highest_j_value(*begin, highest_j_value_type);
+    }
+
+    return create_jarray(highest_j_value_type, v);
+  }
+};
 }}
 
 #endif

@@ -13,6 +13,10 @@ namespace J {
   using std::pair;
 
   class JNoun: public JWord {
+  public:
+    typedef shared_ptr<JNoun> Ptr;
+
+  private:
     j_value_type value_type;
     Dimensions dims;
 
@@ -85,6 +89,8 @@ namespace J {
     shared_ptr<vector<T> > v(new vector<T>(dims.number_of_elems(), val));
     return shared_ptr<JArray<T> >(new JArray<T>(dims, v));
   }
+
+
 }
 
 #endif

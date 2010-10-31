@@ -15,7 +15,8 @@ namespace J {
   };
 
   enum j_value_type {
-    j_value_type_int, j_value_type_float,
+    j_value_type_int, 
+    j_value_type_float,
     j_value_type_complex,
     j_value_type_char, 
     j_value_type_box
