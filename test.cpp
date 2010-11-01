@@ -420,6 +420,11 @@ BOOST_AUTO_TEST_CASE ( test_rank_conjunction ) {
 
   BOOST_CHECK_EQUAL(*(*sum_rank)(m, test_subject), JArray<JInt>(Dimensions(1,2), 15, 40));
   BOOST_CHECK_EQUAL(*(*sum)(m, test_subject), JArray<JInt>(Dimensions(1,5), 7,9,11,13,15));
+
+  shared_ptr<JNoun> rank_array2(new JArray<JInt>(Dimensions(1,3), -1, 0, 0));
+  shared_ptr<JVerb> sum_rank2(boost::static_pointer_cast<JVerb>(RankConjunction()(m, sum, rank_array2)));
+  JArray<JInt> test_subject2(Dimensions(3, 2,3,4), 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24);
+  BOOST_CHECK_EQUAL(*(*sum_rank2)(m, test_subject2), JArray<JInt>(Dimensions(2, 2,4), 15,18,21,24,51,54,57,60));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
