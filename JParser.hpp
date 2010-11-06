@@ -155,9 +155,9 @@ public:
 // template <typename Iteartor>
 // class SymbolParser: public Parser<Iterator, JWord::Ptr> { 
 //   RegexParser regexp;
-
+  
 // public:
-//   SymbolParser(): 
+//   SymbolParser(JMachine::Ptr machine): 
 }}
 
 #endif

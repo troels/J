@@ -81,7 +81,22 @@ public:
     
   
 JArray<JFloat> jarray_int_to_float(const JArray<JInt>& arr);
+
+template <typename S, typename T>
+struct attr_fun_t {
+  S T::* attrib;
+
+  attr_fun_t(S T::* attrib): attrib(attrib) {}
+
+  S operator()(const T& elem) { 
+    return elem.*attrib;
+  }
+};
+
+template <typename S, typename T>
+attr_fun_t<S, T> attr_fun(S T::* attrib) { 
+  return attr_fun_t<S, T>(attrib);
 }
 
-
+}
 #endif

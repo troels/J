@@ -14,8 +14,26 @@ JMachine::JMachine(): operators() {
   operators.insert(p("\"", JWord::Ptr(new RankConjunction())));
 }
 
-shared_ptr<JMachine> JMachine::new_machine() { 
+JMachine::Ptr JMachine::new_machine() { 
   return shared_ptr<JMachine>(new JMachine());
+}
+
+optional<JWord::Ptr> JMachine::lookup_symbol(const string& sym) const {
+  map_iterator iter = operators.find(sym);
+
+  if (iter == operators.end()) {
+    return optional<JWord::Ptr>();
+  }
+
+  return optional<JWord::Ptr>(iter->second);
+}
+
+
+shared_ptr<vector<string>  >JMachine::list_symbols() const { 
+  shared_ptr<vector<string> > strs(new vector<string>(operators.size()));
+  transform(operators.begin(), operators.end(), strs->begin(),
+	    attr_fun(&pair<string, JWord::Ptr>::first));
+  return strs;
 }
 }
   
