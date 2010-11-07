@@ -104,6 +104,26 @@ JArray<JFloat> jarray_int_to_float(const JArray<JInt>& arr) {
   return arr2;
 }
 
+string escape_regex(const string& s) {
+  std::stringstream ss;
+  string::const_iterator begin = s.begin(), end = s.end();
+  for(; begin != end; ++begin) { 
+    if (escape_char_p(*begin)) { 
+      ss << '\\';
+    }
+    ss << *begin;
+  }
+  return ss.str();
+}
+
+bool escape_char_p(char c) { 
+  const char to_escape[] = {'^', '.', '$', '|', '(', ')', '[', ']', '*', '+', '?', '\\', '/'};
+  for (unsigned i = 0; i < sizeof(to_escape); ++i ) {
+    if (to_escape[i] == c) return true;
+  }
+  return false;
+}
+
 template class OperationScalarIterator<JInt>;
 template class OperationScalarIterator<JFloat>;
 template class OperationIterator<JInt>;

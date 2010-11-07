@@ -231,11 +231,12 @@ template <typename Iterator, typename Res, typename InterRes = void>
 class InterspersedParser1: public Parser<Iterator, shared_ptr<vector<Res> > > { 
   InterspersedParser<Iterator, Res, InterRes> parser;
 public:
+  typedef shared_ptr<vector<Res> > return_type;
   InterspersedParser1(typename Parser<Iterator, Res>::Ptr parser,
 		      typename Parser<Iterator, InterRes>::Ptr inter_parser):
     parser(parser, inter_parser) {}
 
-  shared_ptr<vector<Res> > parse(Iterator* begin, Iterator end) const { 
+  return_type parse(Iterator* begin, Iterator end) const { 
     Iterator cached_begin = *begin;
     shared_ptr<vector<Res> > res(parser.parse(begin, end));
     if (res->size() == 0) { 
@@ -258,6 +259,7 @@ private:
 
 public:
   WhitespaceParser(): regexp("\\s*") {}
+
   void parse(Iterator* begin, Iterator end) const {
     regexp.parse(begin, end);
   }

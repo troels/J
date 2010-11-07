@@ -4,6 +4,7 @@
 #include "Dimensions.hpp"
 #include "JNoun.hpp"
 #include <utility>
+#include <sstream>
 
 namespace J {
 using std::pair;
@@ -98,5 +99,23 @@ attr_fun_t<S, T> attr_fun(S T::* attrib) {
   return attr_fun_t<S, T>(attrib);
 }
 
+template <typename T>
+string join_str(T begin, T end, const string& joiner) { 
+  if (begin == end) return string("");
+  std::stringstream ss(std::stringstream::out);
+  ss << *begin;
+  ++begin;
+  
+  for(;begin != end; ++begin) { 
+    ss << joiner;
+    ss << *begin;
+  }
+  
+  return ss.str();
 }
+
+bool escape_char_p(char c);
+string escape_regex(const string& s);
+
+}	
 #endif

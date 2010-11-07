@@ -9,6 +9,7 @@
 using namespace ::J;
 using namespace ::J::JParser;
 using namespace ::ParserCombinators;
+using namespace ::J::JAST;
 
 BOOST_AUTO_TEST_SUITE ( dimensions_tests )
 
@@ -578,6 +579,46 @@ BOOST_AUTO_TEST_CASE ( noun_parser ) {
   JNoun::Ptr n2(parser.parse(&iter, test2.end()));
   BOOST_CHECK_EQUAL(JArray<JFloat>(Dimensions(1,6), 12.0, 12.0, -1234e10, -1.1, -5.3e10, 3.0), *n2);
 }
+
+BOOST_AUTO_TEST_CASE ( builtin_parser ) {
+  JMachine::Ptr m = JMachine::new_machine();
+  string test1("+/ i.");
+  shared_ptr<vector<string> > symbols(m->list_symbols());
+  Parser<string::iterator, JASTBase::Ptr>::Ptr symbol_parser(new BuiltinParser<string::iterator>
+							     (symbols->begin(), symbols->end()));
+  Parser<string::iterator, void>::Ptr ws_parser(new WhitespaceParser<string::iterator>());
+
+  InterspersedParser1<string::iterator, JASTBase::Ptr> parser(symbol_parser, ws_parser);
   
+  string::iterator begin = test1.begin();
+  BOOST_CHECK_EQUAL(parser.parse(&begin, test1.end())->size(), 3);
+}
+  
+
+BOOST_AUTO_TEST_CASE ( sequence_parser ) {
+  vector<string> builtins;
+  builtins.push_back("+");
+  builtins.push_back("-");
+  builtins.push_back("i.");
+  builtins.push_back("g.");
+  builtins.push_back("c.");
+  builtins.push_back("=.");
+  builtins.push_back("=.");
+
+  string test1("10.123 100.1 +i.abc_ asdads i.");
+  
+  SequenceParser<string::iterator> parser(builtins.begin(), builtins.end());
+  string::iterator iter = test1.begin();
+  
+  shared_ptr<vector<JASTBase::Ptr> > res(parser.parse(&iter, test1.end()));
+  BOOST_CHECK_EQUAL(res->size(), 6);
+  BOOST_CHECK_EQUAL(res->at(0)->get_j_ast_elem_type(), j_ast_elem_type_noun);
+  BOOST_CHECK_EQUAL(res->at(1)->get_j_ast_elem_type(), j_ast_elem_type_builtin);
+  BOOST_CHECK_EQUAL(res->at(2)->get_j_ast_elem_type(), j_ast_elem_type_builtin);
+  BOOST_CHECK_EQUAL(res->at(3)->get_j_ast_elem_type(), j_ast_elem_type_user_defined);
+  BOOST_CHECK_EQUAL(res->at(4)->get_j_ast_elem_type(), j_ast_elem_type_user_defined);
+  BOOST_CHECK_EQUAL(res->at(5)->get_j_ast_elem_type(), j_ast_elem_type_builtin);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 

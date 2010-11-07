@@ -29,7 +29,7 @@ optional<JWord::Ptr> JMachine::lookup_symbol(const string& sym) const {
 }
 
 
-shared_ptr<vector<string>  >JMachine::list_symbols() const { 
+shared_ptr<vector<string> > JMachine::list_symbols() const { 
   shared_ptr<vector<string> > strs(new vector<string>(operators.size()));
   transform(operators.begin(), operators.end(), strs->begin(),
 	    attr_fun(&pair<string, JWord::Ptr>::first));

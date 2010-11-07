@@ -8,14 +8,18 @@
 #include <sstream>
 #include <iostream>
 #include <cmath>
+#include <functional>
+#include <algorithm>
 
-
+#include "JAST.hpp"
 #include "ParsedNumbers.hpp"
 #include "JGrammar.hpp"
 #include "ParserCombinators.hpp"
+#include "utils.hpp"
 
 namespace J { namespace JParser { 
 using namespace ::ParserCombinators;
+using namespace ::J::JAST;
 using std::vector;
 using std::string;
 using boost::shared_ptr;
@@ -41,6 +45,7 @@ Res parse_number(Iterator begin, Iterator end, Res base) {
 template <typename Iterator>
 class IntegerParser: public Parser<Iterator, JInt>  { 
   RegexParser<Iterator> parser; 
+
 public:
   IntegerParser(): parser("(_?)(\\d+)") {}
   JInt parse(Iterator* begin, Iterator end) const { 
@@ -152,12 +157,98 @@ public:
   }
 };
 
-// template <typename Iteartor>
-// class SymbolParser: public Parser<Iterator, JWord::Ptr> { 
-//   RegexParser regexp;
+template <typename Iterator>
+class NounParser: public Parser<Iterator, JASTBase::Ptr> {
+public:
+  typedef typename Parser<Iterator, JASTBase::Ptr>::Ptr Ptr;
+
+  static Ptr Instantiate() { 
+    return Ptr(new NounParser());
+  }
+
+private:  
+  ParseNoun<Iterator> parser;
+
+public:
+  NounParser(): parser() {}
   
-// public:
-//   SymbolParser(JMachine::Ptr machine): 
+  JASTBase::Ptr parse(Iterator* begin, Iterator end) const { 
+    return JASTBase::Ptr(new JASTNoun(parser.parse(begin, end)));
+  }
+};
+
+template <typename Iterator>
+class BuiltinParser: public Parser<Iterator, JASTBase::Ptr> { 
+public:
+  typedef typename Parser<Iterator, JASTBase::Ptr>::Ptr Ptr;
+  
+  template <typename T>
+  static Ptr Instantiate(T begin, T end) { 
+    return Ptr(new BuiltinParser(begin, end));
+  }
+
+private:
+  shared_ptr<RegexParser<Iterator> > parser;
+
+public:
+  template <typename T>
+  BuiltinParser(T begin, T end): parser() {
+    vector<string> v(distance(begin, end));
+    transform(begin, end, v.begin(), ptr_fun(&J::escape_regex));
+    string s(join_str(v.begin(), v.end(), "|"));
+    parser = shared_ptr<RegexParser<Iterator> >(new RegexParser<Iterator>(join_str(v.begin(), v.end(), "|")));
+  }
+
+  JASTBase::Ptr parse(Iterator* begin, Iterator end) const { 
+    shared_ptr<vector<string> > s(parser->parse(begin, end));
+    
+    assert(s->size() > 0);
+    
+    return JASTBase::Ptr(new JASTBuiltin(s->at(0)));
+  }
+};
+
+template <typename Iterator>
+class UserDefinedParser: public Parser<Iterator, JASTBase::Ptr> {
+public:
+  typedef typename Parser<Iterator, JASTBase::Ptr>::Ptr Ptr;
+
+  static Ptr Instantiate() { 
+    return Ptr(new UserDefinedParser());
+  }
+
+private:
+  RegexParser<Iterator> parser;
+  
+public:
+  UserDefinedParser(): parser("\\w[\\w_\\d]*") {}
+  
+  JASTBase::Ptr parse(Iterator* begin, Iterator end) const { 
+    shared_ptr<vector<string> > s(parser.parse(begin, end));
+    assert(s->size() > 0);
+    return JASTBase::Ptr(new JASTUserDefined(s->at(0)));
+  }
+};
+  
+template <typename Iterator>
+class SequenceParser: public Parser<Iterator, shared_ptr<vector<JASTBase::Ptr> > > {
+  InterspersedParser1<Iterator, JASTBase::Ptr> parser;
+
+public:
+  template <typename T>
+  SequenceParser(T begin, T end): 
+    parser(ParseOr<Iterator, JASTBase::Ptr>::Instantiate()
+	   ->add_or(BuiltinParser<Iterator>::Instantiate(begin, end))
+	   ->add_or(NounParser<Iterator>::Instantiate())
+	   ->add_or(UserDefinedParser<Iterator>::Instantiate()),
+	   WhitespaceParser<Iterator>::Instantiate())
+  {}
+  
+  typedef typename InterspersedParser1<Iterator, JASTBase::Ptr>::return_type return_type;
+  return_type parse(Iterator* begin, Iterator end) const {
+    return parser.parse(begin, end);
+  }
+};
 }}
 
 #endif
