@@ -7,6 +7,7 @@
 #include <boost/foreach.hpp>
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <algorithm>
 #include <functional>
@@ -20,6 +21,7 @@ using std::vector;
 using boost::regex;
 using boost::optional;
 using boost::shared_ptr;
+using boost::weak_ptr;
 
 class ParserFailure {
   string msg;
@@ -63,6 +65,13 @@ class RegexParser: public Parser<Iterator, StringVecPtr> {
   regex our_regex;
 
 public:
+  typedef StringVecPtr return_type;
+  typedef typename Parser<Iterator, StringVecPtr>::Ptr Ptr;
+
+  static Ptr Instantiate(const string& regex) {
+    return Ptr(new RegexParser<Iterator>(regex));
+  }
+
   RegexParser(const string& regex): str(regex), our_regex(boost::regex(regex)) {}
   StringVecPtr parse(Iterator* begin, Iterator end) const { 
     boost::match_results<Iterator> m;
@@ -246,7 +255,59 @@ public:
     }
   }
 };
+
+template <typename Iterator, typename Res, typename Start = void, typename End = void>
+class DelimitedExpressionParser: public Parser<Iterator, Res> {
+  typename Parser<Iterator, Start>::Ptr start_parser;
+  typename Parser<Iterator, End>::Ptr end_parser;
+  typename Parser<Iterator, Res>::Ptr parser;
   
+private:
+  typedef typename Parser<Iterator, Res>::Ptr Ptr;
+
+public:
+  static Ptr Instantiate(typename Parser<Iterator, Start>::Ptr start_parser,
+			 typename Parser<Iterator, End>::Ptr end_parser,
+			 typename Parser<Iterator, Res>::Ptr parser) {
+    return Ptr(new DelimitedExpressionParser<Iterator, Res, Start, End>(start_parser, end_parser, parser));
+  }
+
+  DelimitedExpressionParser(typename Parser<Iterator, Start>::Ptr start_parser,
+			    typename Parser<Iterator, End>::Ptr end_parser,
+			    typename Parser<Iterator, Res>::Ptr parser):
+    start_parser(start_parser),
+    end_parser(end_parser),
+    parser(parser) {}
+  
+  Res parse(Iterator* begin, Iterator end) const { 
+    start_parser->parse(begin, end);
+    Res r(parser->parse(begin, end));
+    end_parser->parse(begin, end);
+    
+    return r;
+  }
+};
+
+template <typename Iterator, typename Res>
+class RecursiveParser: public Parser<Iterator, Res> { 
+  weak_ptr<Parser<Iterator, Res> > parser;
+public:
+  typedef typename Parser<Iterator, Res>::Ptr Ptr;
+  
+  static Ptr Instantiate(Ptr p) {
+    return Ptr(new RecursiveParser<Iterator, Res>(p));
+  }
+
+  RecursiveParser(Ptr p): parser(p) {}
+
+  Res parse(Iterator* begin, Iterator end) const { 
+    Ptr p(parser.lock());
+    assert(p);
+    
+    return p->parse(begin, end);
+  }
+};
+
 template <typename Iterator>
 class WhitespaceParser: public Parser<Iterator, void> {
 public:

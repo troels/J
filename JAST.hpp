@@ -16,8 +16,7 @@ enum j_ast_elem_type {
   j_ast_elem_type_noun,
   j_ast_elem_type_builtin,
   j_ast_elem_type_user_defined,
-  j_ast_elem_sequence
-  
+  j_ast_elem_type_sequence
 };
 
 class JASTBase {  
@@ -68,9 +67,15 @@ class JASTSequence: public JASTBase {
 
 public:  
   typedef vector<JASTBase::Ptr>::const_iterator const_iterator;
+  typedef shared_ptr<JASTSequence > Ptr;
+  
+  template <typename T>
+  static Ptr Instantiate(T begin, T end) {
+    return Ptr(new JASTSequence(begin, end));
+  }
 
   template <typename T>
-  JASTSequence(T begin, T end): JASTBase(j_ast_elem_sequence), v(begin, end) {}
+  JASTSequence(T begin, T end): JASTBase(j_ast_elem_type_sequence), v(begin, end) {}
   
   const_iterator begin() const { return v.begin(); }
   const_iterator end() const { return v.end(); }

@@ -210,17 +210,11 @@ public:
 
 template <typename Iterator>
 class UserDefinedParser: public Parser<Iterator, JASTBase::Ptr> {
-public:
-  typedef typename Parser<Iterator, JASTBase::Ptr>::Ptr Ptr;
-
-  static Ptr Instantiate() { 
-    return Ptr(new UserDefinedParser());
-  }
-
-private:
   RegexParser<Iterator> parser;
   
 public:
+  typedef typename Parser<Iterator, JASTBase::Ptr>::Ptr Ptr;
+  
   UserDefinedParser(): parser("\\w[\\w_\\d]*") {}
   
   JASTBase::Ptr parse(Iterator* begin, Iterator end) const { 
@@ -228,25 +222,76 @@ public:
     assert(s->size() > 0);
     return JASTBase::Ptr(new JASTUserDefined(s->at(0)));
   }
+
+  static Ptr Instantiate() { 
+    return Ptr(new UserDefinedParser());
+  }
+};
+
+template <typename Iterator, typename Res>
+class ParenthesizedExpressionParser: public Parser<Iterator, Res> {
+public:
+  typedef typename Parser<Iterator, Res>::Ptr Ptr;
+
+private:
+  Ptr parser;
+  
+public:
+  static Ptr Instantiate(Ptr ptr) {
+    return Ptr(new ParenthesizedExpressionParser(ptr));
+  }
+
+  ParenthesizedExpressionParser(Ptr ptr): 
+    parser(DelimitedExpressionParser<Iterator, Res, 
+				     typename RegexParser<Iterator>::return_type, 
+				     typename RegexParser<Iterator>::return_type >::Instantiate
+    (RegexParser<Iterator>::Instantiate("\\s*\\(\\s*"),
+     RegexParser<Iterator>::Instantiate("\\s*\\)\\s*"),
+     ptr)) {}
+  
+  Res parse(Iterator* begin, Iterator end) const { 
+    return parser->parse(begin, end);
+  }
 };
   
+
 template <typename Iterator>
-class SequenceParser: public Parser<Iterator, shared_ptr<vector<JASTBase::Ptr> > > {
-  InterspersedParser1<Iterator, JASTBase::Ptr> parser;
+class SequenceParser: public Parser<Iterator, JASTBase::Ptr> {
+public:
+  typedef typename Parser<Iterator, JASTBase::Ptr>::Ptr Ptr;
+
+private:
+  typedef typename InterspersedParser1<Iterator, JASTBase::Ptr>::return_type parser_return_type;
+  typedef typename Parser<Iterator, parser_return_type >::Ptr parser_ptr;
+  parser_ptr parser;
+
+  SequenceParser() {}
 
 public:
+
   template <typename T>
-  SequenceParser(T begin, T end): 
-    parser(ParseOr<Iterator, JASTBase::Ptr>::Instantiate()
-	   ->add_or(BuiltinParser<Iterator>::Instantiate(begin, end))
-	   ->add_or(NounParser<Iterator>::Instantiate())
-	   ->add_or(UserDefinedParser<Iterator>::Instantiate()),
-	   WhitespaceParser<Iterator>::Instantiate())
-  {}
+  static Ptr Instantiate(T begin, T end) { 
+    Ptr p(new SequenceParser<Iterator>());
+    typename Parser<Iterator, JASTBase::Ptr>::Ptr rp
+      (RecursiveParser<Iterator, JASTBase::Ptr>::Instantiate(p));
+    typename Parser<Iterator, JASTBase::Ptr>::Ptr pep
+      (ParenthesizedExpressionParser<Iterator, JASTBase::Ptr>::Instantiate(rp));
+
+    SequenceParser<Iterator>* inst(static_cast<SequenceParser<Iterator>*>(p.get()));
+    inst->parser = parser_ptr(new InterspersedParser1<Iterator, JASTBase::Ptr>
+		       (ParseOr<Iterator, JASTBase::Ptr>::Instantiate()
+			 ->add_or(pep)
+			 ->add_or(BuiltinParser<Iterator>::Instantiate(begin, end))
+			 ->add_or(NounParser<Iterator>::Instantiate())
+			 ->add_or(UserDefinedParser<Iterator>::Instantiate()),
+			WhitespaceParser<Iterator>::Instantiate()));
+    return p;
+  }
   
-  typedef typename InterspersedParser1<Iterator, JASTBase::Ptr>::return_type return_type;
-  return_type parse(Iterator* begin, Iterator end) const {
-    return parser.parse(begin, end);
+  JASTBase::Ptr parse(Iterator* begin, Iterator end) const {
+    shared_ptr<vector<JASTBase::Ptr> > v(parser->parse(begin, end));
+    
+    return JASTSequence::Instantiate(v->begin(), v->end());
   }
 };
 }}
