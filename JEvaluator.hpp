@@ -14,148 +14,118 @@
 #include "JVerbs.hpp"
 #include "JAdverbs.hpp"
 #include "JConjunctions.hpp"
+#include "JToken.hpp"
+#include "JMachine.hpp"
 
 namespace J { namespace JEvaluator { 
 using std::list;
 using std::string;
 using std::vector;
 using std::set;
+using namespace ::J::JTokens;
 
-enum j_evaluator_type { 
-  j_evaluator_type_noun,
-  j_evaluator_type_verb,
-  j_evaluator_type_adverb,
-  j_evaluator_type_conjunction,
-  j_evaluator_type_dummy,
-  j_evaluator_type_name,
-  j_evaluator_type_sequence_start,
-  j_evaluator_type_assignment 
+class JCriteria {
+  JMachine::Ptr m;
+public:
+  virtual ~JCriteria() {}
+  JCriteria(JMachine::Ptr m): m(m) {}
+  virtual bool operator()(JTokenBase::Ptr token) const = 0;
+  JMachine::Ptr get_machine() const { return m; }
 };
 
-class JEvaluatorBase {
-  j_evaluator_type type;
-public:
-  typedef shared_ptr<JEvaluatorBase> Ptr;
-  
-  JEvaluatorBase(j_evaluator_type type): type(type) {}
-  virtual ~JEvaluatorBase() = 0;
-  j_evaluator_type get_j_evaluator_type() const { return type; }
+class JAnyCriteria: public JCriteria {
+  JAnyCriteria(JMachine::Ptr m): JCriteria(m) {}
+  bool operator()(JTokenBase::Ptr) const {
+    return true;
+  }
+};
+
+class JNameCriteria: public JCriteria { 
+  JNameCriteria(JMachine::Ptr m): JCriteria(m) {}
+  bool operator()(JTokenBase::Ptr token) const {
+    return token->get_j_token_elem_type() == j_token_elem_type_name;
+  }
 };
 
 template <typename T>
-struct JEvaluatorTraits { 
-  static const j_evaluator_type evaluator_type;
-  static const j_grammar_class grammar_class;
-};
-
-template <> 
-struct JEvaluatorTraits<JNoun> { 
-  static const j_evaluator_type evaluator_type = j_evaluator_type_noun;
-  static const j_grammar_class grammar_class = grammar_class_noun;
-};
-
-
-template <> 
-struct JEvaluatorTraits<JVerb> { 
-  static const j_evaluator_type evaluator_type = j_evaluator_type_verb;
-  static const j_grammar_class grammar_class = grammar_class_verb;
-};
-
-template <> 
-struct JEvaluatorTraits<JAdverb> { 
-  static const j_evaluator_type evaluator_type = j_evaluator_type_adverb;
-  static const j_grammar_class grammar_class = grammar_class_adverb;
-};
-
-template <> 
-struct JEvaluatorTraits<JConjunction> { 
-  static const j_evaluator_type evaluator_type = j_evaluator_type_conjunction;
-  static const j_grammar_class grammar_class = grammar_class_conjunction;
-};
-
-template <typename T>
-class JEvaluatorContainer: public JEvaluatorBase { 
-  JWord::Ptr elem;
-
+class JWordCriteria: public JCriteria { 
 public:
-  JEvaluatorContainer(JWord::Ptr elem): JEvaluatorBase(JEvaluatorTraits<T>::evaluator_type), elem(elem) {
-    assert(elem->get_grammar_class() == JEvaluatorTraits<T>::grammar_class);
-  }
+  JWordCriteria(JMachine::Ptr m): JCriteria(m) {}
   
-  shared_ptr<T> get_word() const { 
-    return boost::static_pointer_cast<T>(elem);
+  bool operator()(JTokenBase::Ptr token) const { 
+    if(token->get_j_token_elem_type() == JTokenTraits<T>::token_type) return true;
+    
+    if (token->get_j_token_elem_type() == j_token_elem_type_name) {
+      optional<JWord::Ptr> o(get_machine()->lookup_name(static_cast<JTokenName*>(token.get())->get_name()));
+      if (o && (*o)->get_grammar_class() == JTokenTraits<T>::grammar_class) return true;
+    }
+    
+    return false;
   }
 };
 
-enum assignment_type { assignment_type_local,
-		       assignment_type_public };
-
-class JEvaluatorAssignment { 
-  assignment_type type;
-
-public:
-  JEvaluatorAssignment(const string& assignment);
-};
-
-class JEvaluatorDummy: public JEvaluatorBase { 
-public:
-  typedef JEvaluatorBase::Ptr Ptr;
-  
-  static Ptr Instantiate() { 
-    return Ptr(new JEvaluatorDummy());
+class JCriteriaCollection: public JCriteria { 
+  set<j_token_elem_type> tokens;
+protected:
+  void add_token(j_token_elem_type token) {
+    tokens.insert(token);
   }
 
-  JEvaluatorDummy(): JEvaluatorBase(j_evaluator_type_dummy) {}
-};
-
-class JEvaluatorSequenceStart: public JEvaluatorBase { 
 public:
-  JEvaluatorSequenceStart(): JEvaluatorBase(j_evaluator_type_sequence_start) {}
-};
-
-
-void pad_evaluator(list<JEvaluatorBase::Ptr>* evaluator);
-
-
-class JEvaluatorTypeClass {
-  shared_ptr<set<j_evaluator_type> > types;
-public:
-  typedef shared_ptr<JEvaluatorTypeClass> Ptr;
-  JEvaluatorTypeClass(int nr, ...);
-  virtual ~JEvaluatorTypeClass();
-
-  bool contains(j_evaluator_type t) const; 
-};
-
-extern const JEvaluatorTypeClass::Ptr EDGE; 
-extern const JEvaluatorTypeClass::Ptr VERB;
-extern const JEvaluatorTypeClass::Ptr NOUN;
-extern const JEvaluatorTypeClass::Ptr ADVERB;
-extern const JEvaluatorTypeClass::Ptr VERBNOUN;
-extern const JEvaluatorTypeClass::Ptr ANY;
-extern const JEvaluatorTypeClass::Ptr ASGN;
-extern const JEvaluatorTypeClass::Ptr CAVN;
-extern const JEvaluatorTypeClass::Ptr NAME;
-
-class JRule {
-  JEvaluatorTypeClass::Ptr first;
-  JEvaluatorTypeClass::Ptr second;
-  JEvaluatorTypeClass::Ptr third;
-  JEvaluatorTypeClass::Ptr fourth;
-
-public:
-  JRule(JEvaluatorTypeClass::Ptr first, JEvaluatorTypeClass::Ptr second,
-	JEvaluatorTypeClass::Ptr third, JEvaluatorTypeClass::Ptr fourth): 
-    first(first), second(second), third(third), fourth(fourth) {}
-  
-  template <typename Iterator>
-  bool match(Iterator begin) {
-    return first->contains(*begin) && second->contains(*(begin + 1)) &&
-           third->contains(*(begin + 2)) && fourth->contains(*(begin + 3));
+  JCriteriaCollection(JMachine::Ptr m): JCriteria(m) {} 
+  bool operator()(JTokenBase::Ptr token) const { 
+    return tokens.find(token->get_j_token_elem_type()) != tokens.end();
   }
 };
+
+class JEdgeCriteria: public JCriteriaCollection { 
+public:
+  JEdgeCriteria(JMachine::Ptr m): JCriteriaCollection(m) {
+    add_token(j_token_elem_type_lparen);
+    add_token(j_token_elem_type_assignment);
+  }
+};
+
+class JEdgeAVNCriteria: public JCriteria { 
+  JEdgeCriteria edge;
+  JWordCriteria<JVerb> verb;
+  JWordCriteria<JNoun> noun;
+  JWordCriteria<JAdverb> adverb;
+
+public:
+  JEdgeAVNCriteria(JMachine::Ptr m): JCriteria(m), edge(m), verb(m), noun(m), adverb(m) {}
   
+  bool operator()(JTokenBase::Ptr token) const { 
+    return edge(token) || verb(token) || noun(token) || adverb(token);
+  }
+};
+
+class JVerbNounCriteria: public JCriteria { 
+  JWordCriteria<JVerb> verb;
+  JWordCriteria<JNoun> noun;
   
+public:
+  JVerbNounCriteria(JMachine::Ptr m): JCriteria(m), verb(m), noun(m) {}
+  
+  bool operator()(JTokenBase::Ptr token) const { 
+    return verb(token) || noun(token);
+  }
+};
+
+class JCAVNCriteria: public JCriteria { 
+  JWordCriteria<JVerb> verb;
+  JWordCriteria<JNoun> noun;  
+  JWordCriteria<JAdverb> adverb;  
+  JWordCriteria<JConjunction> conjunction;  
+
+public:
+  JCAVNCriteria(JMachine::Ptr m): 
+    JCriteria(m), verb(m), noun(m), adverb(m), conjunction(m) {}
+  
+  bool operator()(JTokenBase::Ptr token) const { 
+    return verb(token) || noun(token) || adverb(token) || conjunction(token);
+  }
+};
 }}
 
 #endif

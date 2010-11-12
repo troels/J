@@ -6,6 +6,9 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include "JNoun.hpp"
+#include "JVerbs.hpp"
+#include "JAdverbs.hpp"
+#include "JConjunctions.hpp"
 
 namespace J { namespace JTokens { 
 using boost::shared_ptr;
@@ -19,7 +22,6 @@ enum j_token_elem_type {
   j_token_elem_type_conjunction,
   j_token_elem_type_operator,
   j_token_elem_type_name,
-  j_token_elem_type_sequence,
   j_token_elem_type_assignment,
   j_token_elem_type_lparen,
   j_token_elem_type_rparen
@@ -31,6 +33,25 @@ struct JTokenTraits {} ;
 template <> 
 struct JTokenTraits<JNoun> {
   static const j_token_elem_type token_type = j_token_elem_type_noun;
+  static const j_grammar_class grammar_class = grammar_class_noun;
+};
+
+template <>
+struct JTokenTraits<JVerb> {
+  static const j_token_elem_type token_type = j_token_elem_type_verb;
+  static const j_grammar_class grammar_class = grammar_class_verb;
+};
+
+template <>
+struct JTokenTraits<JAdverb> {
+  static const j_token_elem_type token_type = j_token_elem_type_adverb;
+  static const j_grammar_class grammar_class = grammar_class_adverb;
+};
+
+template <>
+struct JTokenTraits<JConjunction> {
+  static const j_token_elem_type token_type = j_token_elem_type_conjunction;
+  static const j_grammar_class grammar_class = grammar_class_conjunction;
 };
 
 class JTokenBase {  

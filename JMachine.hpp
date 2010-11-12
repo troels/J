@@ -30,6 +30,9 @@ public:
   
   optional<JWord::Ptr> lookup_symbol(const string& sym) const;
   shared_ptr<vector<string> > list_symbols() const;
+  optional<JWord::Ptr> lookup_name(const string&) const {
+    return optional<JWord::Ptr>();
+  }
 };
 }
 #endif
