@@ -9,7 +9,7 @@
 using namespace ::J;
 using namespace ::J::JParser;
 using namespace ::ParserCombinators;
-using namespace ::J::JAST;
+using namespace ::J::JTokens;
 
 BOOST_AUTO_TEST_SUITE ( dimensions_tests )
 
@@ -584,11 +584,11 @@ BOOST_AUTO_TEST_CASE ( builtin_parser ) {
   JMachine::Ptr m = JMachine::new_machine();
   string test1("+/ i.");
   shared_ptr<vector<string> > symbols(m->list_symbols());
-  Parser<string::iterator, JASTBase::Ptr>::Ptr symbol_parser(new BuiltinParser<string::iterator>
+  Parser<string::iterator, JTokenBase::Ptr>::Ptr symbol_parser(new OperatorParser<string::iterator>
 							     (symbols->begin(), symbols->end()));
   Parser<string::iterator, void>::Ptr ws_parser(new WhitespaceParser<string::iterator>());
 
-  InterspersedParser1<string::iterator, JASTBase::Ptr> parser(symbol_parser, ws_parser);
+  InterspersedParser1<string::iterator, JTokenBase::Ptr> parser(symbol_parser, ws_parser);
   
   string::iterator begin = test1.begin();
   BOOST_CHECK_EQUAL(parser.parse(&begin, test1.end())->size(), 3);
@@ -607,47 +607,46 @@ BOOST_AUTO_TEST_CASE ( sequence_parser ) {
 
   string test1("10.123 100.1 +i.abc_ asdads i.");
   
-  SequenceParser<string::iterator>::Ptr parser
-    (SequenceParser<string::iterator>::Instantiate(builtins.begin(), builtins.end()));
+  JTokenizer<string::iterator>::Ptr parser
+    (JTokenizer<string::iterator>::Instantiate(builtins.begin(), builtins.end()));
   string::iterator iter = test1.begin();
   
-  JASTBase::Ptr res( parser->parse(&iter, test1.end( ) ) );
-  BOOST_CHECK_EQUAL(res->get_j_ast_elem_type(), j_ast_elem_type_sequence);
+  JTokenizer<string::iterator>::result_type res( parser->parse(&iter, test1.end( ) ) );
   
-  JASTSequence* js(static_cast<JASTSequence*>(res.get()));
-  BOOST_CHECK_EQUAL(distance(js->begin(), js->end()), 6);
-  JASTSequence::const_iterator res_iter = js->begin();
+  // JTokenSequence* js(static_cast<JTokenSequence*>(res.get()));
+  // BOOST_CHECK_EQUAL(distance(js->begin(), js->end()), 6);
+  // JTokenSequence::const_iterator res_iter = js->begin();
   
-  BOOST_CHECK_EQUAL((*res_iter)->get_j_ast_elem_type(), j_ast_elem_type_noun);
-  BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_builtin);
-  BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_builtin);
-  BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_user_defined);
-  BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_user_defined);
-  BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_builtin);
+  // BOOST_CHECK_EQUAL((*res_iter)->get_j_ast_elem_type(), j_ast_elem_type_noun);
+  // BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_operator);
+  // BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_operator);
+  // BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_name);
+  // BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_name);
+  // BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_operator);
 
-  BOOST_CHECK(++res_iter == js->end());
+  // BOOST_CHECK(++res_iter == js->end());
 
-  string test2("10.123 (+ - 3) 120 afadsd_");
-  iter = test2.begin();
-  res = parser->parse(&iter, test2.end());
-  BOOST_CHECK_EQUAL(res->get_j_ast_elem_type(), j_ast_elem_type_sequence);
+  // string test2("10.123 (+ - 3) 120 afadsd_");
+  // iter = test2.begin();
+  // res = parser->parse(&iter, test2.end());
+  // BOOST_CHECK_EQUAL(res->get_j_ast_elem_type(), j_ast_elem_type_sequence);
 
-  js = static_cast<JASTSequence*>(res.get());
-  BOOST_CHECK_EQUAL(distance(js->begin(), js->end()), 4);
+  // js = static_cast<JTokenSequence*>(res.get());
+  // BOOST_CHECK_EQUAL(distance(js->begin(), js->end()), 4);
   
-  res_iter = js->begin();
-  BOOST_CHECK_EQUAL((*res_iter)->get_j_ast_elem_type(), j_ast_elem_type_noun);
-  BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_sequence);
-  JASTSequence::const_iterator res_iter2 = res_iter;
-  BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_noun);
-  BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_user_defined);
-  js = static_cast<JASTSequence*>(res_iter2->get());
-  BOOST_CHECK_EQUAL(distance(js->begin(), js->end()), 3);
-  res_iter = js->begin();
+  // res_iter = js->begin();
+  // BOOST_CHECK_EQUAL((*res_iter)->get_j_ast_elem_type(), j_ast_elem_type_noun);
+  // BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_sequence);
+  // JTokenSequence::const_iterator res_iter2 = res_iter;
+  // BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_noun);
+  // BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_name);
+  // js = static_cast<JTokenSequence*>(res_iter2->get());
+  // BOOST_CHECK_EQUAL(distance(js->begin(), js->end()), 3);
+  // res_iter = js->begin();
 
-  BOOST_CHECK_EQUAL((*res_iter)->get_j_ast_elem_type(), j_ast_elem_type_builtin);
-  BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_builtin);
-  BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_noun);
+  // BOOST_CHECK_EQUAL((*res_iter)->get_j_ast_elem_type(), j_ast_elem_type_operator);
+  // BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_operator);
+  // BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_noun);
 }
 
 

@@ -4,8 +4,11 @@
 #include <stdexcept>
 #include <boost/shared_ptr.hpp>
 #include <deque>
+#include <list>
 #include <vector>
 #include <string>
+#include <cstdarg>
+#include <set>
 #include "JGrammar.hpp"
 #include "JNoun.hpp"
 #include "JVerbs.hpp"
@@ -13,9 +16,10 @@
 #include "JConjunctions.hpp"
 
 namespace J { namespace JEvaluator { 
-using std::deque;
+using std::list;
 using std::string;
 using std::vector;
+using std::set;
 
 enum j_evaluator_type { 
   j_evaluator_type_noun,
@@ -23,6 +27,7 @@ enum j_evaluator_type {
   j_evaluator_type_adverb,
   j_evaluator_type_conjunction,
   j_evaluator_type_dummy,
+  j_evaluator_type_name,
   j_evaluator_type_sequence_start,
   j_evaluator_type_assignment 
 };
@@ -68,7 +73,6 @@ struct JEvaluatorTraits<JConjunction> {
   static const j_grammar_class grammar_class = grammar_class_conjunction;
 };
 
-
 template <typename T>
 class JEvaluatorContainer: public JEvaluatorBase { 
   JWord::Ptr elem;
@@ -90,15 +94,7 @@ class JEvaluatorAssignment {
   assignment_type type;
 
 public:
-  JEvaluatorAssignment(const string& assignment) {
-    if (assignment == "=:") {
-      type = assignment_type_public;
-    } else if (assignment == "=.") {
-      type = assignment_type_local;
-    } else {
-      throw std::logic_error("Unknown assignment operator: " + assignment);
-    }
-  }
+  JEvaluatorAssignment(const string& assignment);
 };
 
 class JEvaluatorDummy: public JEvaluatorBase { 
@@ -118,32 +114,48 @@ public:
 };
 
 
-void pad_evaluator(deque<JEvaluatorBase::Ptr>* evaluator) { 
-  if (evaluator->size() < 4) {
-    while (i = 4; i > evaluator->size(); --i) {
-      evaluator.push_back(JEvaluatorDummy::Instantiate());
-    }
-  } else {
-    while(evaluator.size() > 4 && evaluator.back()->get_j_evaluator_type() == j_evaluator_type_dummy) {
-      evaluator.pop_back();
-    }
-  }
-}
+void pad_evaluator(list<JEvaluatorBase::Ptr>* evaluator);
 
 
-void evaluate(deque<JEvaluatorBase::Ptr>* evaluator) { 
-  pad_evaluator(evaluator);
-  
-}
-  
-  
-  
-class JEvaluator { 
-  deque<JEvaluatorBase> evaluator;
+class JEvaluatorTypeClass {
+  shared_ptr<set<j_evaluator_type> > types;
 public:
-  
-  
+  typedef shared_ptr<JEvaluatorTypeClass> Ptr;
+  JEvaluatorTypeClass(int nr, ...);
+  virtual ~JEvaluatorTypeClass();
+
+  bool contains(j_evaluator_type t) const; 
 };
+
+extern const JEvaluatorTypeClass::Ptr EDGE; 
+extern const JEvaluatorTypeClass::Ptr VERB;
+extern const JEvaluatorTypeClass::Ptr NOUN;
+extern const JEvaluatorTypeClass::Ptr ADVERB;
+extern const JEvaluatorTypeClass::Ptr VERBNOUN;
+extern const JEvaluatorTypeClass::Ptr ANY;
+extern const JEvaluatorTypeClass::Ptr ASGN;
+extern const JEvaluatorTypeClass::Ptr CAVN;
+extern const JEvaluatorTypeClass::Ptr NAME;
+
+class JRule {
+  JEvaluatorTypeClass::Ptr first;
+  JEvaluatorTypeClass::Ptr second;
+  JEvaluatorTypeClass::Ptr third;
+  JEvaluatorTypeClass::Ptr fourth;
+
+public:
+  JRule(JEvaluatorTypeClass::Ptr first, JEvaluatorTypeClass::Ptr second,
+	JEvaluatorTypeClass::Ptr third, JEvaluatorTypeClass::Ptr fourth): 
+    first(first), second(second), third(third), fourth(fourth) {}
+  
+  template <typename Iterator>
+  bool match(Iterator begin) {
+    return first->contains(*begin) && second->contains(*(begin + 1)) &&
+           third->contains(*(begin + 2)) && fourth->contains(*(begin + 3));
+  }
+};
+  
+  
 }}
 
 #endif

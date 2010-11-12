@@ -38,6 +38,8 @@ class JVerb: public JWord {
   shared_ptr<Dyad> dyad;
 
 public:
+  typedef shared_ptr<JVerb> Ptr;
+
   virtual ~JVerb() {}
   JVerb(shared_ptr<Monad> monad, shared_ptr<Dyad> dyad):
     JWord(grammar_class_verb), monad(monad), dyad(dyad) {}

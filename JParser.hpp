@@ -11,7 +11,7 @@
 #include <functional>
 #include <algorithm>
 
-#include "JAST.hpp"
+#include "JToken.hpp"
 #include "ParsedNumbers.hpp"
 #include "JGrammar.hpp"
 #include "ParserCombinators.hpp"
@@ -19,7 +19,7 @@
 
 namespace J { namespace JParser { 
 using namespace ::ParserCombinators;
-using namespace ::J::JAST;
+using namespace ::J::JTokens;
 using std::vector;
 using std::string;
 using boost::shared_ptr;
@@ -158,9 +158,9 @@ public:
 };
 
 template <typename Iterator>
-class NounParser: public Parser<Iterator, JASTBase::Ptr> {
+class NounParser: public Parser<Iterator, JTokenBase::Ptr> {
 public:
-  typedef typename Parser<Iterator, JASTBase::Ptr>::Ptr Ptr;
+  typedef typename Parser<Iterator, JTokenBase::Ptr>::Ptr Ptr;
 
   static Ptr Instantiate() { 
     return Ptr(new NounParser());
@@ -172,19 +172,19 @@ private:
 public:
   NounParser(): parser() {}
   
-  JASTBase::Ptr parse(Iterator* begin, Iterator end) const { 
-    return JASTBase::Ptr(new JASTNoun(parser.parse(begin, end)));
+  JTokenBase::Ptr parse(Iterator* begin, Iterator end) const { 
+    return JTokenBase::Ptr(new JTokenWord<JNoun>(parser.parse(begin, end)));
   }
 };
 
 template <typename Iterator>
-class BuiltinParser: public Parser<Iterator, JASTBase::Ptr> { 
+class OperatorParser: public Parser<Iterator, JTokenBase::Ptr> { 
 public:
-  typedef typename Parser<Iterator, JASTBase::Ptr>::Ptr Ptr;
+  typedef typename Parser<Iterator, JTokenBase::Ptr>::Ptr Ptr;
   
   template <typename T>
   static Ptr Instantiate(T begin, T end) { 
-    return Ptr(new BuiltinParser(begin, end));
+    return Ptr(new OperatorParser(begin, end));
   }
 
 private:
@@ -192,39 +192,39 @@ private:
 
 public:
   template <typename T>
-  BuiltinParser(T begin, T end): parser() {
+  OperatorParser(T begin, T end): parser() {
     vector<string> v(distance(begin, end));
     transform(begin, end, v.begin(), ptr_fun(&J::escape_regex));
     string s(join_str(v.begin(), v.end(), "|"));
     parser = shared_ptr<RegexParser<Iterator> >(new RegexParser<Iterator>(join_str(v.begin(), v.end(), "|")));
   }
 
-  JASTBase::Ptr parse(Iterator* begin, Iterator end) const { 
+  JTokenBase::Ptr parse(Iterator* begin, Iterator end) const { 
     shared_ptr<vector<string> > s(parser->parse(begin, end));
     
     assert(s->size() > 0);
     
-    return JASTBase::Ptr(new JASTBuiltin(s->at(0)));
+    return JTokenBase::Ptr(new JTokenOperator(s->at(0)));
   }
 };
 
 template <typename Iterator>
-class UserDefinedParser: public Parser<Iterator, JASTBase::Ptr> {
+class NameParser: public Parser<Iterator, JTokenBase::Ptr> {
   RegexParser<Iterator> parser;
   
 public:
-  typedef typename Parser<Iterator, JASTBase::Ptr>::Ptr Ptr;
+  typedef typename Parser<Iterator, JTokenBase::Ptr>::Ptr Ptr;
   
-  UserDefinedParser(): parser("\\w[\\w_\\d]*") {}
+  NameParser(): parser("\\w[\\w_\\d]*") {}
   
-  JASTBase::Ptr parse(Iterator* begin, Iterator end) const { 
+  JTokenBase::Ptr parse(Iterator* begin, Iterator end) const { 
     shared_ptr<vector<string> > s(parser.parse(begin, end));
     assert(s->size() > 0);
-    return JASTBase::Ptr(new JASTUserDefined(s->at(0)));
+    return JTokenBase::Ptr(new JTokenName(s->at(0)));
   }
 
   static Ptr Instantiate() { 
-    return Ptr(new UserDefinedParser());
+    return Ptr(new NameParser());
   }
 };
 
@@ -256,42 +256,36 @@ public:
   
 
 template <typename Iterator>
-class SequenceParser: public Parser<Iterator, JASTBase::Ptr> {
+class JTokenizer: public Parser<Iterator, shared_ptr<vector<JTokenBase::Ptr> > >  {
 public:
-  typedef typename Parser<Iterator, JASTBase::Ptr>::Ptr Ptr;
+  typedef shared_ptr<vector<JTokenBase::Ptr> > result_type;
+  typedef typename Parser<Iterator, result_type>::Ptr Ptr;
 
 private:
-  typedef typename InterspersedParser1<Iterator, JASTBase::Ptr>::return_type parser_return_type;
+  typedef typename InterspersedParser1<Iterator, JTokenBase::Ptr>::return_type parser_return_type;
   typedef typename Parser<Iterator, parser_return_type >::Ptr parser_ptr;
   parser_ptr parser;
 
-  SequenceParser() {}
-
 public:
+  template <typename T>
+  JTokenizer(T begin, T end): parser(new InterspersedParser1<Iterator, JTokenBase::Ptr>
+				     (ParseOr<Iterator, JTokenBase::Ptr>::Instantiate()
+				      ->add_or(ComposeParser<Iterator, JTokenBase::Ptr>::Instantiate
+					       (ParseConstant<Iterator>::Instantiate("("), 
+						ConstantParser<Iterator, JTokenBase::Ptr>::Instantiate
+						(JTokenLParen::Instantiate())))
+				      ->add_or(OperatorParser<Iterator>::Instantiate(begin, end))
+				      ->add_or(NounParser<Iterator>::Instantiate())
+				      ->add_or(NameParser<Iterator>::Instantiate()),
+				      WhitespaceParser<Iterator>::Instantiate())) {}
 
   template <typename T>
   static Ptr Instantiate(T begin, T end) { 
-    Ptr p(new SequenceParser<Iterator>());
-    typename Parser<Iterator, JASTBase::Ptr>::Ptr rp
-      (RecursiveParser<Iterator, JASTBase::Ptr>::Instantiate(p));
-    typename Parser<Iterator, JASTBase::Ptr>::Ptr pep
-      (ParenthesizedExpressionParser<Iterator, JASTBase::Ptr>::Instantiate(rp));
-
-    SequenceParser<Iterator>* inst(static_cast<SequenceParser<Iterator>*>(p.get()));
-    inst->parser = parser_ptr(new InterspersedParser1<Iterator, JASTBase::Ptr>
-		       (ParseOr<Iterator, JASTBase::Ptr>::Instantiate()
-			 ->add_or(pep)
-			 ->add_or(BuiltinParser<Iterator>::Instantiate(begin, end))
-			 ->add_or(NounParser<Iterator>::Instantiate())
-			 ->add_or(UserDefinedParser<Iterator>::Instantiate()),
-			WhitespaceParser<Iterator>::Instantiate()));
-    return p;
+    return Ptr(new JTokenizer(begin, end));
   }
   
-  JASTBase::Ptr parse(Iterator* begin, Iterator end) const {
-    shared_ptr<vector<JASTBase::Ptr> > v(parser->parse(begin, end));
-    
-    return JASTSequence::Instantiate(v->begin(), v->end());
+  result_type parse(Iterator* begin, Iterator end) const {
+    return parser->parse(begin, end);
   }
 };
 }}
