@@ -73,6 +73,12 @@ class JTokenWord: public JTokenBase {
   typename T::Ptr word;
 
 public:
+  typedef JTokenBase::Ptr Ptr;
+  
+  static Ptr Instantiate(typename T::Ptr word) {
+    return Ptr(new JTokenWord<T>(word));
+  }
+    
   JTokenWord(typename T::Ptr word): 
     JTokenBase(JTokenTraits<T>::token_type), word(word) {}
 
@@ -106,6 +112,10 @@ class JTokenAssignment: public JTokenBase {
   string operator_name;
 
 public:
+  static JTokenBase::Ptr Instantiate(const string& operator_name) {
+    return JTokenBase::Ptr(new JTokenAssignment(operator_name));
+  }
+
   JTokenAssignment(const string& operator_name): 
     JTokenBase(j_token_elem_type_assignment), operator_name(operator_name) {}
 
@@ -124,9 +134,47 @@ public:
 
 class JTokenRParen: public JTokenBase { 
 public: 
+  typedef JTokenBase::Ptr Ptr;
+  static Ptr Instantiate() { 
+    return Ptr(new JTokenRParen());
+  }
+
   JTokenRParen(): JTokenBase(j_token_elem_type_rparen) {}
 };
 
+template <typename T>
+typename T::Ptr get_word(JTokenBase::Ptr token, JMachine::Ptr m) { 
+  if(token->get_j_token_elem_type() == JTokenTraits<T>::token_type) {
+    return static_cast<JTokenWord<T>*>(token.get())->get_word();
+  } else { 
+    optional<JWord::Ptr> o(
+      token->get_j_token_elem_type() == j_token_elem_type_operator ?
+      m->lookup_symbol(static_cast<JTokenOperator*>(token.get())->get_operator_name()) : 
+      token->get_j_token_elem_type() == j_token_elem_type_name ?
+      m->lookup_name(static_cast<JTokenName*>(token.get())->get_name()) :
+      optional<JWord::Ptr>());
+    
+    if (o && (*o)->get_grammar_class() == JTokenTraits<T>::grammar_class) {
+      return boost::static_pointer_cast<T>(*o);
+    }
+  }
+  
+  throw std::logic_error("Not a word of right type");
+}
+
+template <typename T>
+JWord::Ptr get_word_as_word(JTokenBase::Ptr token) {
+  return boost::static_pointer_cast<JWord>(static_cast<JTokenWord<T>*>(token.get())->get_word());
+}
+
+template <typename T>
+typename T::Ptr get_word_as_type(JWord::Ptr word) { 
+  assert(JTokenTraits<T>::grammar_class == word->get_grammar_class());
+  return boost::static_pointer_cast<T>(word);
+}
+  
+JWord::Ptr get_bare_word(JTokenBase::Ptr token, JMachine::Ptr m);
+JTokenBase::Ptr construct_token(JWord::Ptr word);
 }}
 
 

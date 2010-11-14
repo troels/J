@@ -75,12 +75,12 @@ public:
 class IDotVerb: public JVerb { 
   template <typename Arg, typename Res>
   struct MonadOp: public std::unary_function<Arg, Res> {
-    shared_ptr<JNoun > operator()(const JNoun& arg) const;
+    JNoun::Ptr operator()(const JNoun& arg) const;
   };
 
   struct IDotMonad: Monad { 
     IDotMonad(): Monad(1) {}
-    shared_ptr<JNoun> operator()(shared_ptr<JMachine>, const JNoun& arg) const;
+    JNoun::Ptr operator()(JMachine::Ptr, const JNoun& arg) const;
   };
     
   template <typename LArg, typename RArg, typename Res>
@@ -98,7 +98,7 @@ class IDotVerb: public JVerb {
 
   struct IDotDyad: Dyad {
     IDotDyad(): Dyad(rank_infinity, rank_infinity) {}
-    shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& larg, const JNoun& rarg) const;
+    JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& larg, const JNoun& rarg) const;
   };
 
 public:

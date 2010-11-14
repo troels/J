@@ -270,10 +270,18 @@ public:
   template <typename T>
   JTokenizer(T begin, T end): parser(new InterspersedParser1<Iterator, JTokenBase::Ptr>
 				     (ParseOr<Iterator, JTokenBase::Ptr>::Instantiate()
-				      ->add_or(ComposeParser<Iterator, JTokenBase::Ptr>::Instantiate
-					       (ParseConstant<Iterator>::Instantiate("("), 
-						ConstantParser<Iterator, JTokenBase::Ptr>::Instantiate
-						(JTokenLParen::Instantiate())))
+				      ->add_or(ParseConstant<Iterator>::Instantiate("(") >>
+					       ConstantParser<Iterator, JTokenBase::Ptr>::Instantiate
+					       (JTokenLParen::Instantiate()))
+				      ->add_or(ParseConstant<Iterator>::Instantiate(")") >>
+					       ConstantParser<Iterator, JTokenBase::Ptr>::Instantiate
+					       (JTokenRParen::Instantiate()))
+				      ->add_or(ParseConstant<Iterator>::Instantiate("=:") >>
+					       ConstantParser<Iterator, JTokenBase::Ptr>::Instantiate
+					       (JTokenAssignment::Instantiate("=:")))
+				      ->add_or(ParseConstant<Iterator>::Instantiate("=.") >>
+					       ConstantParser<Iterator, JTokenBase::Ptr>::Instantiate
+					       (JTokenAssignment::Instantiate("=.")))
 				      ->add_or(OperatorParser<Iterator>::Instantiate(begin, end))
 				      ->add_or(NounParser<Iterator>::Instantiate())
 				      ->add_or(NameParser<Iterator>::Instantiate()),

@@ -8,10 +8,10 @@
 namespace J {
 class JConjunction: public JWord {
 public:
+  typedef shared_ptr<JConjunction> Ptr;
   virtual ~JConjunction() {}
   JConjunction(): JWord(grammar_class_conjunction) {}
-  virtual shared_ptr<JWord> operator()(shared_ptr<JMachine> m, shared_ptr<JWord> lword, 
-				       shared_ptr<JWord> rword) const = 0;
+  virtual JWord::Ptr operator()(JMachine::Ptr m, JWord::Ptr lword, JWord::Ptr rword) const = 0;
 };
 }
 

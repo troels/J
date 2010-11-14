@@ -174,7 +174,7 @@ public:
     
     throw MatchFailure("ParseOr failed");
   }
-
+  
   Ptr add_or(OurParserPtr parser) const {
     if (parser_list) 
       return Ptr(new ParseOr<Iterator, Res>(parser_list->cons(parser)));
@@ -375,9 +375,9 @@ public:
 };
 
 template <typename Iterator, typename Res, typename Res1> 
-typename Parser<Iterator, Res>::Ptr operator>>(typename Parser<Iterator, Res1>::Ptr first, 
-				      typename Parser<Iterator, Res>::Ptr second) {
-  return ComposeParser<Iterator, Res, Res1>(first, second);
+typename Parser<Iterator, Res>::Ptr operator>>(shared_ptr<Parser<Iterator, Res1> > first, 
+					       shared_ptr<Parser<Iterator, Res> > second) {
+  return ComposeParser<Iterator, Res, Res1>::Instantiate(first, second);
 }
 }
 
