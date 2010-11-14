@@ -282,6 +282,9 @@ public:
 				      ->add_or(ParseConstant<Iterator>::Instantiate("=.") >>
 					       ConstantParser<Iterator, JTokenBase::Ptr>::Instantiate
 					       (JTokenAssignment::Instantiate("=.")))
+				      ->add_or(ParseConstant<Iterator>::Instantiate("[:") >>
+					       ConstantParser<Iterator, JTokenBase::Ptr>::Instantiate
+					       (JTokenCap::Instantiate()))
 				      ->add_or(OperatorParser<Iterator>::Instantiate(begin, end))
 				      ->add_or(NounParser<Iterator>::Instantiate())
 				      ->add_or(NameParser<Iterator>::Instantiate()),

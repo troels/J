@@ -24,7 +24,8 @@ enum j_token_elem_type {
   j_token_elem_type_name,
   j_token_elem_type_assignment,
   j_token_elem_type_lparen,
-  j_token_elem_type_rparen
+  j_token_elem_type_rparen,
+  j_token_elem_type_cap
 };
 
 template <typename T>
@@ -108,6 +109,15 @@ public:
   }
 };
 
+class JTokenCap: public JTokenBase { 
+public:
+  static JTokenBase::Ptr Instantiate() {
+    return JTokenBase::Ptr(new JTokenCap());
+  }
+
+  JTokenCap(): JTokenBase(j_token_elem_type_cap) {}
+};
+  
 class JTokenAssignment: public JTokenBase { 
   string operator_name;
 
