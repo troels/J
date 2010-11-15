@@ -56,5 +56,3 @@ JTokenBase::Ptr construct_token(JWord::Ptr word) {
   }
 }
 }}
-
-

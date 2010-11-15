@@ -4,7 +4,7 @@
 #include "JBasicConjunctions.hpp"
 
 namespace J {
-JMachine::JMachine(): operators() {
+JMachine::JMachine(): operators(), cur_locale(Locale::Instantiate()) {
   typedef pair<string, JWord::Ptr> p;
 
   operators.insert(p("+", JWord::Ptr(new PlusVerb())));
@@ -34,6 +34,18 @@ shared_ptr<vector<string> > JMachine::list_symbols() const {
   transform(operators.begin(), operators.end(), strs->begin(),
 	    attr_fun(&pair<string, JWord::Ptr>::first));
   return strs;
+}
+
+optional<JWord::Ptr> JMachine::lookup_name(const string& name) const {
+  return cur_locale->lookup_symbol(name);
+}
+
+void JMachine::add_public_symbol(const string& name, JWord::Ptr word) {
+  cur_locale->add_public_symbol(name, word);
+}
+
+void JMachine::add_private_symbol(const string& name, JWord::Ptr word) {
+  cur_locale->add_private_symbol(name, word);
 }
 }
   
