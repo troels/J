@@ -10,6 +10,7 @@
 #include <cstdarg>
 #include <set>
 #include <iterator>
+#include <iostream>
 #include "JGrammar.hpp"
 #include "JNoun.hpp"
 #include "JVerbs.hpp"
@@ -60,13 +61,26 @@ public:
   JWordCriteria(JMachine::Ptr m): JCriteria(m) {}
 
   bool operator()(JTokenBase::Ptr token) const { 
-    if(token->get_j_token_elem_type() == JTokenTraits<T>::token_type) return true;
-    
-    if (token->get_j_token_elem_type() == j_token_elem_type_name) {
-      optional<JWord::Ptr> o(get_machine()->lookup_name(static_cast<JTokenName*>(token.get())->get_name()));
-      if (o && (*o)->get_grammar_class() == JTokenTraits<T>::grammar_class) return true;
+    switch (token->get_j_token_elem_type()) { 
+    case JTokenTraits<T>::token_type:
+      return true;
+      break;
+    case j_token_elem_type_operator:
+      do {
+	optional<JWord::Ptr> o
+	  (get_machine()->lookup_symbol(static_cast<JTokenOperator*>(token.get())->get_operator_name()));
+	return o && (*o)->get_grammar_class() == JTokenTraits<T>::grammar_class;
+      } while(0);
+      break;
+    case j_token_elem_type_name:
+      do {
+	optional<JWord::Ptr> o(get_machine()->lookup_name(static_cast<JTokenName*>(token.get())->get_name()));
+	return o && (*o)->get_grammar_class() == JTokenTraits<T>::grammar_class;
+      } while (0);
+      break;
+    default:
+      return false;
     }
-    
     return false;
   }
 };
@@ -192,7 +206,7 @@ public:
   template <typename Iterator>
   bool is_applicable(Iterator begin) const { 
     if (!(*first)(*begin)) return false;
-    if (!(*second)(*(++begin))) return false;
+    if (!(*second)(*(++begin))) return false; 
     if (!(*third)(*(++begin))) return false;
     if (!(*fourth)(*(++begin))) return false;
     return true;

@@ -9,6 +9,7 @@
 #include "JVerbs.hpp"
 #include "JAdverbs.hpp"
 #include "JConjunctions.hpp"
+#include <iostream>
 
 namespace J { namespace JTokens { 
 using boost::shared_ptr;
@@ -25,7 +26,8 @@ enum j_token_elem_type {
   j_token_elem_type_assignment,
   j_token_elem_type_lparen,
   j_token_elem_type_rparen,
-  j_token_elem_type_cap
+  j_token_elem_type_cap,
+  j_token_elem_type_dummy
 };
 
 template <typename T>
@@ -69,6 +71,15 @@ public:
   }
 };
 
+class JTokenDummy: public JTokenBase { 
+public:
+  static Ptr Instantiate() {
+    return Ptr(new JTokenDummy());
+  } 
+  
+  JTokenDummy(): JTokenBase(j_token_elem_type_dummy) {}
+};
+
 template <typename T>
 class JTokenWord: public JTokenBase {
   typename T::Ptr word;
@@ -90,6 +101,9 @@ class JTokenOperator: public JTokenBase {
   string operator_name;
   
 public:
+  static Ptr Instantiate(const string& operator_name) {
+    return Ptr(new JTokenOperator(operator_name));
+  }
   JTokenOperator(const string& operator_name): 
     JTokenBase(j_token_elem_type_operator), operator_name(operator_name) {}
   
@@ -102,6 +116,10 @@ class JTokenName: public JTokenBase {
   string name;
   
 public:
+  static JTokenBase::Ptr Instantiate(const string& name) {
+    return JTokenBase::Ptr(new JTokenName(name));
+  }
+
   JTokenName(const string& name): JTokenBase(j_token_elem_type_name), name(name) {} 
   
   string get_name() const { 
@@ -134,7 +152,6 @@ public:
 
 class JTokenLParen: public JTokenBase {
 public:
-  typedef JTokenBase::Ptr Ptr;
   static Ptr Instantiate() { 
     return Ptr(new JTokenLParen());
   }
@@ -144,7 +161,6 @@ public:
 
 class JTokenRParen: public JTokenBase { 
 public: 
-  typedef JTokenBase::Ptr Ptr;
   static Ptr Instantiate() { 
     return Ptr(new JTokenRParen());
   }

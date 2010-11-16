@@ -1,5 +1,6 @@
 #include "J.hpp"
 #include "ParserCombinators.hpp"
+#include "JEvaluator.hpp"
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE J
@@ -236,9 +237,9 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE ( verbs )
 
 BOOST_AUTO_TEST_CASE (test_find_max_dims) {
-  shared_ptr<JNoun> arr(new JArray<JInt>(Dimensions(3, 2, 3, 4), shared_ptr<vector<int> >(new vector<int>(24, 1))));
-  shared_ptr<JNoun> arr2(new JArray<JInt>(Dimensions(3, 3, 2, 5), shared_ptr<vector<int> >(new vector<int>(30, 2))));
-  shared_ptr<JNoun> arr3(new JArray<JInt>(Dimensions(3, 3, 2, 10), shared_ptr<vector<int> >(new vector<int>(60, 3))));
+  JNoun::Ptr arr(new JArray<JInt>(Dimensions(3, 2, 3, 4), shared_ptr<vector<int> >(new vector<int>(24, 1))));
+  JNoun::Ptr arr2(new JArray<JInt>(Dimensions(3, 3, 2, 5), shared_ptr<vector<int> >(new vector<int>(30, 2))));
+  JNoun::Ptr arr3(new JArray<JInt>(Dimensions(3, 3, 2, 10), shared_ptr<vector<int> >(new vector<int>(60, 3))));
   
   JResult res(Dimensions(2, 3, 2));
   res.add_noun(arr); res.add_noun(arr2); res.add_noun(arr3);
@@ -649,6 +650,120 @@ BOOST_AUTO_TEST_CASE ( sequence_parser ) {
   // BOOST_CHECK_EQUAL((*++res_iter)->get_j_ast_elem_type(), j_ast_elem_type_noun);
 }
 
+BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE ( criteria )
+
+using namespace ::J::JEvaluator;
+
+BOOST_AUTO_TEST_CASE (criteria0) {
+  JMachine::Ptr m(JMachine::new_machine());
+  JWordCriteria<JVerb> criteria(m);
+  JTokenBase::Ptr token(JTokenOperator::Instantiate("+"));
+  
+  BOOST_CHECK(criteria(token));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE ( transformation_rules )
+
+using namespace ::J::JEvaluator;
+
+BOOST_AUTO_TEST_CASE ( transformation_rule0 ) {
+  JMachine::Ptr m(JMachine::new_machine());
+  JRuleMonad0 monad0(m);
+
+  list<JTokenBase::Ptr> lst;
+  lst.insert(lst.end(), JTokenLParen::Instantiate());
+  lst.insert(lst.end(), JTokenOperator::Instantiate("-"));
+  lst.insert(lst.end(), 
+	     JTokenWord<JNoun>::Instantiate(shared_ptr<JNoun>(new JArray<JInt>(Dimensions(2,2,2), 0, 1,2,3))));
+  lst.insert(lst.end(), JTokenRParen::Instantiate());
+  
+  BOOST_CHECK(monad0(&lst, lst.begin()));
+  BOOST_CHECK_EQUAL(lst.size(), 3);
+  list<JTokenBase::Ptr>::iterator it(lst.begin());
+  ++it;
+  BOOST_CHECK_EQUAL(JArray<JInt>(Dimensions(2,2,2), 0, -1, -2, -3),
+		    *get_word<JNoun>(*it, m));
+}
+
+BOOST_AUTO_TEST_CASE ( transformation_rule1 ) {
+  JMachine::Ptr m(JMachine::new_machine());
+  JRuleMonad1 monad1(m);
+
+  list<JTokenBase::Ptr> lst;
+  lst.insert(lst.end(), JTokenLParen::Instantiate());
+  lst.insert(lst.end(), JTokenOperator::Instantiate("-"));
+  lst.insert(lst.end(), JTokenOperator::Instantiate("-"));
+  lst.insert(lst.end(), JTokenWord<JNoun>::Instantiate
+	     (shared_ptr<JNoun>(new JArray<JInt>(Dimensions(1, 3), 1,  2,  3))));
+  
+  BOOST_CHECK(monad1(&lst, lst.begin()));
+  BOOST_CHECK_EQUAL(lst.size(), 3);
+  BOOST_CHECK_EQUAL(*get_word<JNoun>(lst.back(), m),
+		    JArray<JInt>(Dimensions(1, 3), -1, -2, -3));
+}
+  
+BOOST_AUTO_TEST_CASE ( transformation_rule2 ) {
+  JMachine::Ptr m(JMachine::new_machine());
+  JRuleDyad2 rule(m);
+
+  list<JTokenBase::Ptr> lst;
+  lst.insert(lst.end(), JTokenLParen::Instantiate());
+  lst.insert(lst.end(), JTokenWord<JNoun>::Instantiate
+	     (shared_ptr<JNoun>(new JArray<JInt>(Dimensions(2, 3, 2), 6,  2,  3, 1, 2, 3))));
+  lst.insert(lst.end(), JTokenOperator::Instantiate("-"));
+  lst.insert(lst.end(), JTokenWord<JNoun>::Instantiate
+	     (shared_ptr<JNoun>(new JArray<JInt>(Dimensions(1, 3), 1,  2,  3))));
+  
+  BOOST_CHECK(rule(&lst, lst.begin()));
+  BOOST_CHECK_EQUAL(lst.size(), 2);
+  BOOST_CHECK_EQUAL(JArray<JInt>(Dimensions(2, 3, 2), 5,1,1,-1, -1,0),
+		    *get_word<JNoun>(lst.back(), m));
+}
+  
+BOOST_AUTO_TEST_CASE ( transformation_rule3 ) {
+  JMachine::Ptr m(JMachine::new_machine());
+  JRuleAdverb3 rule(m);
+  
+  list<JTokenBase::Ptr> lst; 
+  lst.insert(lst.end(), JTokenLParen::Instantiate());
+  lst.insert(lst.end(), JTokenOperator::Instantiate("+"));
+  lst.insert(lst.end(), JTokenOperator::Instantiate("/"));
+  lst.insert(lst.end(), JTokenRParen::Instantiate());
+  
+  BOOST_CHECK(rule(&lst, lst.begin()));
+  BOOST_CHECK_EQUAL(lst.size(), 3);
+  JArray<JInt> testObj(Dimensions(1, 5), 1,2,3,4,5);
+  list<JTokenBase::Ptr>::iterator it(lst.begin());
+  ++it;
+  
+  BOOST_CHECK_EQUAL(*(*get_word<JVerb>(*it, m))(m, testObj),
+		    JArray<JInt>(Dimensions(0), 15));
+}
+
+BOOST_AUTO_TEST_CASE ( transformation_rule4 ) {
+  JMachine::Ptr m(JMachine::new_machine());
+  JRuleConjunction4 rule(m);
+  
+  list<JTokenBase::Ptr> lst;
+  lst.insert(lst.end(), JTokenLParen::Instantiate());
+  lst.insert(lst.end(), JTokenOperator::Instantiate("+"));
+  lst.insert(lst.end(), JTokenOperator::Instantiate("\""));
+  lst.insert(lst.end(), JTokenWord<JNoun>::Instantiate
+	     (JNoun::Ptr(new JArray<JInt>(Dimensions(0), 1))));
+  
+  BOOST_CHECK(rule(&lst, lst.begin()));
+  BOOST_CHECK_EQUAL(lst.size(), 2);
+  JVerb::Ptr verb(get_word<JVerb>(lst.back(), m));
+  
+  BOOST_CHECK_EQUAL(*(*verb)(m, JArray<JInt>(Dimensions(2, 2, 3), 1,2,3,4,5,6),
+			     JArray<JInt>(Dimensions(1, 3), 1,2,3)),
+		    JArray<JInt>(Dimensions(2,2, 3), 2,4, 6, 5,7, 9));
+}
+		  
+  
 BOOST_AUTO_TEST_SUITE_END()
 
