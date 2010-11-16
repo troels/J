@@ -477,8 +477,8 @@ BOOST_AUTO_TEST_CASE ( test_parser_or ) {
   parser->parse(&begin, test.end());
   BOOST_CHECK_EQUAL(distance(test.begin(), begin), 7);
   shared_ptr<vector<string> > v(parser->parse(&begin, test.end()));
-BOOST_CHECK_EQUAL(string("bb"), (*v)[0]);
-BOOST_CHECK_THROW(parser->parse(&begin, test.end()), MatchFailure);
+  BOOST_CHECK_EQUAL(string("bb"), (*v)[0]);
+  BOOST_CHECK_THROW(parser->parse(&begin, test.end()), MatchFailure);
 }
 
 BOOST_AUTO_TEST_CASE ( test_interspersed_parser ) {

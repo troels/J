@@ -98,8 +98,6 @@ optional<JWord::Ptr> LocaleCollection::lookup_symbol(const string& name) const {
   }
   return optional<JWord::Ptr>();
 }
-
-
 }
 
 
