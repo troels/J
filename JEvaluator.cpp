@@ -95,12 +95,10 @@ bool JRuleFork5::transform(list<JTokenBase::Ptr>* lst, list<JTokenBase::Ptr>::it
   ++iter;
   list<JTokenBase::Ptr>::iterator saved_iter(iter);
   JTokenBase::Ptr first_arg(*iter);
-  ++iter;
-  list<JTokenBase::Ptr>::iterator saved_iter2(iter);
   JVerb::Ptr verb0(get_word<JVerb>(*++iter, get_machine()));
   JVerb::Ptr verb1(get_word<JVerb>(*++iter, get_machine()));
   ++iter;
-    
+
   if (first_arg->get_j_token_elem_type() == j_token_elem_type_cap) {
     JVerb::Ptr new_verb(new CappedFork(verb0, verb1));
     JTokenBase::Ptr new_token(construct_token(new_verb));
@@ -113,9 +111,10 @@ bool JRuleFork5::transform(list<JTokenBase::Ptr>* lst, list<JTokenBase::Ptr>::it
     lst->erase(saved_iter, iter);
     lst->insert(iter, new_token);
   } else {
-    JVerb::Ptr new_verb(new Hook(verb0, verb1));
+    JNoun::Ptr noun(get_word<JNoun>(first_arg, get_machine()));
+    JVerb::Ptr new_verb(new BoundHook(noun, verb0, verb1));
     JTokenBase::Ptr new_token(construct_token(new_verb));
-    lst->erase(saved_iter2, iter);
+    lst->erase(saved_iter, iter);
     lst->insert(iter, new_token);
   }
 
@@ -137,6 +136,15 @@ bool JRuleBident6::transform(list<JTokenBase::Ptr>* lst, list<JTokenBase::Ptr>::
     lst->erase(saved_iter, iter);
     lst->insert(iter, JTokenWord<JAdverb>::Instantiate(adverb));
     return true;
+  } else if (word0->get_grammar_class() == grammar_class_verb &&
+	     word1->get_grammar_class() == grammar_class_verb) {
+    JVerb::Ptr verb0(boost::static_pointer_cast<JVerb>(word0));
+    JVerb::Ptr verb1(boost::static_pointer_cast<JVerb>(word1));
+    JVerb::Ptr new_verb(new Hook(verb0, verb1));
+    JTokenBase::Ptr new_token(construct_token(new_verb));
+    lst->erase(saved_iter, iter);
+    lst->insert(iter, new_token);
+    return true;
   } else if ((word0->get_grammar_class() == grammar_class_conjunction &&
 	      (word1->get_grammar_class() == grammar_class_noun || 
 	       word1->get_grammar_class() == grammar_class_verb)) ||
@@ -154,7 +162,7 @@ bool JRuleBident6::transform(list<JTokenBase::Ptr>* lst, list<JTokenBase::Ptr>::
     lst->erase(saved_iter, iter);
     lst->insert(iter, JTokenWord<JAdverb>::Instantiate(adverb));
     return true;
-  } else { 
+  } else {
     return false;
   }
 }

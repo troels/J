@@ -42,10 +42,58 @@ public:
 	  Dyad::Ptr(new DyadOp(verb0, verb1))) {}
 };
 
+class BoundHook: public JVerb {
+  class MonadOp: public Monad { 
+    JVerb::Ptr verb0, verb1;
+    JNoun::Ptr noun;
+  public:
+    static Ptr Instantiate(JNoun::Ptr noun, JVerb::Ptr verb0, JVerb::Ptr verb1) {
+      return Ptr(new MonadOp(noun, verb0, verb1));
+    }
+
+    MonadOp(JNoun::Ptr noun, JVerb::Ptr verb0, JVerb::Ptr verb1):
+      Monad(rank_infinity), verb0(verb0), verb1(verb1), noun(noun) {}
+    
+    JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& arg) const {
+      JNoun::Ptr res0((*verb1)(m, arg));
+      JNoun::Ptr res1((*verb0)(m, *noun, *res0));
+      return res1;
+    }
+  };
+
+  class DyadOp: public Dyad {
+    JVerb::Ptr verb0, verb1;
+    JNoun::Ptr noun;
+  public:
+    static Ptr Instantiate(JNoun::Ptr noun, JVerb::Ptr verb0, JVerb::Ptr verb1) {
+      return Ptr(new DyadOp(noun, verb0, verb1));
+    }
+
+    DyadOp(JNoun::Ptr noun, JVerb::Ptr verb0, JVerb::Ptr verb1):
+      Dyad(rank_infinity, rank_infinity), verb0(verb0), verb1(verb1), noun(noun) {}
+    
+    JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& larg, const JNoun& rarg) const { 
+      JNoun::Ptr res0((*verb1)(m, larg, rarg));
+      JNoun::Ptr res1((*verb0)(m, *noun, *res0));
+      return res1;
+    }
+  };
+
+public:
+  BoundHook(JNoun::Ptr noun, JVerb::Ptr verb0, JVerb::Ptr verb1):
+    JVerb(MonadOp::Instantiate(noun, verb0, verb1),
+	  DyadOp::Instantiate(noun, verb0, verb1)) {}
+};
+   
+      
 class Fork: public JVerb { 
   class MonadOp: public Monad { 
     JVerb::Ptr verb0, verb1, verb2;
   public:
+    static Ptr Instantiate(JVerb::Ptr verb0, JVerb::Ptr verb1, JVerb::Ptr verb2) {
+      return Ptr(new MonadOp(verb0, verb1, verb2));
+    }
+
     MonadOp(JVerb::Ptr verb0, JVerb::Ptr verb1, JVerb::Ptr verb2):
       Monad(rank_infinity), verb0(verb0), verb1(verb1), verb2(verb2) {} 
     
@@ -60,6 +108,10 @@ class Fork: public JVerb {
   class DyadOp: public Dyad { 
     JVerb::Ptr verb0, verb1, verb2; 
   public:
+    static Ptr Instantiate(JVerb::Ptr verb0, JVerb::Ptr verb1, JVerb::Ptr verb2) {
+      return Ptr(new DyadOp(verb0, verb1, verb2));
+    }
+
     DyadOp(JVerb::Ptr verb0, JVerb::Ptr verb1, JVerb::Ptr verb2): 
       Dyad(rank_infinity, rank_infinity), verb0(verb0), verb1(verb1), verb2(verb2) {}
     
@@ -73,8 +125,8 @@ class Fork: public JVerb {
  
 public:
   Fork(JVerb::Ptr verb0, JVerb::Ptr verb1, JVerb::Ptr verb2): 
-    JVerb(Monad::Ptr(new MonadOp(verb0, verb1, verb2)),
-	  Dyad::Ptr(new DyadOp(verb0, verb1, verb2))) {}
+    JVerb(MonadOp::Instantiate(verb0, verb1, verb2),
+	  DyadOp::Instantiate(verb0, verb1, verb2)) {}
 };
 
 class CappedFork: public JVerb {
