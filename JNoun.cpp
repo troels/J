@@ -9,22 +9,29 @@ JNoun::JNoun(const Dimensions& d, j_value_type value_type):
 template <typename T>
 JArray<T>::JArray(const Dimensions& d, shared_ptr<container> v):
   JNoun(d, JTypeTrait<T>::value_type), content(v), 
-  begin_iter(content->begin()), end_iter(content->end()) {}
+  begin_iter(content->begin()), end_iter(content->end()) {
+  assert(static_cast<unsigned>(d.number_of_elems()) == v->size());
+}
   
 template <typename T>
 JArray<T>::JArray(const Dimensions& d, shared_ptr<container> v, iter begin, iter end):
   JNoun(d, JTypeTrait<T>::value_type), content(v), 
-  begin_iter(begin), end_iter(end) {}
+  begin_iter(begin), end_iter(end) {
+  assert(d.number_of_elems() == distance(begin, end));
+}
   
 template <typename T>
 JArray<T>::JArray(const Dimensions& d, const JArray<T>& arr, iter begin, iter end):
   JNoun(d, JTypeTrait<T>::value_type), content(arr.content), 
-  begin_iter(begin), end_iter(end) {}
+  begin_iter(begin), end_iter(end) {
+  assert(d.number_of_elems() == distance(begin, end));
+}
   
 template <typename T>
 JArray<T>::JArray(): 
   JNoun(Dimensions(), JTypeTrait<T>::value_type), content(new container(0)),
-  begin_iter(content->begin()), end_iter(content->end()) {}
+  begin_iter(content->begin()), end_iter(content->end()) {
+}
   
 template <typename T>
 JArray<T>::JArray(const Dimensions &d, ...): 
@@ -75,10 +82,10 @@ void JArray<T>::extend_into(const Dimensions &d, iter new_ptr) const {
 }
 
 template <typename T> 
-shared_ptr<JNoun> JArray<T>::extend(const Dimensions &d) const {
+JNoun::Ptr JArray<T>::extend(const Dimensions &d) const {
   assert(d.get_rank() == get_rank());
     
-  if (d == get_dims()) return shared_ptr<JNoun>(new JArray<T>(*this));
+  if (d == get_dims()) return JNoun::Ptr(new JArray<T>(*this));
     
   shared_ptr<container> nv(new container(d.number_of_elems(), JTypeTrait<T>::base_elem()));
     
@@ -98,7 +105,7 @@ shared_ptr<JNoun> JArray<T>::extend(const Dimensions &d) const {
     }
   }
     
-  return shared_ptr<JNoun>(new JArray<T>(d, nv));
+  return JNoun::Ptr(new JArray<T>(d, nv));
 }
 
 template <typename T>
@@ -132,7 +139,7 @@ void JArray<T>::content_string(std::stringstream &ss, int field_width) const {
 }
 
 template <typename T>
-shared_ptr<JNoun> JArray<T>::coordinate(int coord_nr, ...) const {
+JNoun::Ptr JArray<T>::coordinate(int coord_nr, ...) const {
   assert(get_rank() >= coord_nr);
   assert(coord_nr >= 0);
     
@@ -147,18 +154,42 @@ shared_ptr<JNoun> JArray<T>::coordinate(int coord_nr, ...) const {
     offset += coord;
   }
   va_end(va);
+
   Dimensions suffix = get_dims().suffix(-i);
   int suffix_len = suffix.number_of_elems();
   iter ptr = begin() + offset * suffix_len;
-  assert(distance(ptr, end()) > 0);
+  assert(distance(ptr, end()) >= 0);
     
-  return shared_ptr<JNoun>(new JArray<T>(suffix, content, ptr, ptr + suffix_len));
+  return JNoun::Ptr(new JArray<T>(suffix, content, ptr, ptr + suffix_len));
 }
 
 template <typename T>
-shared_ptr<JNoun> JArray<T>::clone() const { 
-  return shared_ptr<JNoun>(new JArray<T>(*this));
+JNoun::Ptr JArray<T>::clone() const { 
+  return JNoun::Ptr(new JArray<T>(*this));
 }
+    
+template <typename T>
+JNoun::Ptr JArray<T>::subarray(int start, int end) const { 
+  assert(start >= 0 && end >= 0);
+  assert(end >= start);
+
+  Dimensions suffix(get_dims().suffix(-1));
+  int nr_of_elems = suffix.number_of_elems();
+  
+  Dimensions new_dims(Dimensions(1, end - start) + suffix);
+  int first_dim = get_dims()[0];
+  if (start <= first_dim && end <= first_dim) {
+    return JNoun::Ptr(new JArray<T>(new_dims, *this, 
+				    begin() + (start * nr_of_elems),
+				    begin() + (end * nr_of_elems)));
+  } else { 
+    shared_ptr<vector<T> > v(new vector<T>(new_dims.number_of_elems(), JTypeTrait<T>::base_elem()));
+    if (start < first_dim) {
+      v->insert(v->begin(), begin() + (start * nr_of_elems), this->end());
+    }
+    return JNoun::Ptr(new JArray<T>(new_dims, v));
+  }
+}    
     
 template <typename T>
 bool JArray<T>::operator==(const JNoun& other) const {

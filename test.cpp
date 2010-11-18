@@ -399,6 +399,9 @@ BOOST_AUTO_TEST_CASE ( test_adverb ) {
   BOOST_CHECK_EQUAL(*verb(m, JArray<JInt>(Dimensions(1,10), 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)),
 		    JArray<JInt>(Dimensions(0), 55));
   
+  BOOST_CHECK_EQUAL(*verb(m, JArray<JInt>(Dimensions(3, 10, 0, 10))),
+		    JArray<JInt>(Dimensions(2, 0, 10)));
+
   JArray<JInt> table(Dimensions(1, 5), -2, -1, 0, 1, 2);
   JArray<JInt> answer(Dimensions(2,5,5), 
 		      -4, -3, -2, -1,  0, 
@@ -409,8 +412,58 @@ BOOST_AUTO_TEST_CASE ( test_adverb ) {
   
   BOOST_CHECK_EQUAL(answer, *verb(m, table, table));
   BOOST_CHECK_EQUAL(*verb(m, answer), JArray<JInt>(Dimensions(1, 5), -10, -5, 0, 5, 10));
+
+  BOOST_CHECK_EQUAL(*verb(m, JArray<JInt>(Dimensions(2, 1, 5), 1,2,3,4,5)),
+		    JArray<JInt>(Dimensions(1, 5), 1,2,3,4,5));
 }
   
+BOOST_AUTO_TEST_CASE ( test_prefix_infix_adverb ) {
+  JMachine::Ptr m(JMachine::new_machine());
+  JVerb::Ptr minus(new MinusVerb());
+  JAdverb::Ptr adverb(new PrefixInfixAdverb());
+  JVerb::Ptr realverb(boost::static_pointer_cast<JVerb>((*adverb)(m, minus)));
+  JNoun::Ptr noun0(new JArray<JInt>(Dimensions(2, 2, 3), 1,2,3,4,5,6));
+  JNoun::Ptr noun1(new JArray<JInt>(Dimensions(1, 6), 1,2,3,4,5,6));
+
+  BOOST_CHECK_EQUAL(*(*realverb)(m, *noun0),
+		    JArray<JInt>(Dimensions(3,2,2,3),
+				 -1,-2,-3,0,0,0, -1,-2,-3,-4,-5,-6));
+
+  BOOST_CHECK_EQUAL(*(*realverb)(m, *noun1),
+		    JArray<JInt>(Dimensions(2,6,6),
+				 -1,0,0, 0,0,0,
+				 -1,-2,0,0,0,0,
+				 -1,-2,-3,0,0,0,
+				 -1,-2,-3,-4,0,0,
+				 -1,-2,-3,-4,-5,0,
+				 -1,-2,-3,-4,-5,-6));
+  
+  JVerb::Ptr otherverb(boost::static_pointer_cast<JVerb>(JInsertTableAdverb()(m, minus)));
+  JVerb::Ptr otherverbwithinsert(boost::static_pointer_cast<JVerb>((*adverb)(m, otherverb)));
+  
+  BOOST_CHECK_EQUAL(*(*otherverbwithinsert)(m, *noun0),
+		    JArray<JInt>(Dimensions(2,2,3), 1,2,3,-3,-3,-3));
+  
+  BOOST_CHECK_EQUAL(*(*otherverbwithinsert)(m, *noun1),
+		    JArray<JInt>(Dimensions(1, 6), 1,-1,2,-2,3,-3));
+
+  BOOST_CHECK_EQUAL((*(*otherverbwithinsert)(m, JArray<JInt>(Dimensions(0), 2), *noun0)),
+		    JArray<JInt>(Dimensions(2, 1, 3), -3, -3, -3)); 
+  BOOST_CHECK_EQUAL((*(*otherverbwithinsert)(m, JArray<JInt>(Dimensions(0), 2), *noun1)),
+		    JArray<JInt>(Dimensions(1, 5), -1,-1,-1,-1,-1));
+  BOOST_CHECK_EQUAL((*(*otherverbwithinsert)(m, JArray<JInt>(Dimensions(0), 7), *noun1)),
+		    JArray<JInt>(Dimensions(1, 0)));
+  BOOST_CHECK_EQUAL((*(*otherverbwithinsert)(m, JArray<JInt>(Dimensions(0), -2), *noun0)),
+		    JArray<JInt>(Dimensions(2, 1 , 3), -3,-3,-3));
+  BOOST_CHECK_EQUAL((*(*otherverbwithinsert)(m, JArray<JInt>(Dimensions(0), -4), *noun1)),
+		    JArray<JInt>(Dimensions(1, 2), -2, -1));
+
+  BOOST_CHECK_EQUAL((*(*otherverbwithinsert)(m, JArray<JInt>(Dimensions(2, 0, 4)))),
+					     JArray<JInt>(Dimensions(2, 0, 4)));
+  BOOST_CHECK_EQUAL((*(*otherverbwithinsert)(m, JArray<JInt>(Dimensions(3, 10, 0, 4)))),
+		    JArray<JInt>(Dimensions(3, 10, 0, 4)));
+}
+
 BOOST_AUTO_TEST_CASE ( test_rank_conjunction ) {
   shared_ptr<JMachine> m(JMachine::new_machine());
   shared_ptr<PlusVerb> plus(new PlusVerb);
@@ -806,11 +859,34 @@ BOOST_AUTO_TEST_CASE ( transformation_rule5 ) {
 		    JArray<JInt>(Dimensions(1,3), -2, -2, -2));
 
   lst.clear();
+  lst.insert(lst.end(), JTokenLParen::Instantiate());
+  lst.insert(lst.end(), JTokenCap::Instantiate());
+  lst.insert(lst.end(), JTokenOperator::Instantiate("-"));
+  lst.insert(lst.end(), JTokenOperator::Instantiate("-"));
   
+  BOOST_CHECK(rule(&lst, lst.begin()));
+  BOOST_CHECK_EQUAL(lst.size(), 2);
   
+  verb = get_word<JVerb>(lst.back(), m);
+  BOOST_CHECK_EQUAL(*(*verb)(m, JArray<JInt>(Dimensions(0), 1)),
+		    JArray<JInt>(Dimensions(0), 1));
+
+  BOOST_CHECK_EQUAL(*(*verb)(m, 
+			     JArray<JInt>(Dimensions(0), 1),
+			     JArray<JInt>(Dimensions(0), 1)),
+		    JArray<JInt>(Dimensions(0), 0));
 }
 
+// BOOST_AUTO_TEST_CASE ( transformation_rule6 ) {
+//   JMachine::Ptr m(JMachine::new_machine());
+//   JRuleBident6 rule(m);
+  
+//   list<JTokenBase::Ptr> lst;
+//   lst.insert(JTokenLParen::Instantiate());
+//   lst.insert(
+// }  
 						       
 						       
 BOOST_AUTO_TEST_SUITE_END()
-
+  
+  

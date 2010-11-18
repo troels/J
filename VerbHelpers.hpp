@@ -13,7 +13,7 @@ std::auto_ptr<OperationIteratorBase> get_operation_iterator(const JNoun& arg, co
 							    int output_rank);
 
 class JResult { 
-  typedef vector<shared_ptr<JNoun> > JNounList;
+  typedef vector<JNoun::Ptr > JNounList;
 
   Dimensions frame;
   JNounList nouns;
@@ -23,7 +23,7 @@ class JResult {
   optional<j_value_type> value_type;
 
   template <typename T>
-  shared_ptr<JNoun> assemble_result_internal() const;
+  JNoun::Ptr assemble_result_internal() const;
 
 public:
   JResult(const Dimensions& frame);
@@ -31,9 +31,9 @@ public:
   Dimensions get_frame() const { return frame; }
   shared_ptr<vector<int> > get_max_dims() const { return max_dims; }
   optional<j_value_type> get_value_type() const { return value_type; }
-  void add_noun(shared_ptr<JNoun> noun);
+  void add_noun(JNoun::Ptr noun);
   const JNounList& get_nouns() const { return nouns; }
-  shared_ptr<JNoun> assemble_result() const;
+  JNoun::Ptr assemble_result() const;
 };
   
 Dimensions find_frame(int lrank, int rrank, const Dimensions& larg, const Dimensions& rarg);
@@ -67,11 +67,11 @@ shared_ptr<JArray<Res> > scalar_dyadic_apply(const JArray<LArg>& larg, const JAr
 
   
 template <typename Op>
-shared_ptr<JNoun> dyadic_apply(int lrank, int rrank, 
-			       const JNoun& larg, const JNoun& rarg,
-			       Op op) {
+JNoun::Ptr dyadic_apply(int lrank, int rrank, 
+			JMachine::Ptr m, const JNoun& larg, const JNoun& rarg,
+			Op op) {
   if (lrank >= larg.get_rank() && rrank >= rarg.get_rank()) {
-    return op(larg, rarg)->clone();
+    return op(m, larg, rarg)->clone();
   }
     
   Dimensions frame = find_frame(lrank, rrank, larg.get_dims(), rarg.get_dims());
@@ -82,7 +82,7 @@ shared_ptr<JNoun> dyadic_apply(int lrank, int rrank,
   JResult res(frame);
     
   for (;!liter->at_end() && !riter->at_end(); ++(*liter), ++(*riter)) {
-    res.add_noun(op(***liter, ***riter));
+    res.add_noun(op(m, ***liter, ***riter));
   }
 
   assert(liter->at_end() && riter->at_end());
@@ -99,13 +99,13 @@ shared_ptr<JArray<Res> > scalar_monadic_apply(const JArray<Arg>& arg, OpType<Arg
 }
 
 template <typename OpType>
-shared_ptr<JNoun > monadic_apply(int rank, const JNoun& arg, OpType op) {
+shared_ptr<JNoun > monadic_apply(int rank, JMachine::Ptr m, const JNoun& arg, OpType op) {
   if (rank < 0) {
     rank = std::max(0, arg.get_rank() + rank);
   }
 
   if ( rank >= arg.get_rank()) {
-    return op(arg);
+    return op(m, arg);
   }
 
   Dimensions frame = arg.get_dims().prefix(-rank);
@@ -113,7 +113,7 @@ shared_ptr<JNoun > monadic_apply(int rank, const JNoun& arg, OpType op) {
       
   for (std::auto_ptr<OperationIteratorBase> input(get_operation_iterator(arg, frame, rank)); 
        !input->at_end(); ++(*input)) {
-    res.add_noun(op(***input));
+    res.add_noun(op(m, ***input));
   }
 
   return res.assemble_result();
@@ -122,17 +122,43 @@ shared_ptr<JNoun > monadic_apply(int rank, const JNoun& arg, OpType op) {
 template <template <typename, typename, typename> class Op>
 struct ScalarDyad: public Dyad {
   ScalarDyad(): Dyad(0, 0) {}
-  inline shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& larg, const JNoun& rarg) const;
+  inline JNoun::Ptr operator()(shared_ptr<JMachine> m, const JNoun& larg, const JNoun& rarg) const;
+};
+
+template <typename Op>
+class DefaultDyad: public Dyad {
+  Op op;
+public:
+  DefaultDyad(int lrank, int rrank, Op op): Dyad(lrank, rrank), op(op) {}
+
+  static Ptr Instantiate(int lrank, int rrank, Op op) {
+    return Ptr(new DefaultDyad<Op>(lrank, rrank, op));
+  }
+
+  JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& larg, const JNoun& rarg) const {
+    return dyadic_apply(get_lrank(), get_rrank(), m, larg, rarg, op);
+  }
 };
 
 template <template <typename, typename> class Op>
 struct ScalarMonad: public Monad { 
   ScalarMonad(): Monad(0) {}
-  inline shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& arg) const;
+  inline JNoun::Ptr operator()(shared_ptr<JMachine> m, const JNoun& arg) const;
+};
+
+template <typename Op>
+class DefaultMonad: public Monad { 
+  Op op;
+public:
+  DefaultMonad(int rank, Op op): Monad(rank), op(op) {}
+  
+  JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& arg) const { 
+    return monad_apply(get_rank(), m, arg, op);
+  }
 };
 
 template <template <typename, typename> class Op>
-inline shared_ptr<JNoun> ScalarMonad<Op>::operator()(shared_ptr<JMachine>, const JNoun& arg) const {
+inline JNoun::Ptr ScalarMonad<Op>::operator()(shared_ptr<JMachine>, const JNoun& arg) const {
   if (arg.get_value_type() == j_value_type_int) {
     return scalar_monadic_apply<Op, JInt, JInt>(static_cast<const JArray<JInt> &>(arg),
 						Op<JInt, JInt>());
@@ -144,7 +170,7 @@ inline shared_ptr<JNoun> ScalarMonad<Op>::operator()(shared_ptr<JMachine>, const
 }
       
 template <template <typename, typename, typename> class Op>  
-inline shared_ptr<JNoun> ScalarDyad<Op>::operator()(shared_ptr<JMachine>, const JNoun& larg, 
+inline JNoun::Ptr ScalarDyad<Op>::operator()(shared_ptr<JMachine>, const JNoun& larg, 
 						    const JNoun& rarg) const {
   if (larg.get_value_type() == j_value_type_int && 
       rarg.get_value_type() == j_value_type_int) {
@@ -198,19 +224,21 @@ public:
   }
 };
 
+
 class VerbContainer { 
-  shared_ptr<JVerb> verb;
-  shared_ptr<JMachine> jmachine; 
+  JVerb::Ptr verb;
+  JMachine::Ptr jmachine; 
+
 public:
-  shared_ptr<JNoun> operator()(const JNoun& larg, const JNoun& rarg) const {
+  JNoun::Ptr operator()(const JNoun& larg, const JNoun& rarg) const {
     return (*verb)(jmachine, larg, rarg);
   }
     
-  shared_ptr<JNoun> operator()(const JNoun& arg) const { 
+  JNoun::Ptr operator()(const JNoun& arg) const { 
     return (*verb)(jmachine, arg);
   }
 
-  VerbContainer(shared_ptr<JMachine> jmachine, shared_ptr<JVerb> verb): verb(verb), jmachine(jmachine) {}
+  VerbContainer(JMachine::Ptr jmachine, JVerb::Ptr verb): verb(verb), jmachine(jmachine) {}
 };
 
 }

@@ -59,6 +59,7 @@ public:
   JWord(j_grammar_class grammar_class): grammar_class(grammar_class) {}
   j_grammar_class get_grammar_class() const { return grammar_class; }
 };
+
 }
     
 #endif

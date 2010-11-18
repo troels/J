@@ -75,7 +75,7 @@ public:
 class IDotVerb: public JVerb { 
   template <typename Arg, typename Res>
   struct MonadOp: public std::unary_function<Arg, Res> {
-    JNoun::Ptr operator()(const JNoun& arg) const;
+    JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& arg) const;
   };
 
   struct IDotMonad: Monad { 

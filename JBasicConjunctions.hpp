@@ -16,7 +16,7 @@ class RankConjunction: public JConjunction {
     public:
       MyMonad(int rank, shared_ptr<JVerb> verb): Monad(rank), verb(verb) {}
       shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& arg) const {
-	return monadic_apply(get_rank(), arg, VerbContainer(m, verb));
+	return monadic_apply(get_rank(), m, arg, *verb);
       }
     };
 	
@@ -26,7 +26,7 @@ class RankConjunction: public JConjunction {
     public:
       MyDyad(int lrank, int rrank, shared_ptr<JVerb> verb): Dyad(lrank, rrank),  verb(verb) {}
       shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& larg, const JNoun& rarg) const { 
-	return dyadic_apply(get_lrank(), get_rrank(), larg, rarg, VerbContainer(m, verb));
+	return dyadic_apply(get_lrank(), get_rrank(), m, larg, rarg, *verb);
       }
     };
   public:

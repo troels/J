@@ -12,14 +12,14 @@ shared_ptr<JNoun> JArithmeticVerb<T>::unit(const Dimensions& dims) const {
 
 template class JArithmeticVerb<JInt>;
   
-shared_ptr<JNoun> IDotVerb::IDotMonad::operator()(shared_ptr<JMachine>, const JNoun& arg) const { 
+shared_ptr<JNoun> IDotVerb::IDotMonad::operator()(JMachine::Ptr m, const JNoun& arg) const { 
   JArray<JInt> int_arg = require_ints(arg);
 
-  return monadic_apply< MonadOp<JInt, JInt> >(get_rank(), int_arg, MonadOp<JInt, JInt>());
+  return monadic_apply< MonadOp<JInt, JInt> >(get_rank(), m, int_arg, MonadOp<JInt, JInt>());
 }
 
 template <>
-shared_ptr<JNoun > IDotVerb::MonadOp<JInt, JInt>::operator()(const JNoun& _arg) const {
+shared_ptr<JNoun > IDotVerb::MonadOp<JInt, JInt>::operator()(JMachine::Ptr, const JNoun& _arg) const {
   const JArray<JInt>& arg = static_cast<const JArray<JInt>&>(_arg);
   vector<int> v(arg.begin(), arg.end());
   shared_ptr<vector<JInt> > res(new vector<JInt>(std::abs(accumulate(v.begin(), v.end(), 

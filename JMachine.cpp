@@ -12,6 +12,7 @@ JMachine::JMachine(): operators(), cur_locale(Locale::Instantiate()) {
   operators.insert(p("i.", JWord::Ptr(new IDotVerb())));
   operators.insert(p("/", JWord::Ptr(new JInsertTableAdverb())));
   operators.insert(p("\"", JWord::Ptr(new RankConjunction())));
+  operators.insert(p("\\", JWord::Ptr(new PrefixInfixAdverb())));
 }
 
 JMachine::Ptr JMachine::new_machine() { 
