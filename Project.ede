@@ -13,6 +13,6 @@
     :ldlibs '("boost_unit_test_framework" "boost_regex")
     )
    )
-  :variables '(("CPPFLAGS" . "-Wall -Wextra -pedantic -O2"))
+  :variables '(("CPPFLAGS" . "-Wall -Wextra -ansi -pedantic -O2"))
   :configuration-variables 'nil
   )

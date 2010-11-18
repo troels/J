@@ -20,33 +20,7 @@ j_value_type highest_j_value(ParsedNumberBase::Ptr a, j_value_type type) {
   return a->get_value_type();
 }
 
-shared_ptr<JNoun> create_jarray(j_value_type value_type, VecPtr<ParsedNumberBase::Ptr>::type vec) {
-  typename VecPtr<ParsedNumberBase::Ptr>::type v2(new vector<ParsedNumberBase::Ptr>(vec->size()));
-  
-  vector<ParsedNumberBase::Ptr>::iterator iter = v2->begin();
-  BOOST_FOREACH(ParsedNumberBase::Ptr p, *vec) { 
-    *iter = p->convert_to(value_type);
-    ++iter;
-  }
 
-  switch (value_type) { 
-  case j_value_type_int:
-    return create_noun<JInt>(v2);
-  case j_value_type_float:
-    return create_noun<JFloat>(v2);
-  default:
-    throw std::logic_error("Clauses missing");
-  }
-}
-
-template <typename T>
-shared_ptr<JNoun> create_noun(const VecPtr<ParsedNumberBase::Ptr>::type& vec) {
-  shared_ptr<vector<T> > v(new vector<T>());
-  BOOST_FOREACH(ParsedNumberBase::Ptr& p, *vec) { 
-    v->push_back(static_cast<ParsedNumber<T>*>(p.get())->get_nr());
-  }
-  return shared_ptr<JNoun>(new JArray<T>(Dimensions(1, vec->size()), v));
-}
 
 
 template <typename Number>

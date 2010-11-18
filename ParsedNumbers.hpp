@@ -71,10 +71,39 @@ int get_j_value_type_place_in_hierarchy(j_value_type t);
 j_value_type highest_j_value(ParsedNumberBase::Ptr a, j_value_type type);
 
 template <typename T>
-shared_ptr<JNoun> create_noun(const VecPtr<ParsedNumberBase::Ptr>::type& vec);
+struct create_noun {
+  template <typename Iterator>
+  static JNoun::Ptr apply(Iterator begin, Iterator end) {
+    shared_ptr<vector<T> > v(new vector<T>(distance(begin, end)));
+    typename vector<T>::iterator out_iter(v->begin());
+    
+    for (Iterator in_iter(begin); in_iter != end; ++in_iter, ++out_iter) {
+      *out_iter = static_cast<ParsedNumber<T>*>(in_iter->get())->get_nr();
+    }
+    
+    return JNoun::Ptr(new JArray<T>(Dimensions(1, v->size()), v));
+  }
+};
 
-shared_ptr<JNoun> create_jarray(j_value_type value_type, VecPtr<ParsedNumberBase::Ptr>::type vec);
+template <typename Iterator>
+shared_ptr<JNoun> create_jarray(j_value_type value_type, Iterator begin, Iterator end) {
+  typename VecPtr<ParsedNumberBase::Ptr>::type v2(new vector<ParsedNumberBase::Ptr>(distance(begin, end)));
+  vector<ParsedNumberBase::Ptr>::iterator iter = v2->begin();
 
+  for (Iterator arg_iter = begin; arg_iter != end; ++arg_iter) {
+    *iter = (*arg_iter)->convert_to(value_type);
+    ++iter;
+  }
+
+  switch (value_type) { 
+  case j_value_type_int:
+    return create_noun<JInt>::apply(v2->begin(), v2->end());
+  case j_value_type_float:
+    return create_noun<JFloat>::apply(v2->begin(), v2->end());
+  default:
+    throw std::logic_error("Clauses missing");
+  }
+}
 
 }}
 

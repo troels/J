@@ -545,14 +545,14 @@ BOOST_AUTO_TEST_CASE ( test_interspersed_parser ) {
 
   string test1("ab  -123213-ab   -232-");
   string::iterator iter = test1.begin();
-  shared_ptr<vector<StringVecPtr > > v(parser.parse(&iter, test1.end()));
+  shared_ptr<deque<StringVecPtr > > v(parser.parse(&iter, test1.end()));
   BOOST_CHECK(iter == test1.begin() + 17);
   BOOST_CHECK_EQUAL(v->at(0)->at(0),"ab  ");
   BOOST_CHECK_EQUAL(v->at(1)->at(0),"ab   ");
 
   string test2("yadayada");
   iter = test2.begin();
-  shared_ptr<vector<StringVecPtr > > v2(parser.parse(&iter, test2.end()));
+  shared_ptr<deque<StringVecPtr > > v2(parser.parse(&iter, test2.end()));
   BOOST_CHECK_EQUAL(v2->size(), 0);
   BOOST_CHECK(iter == test2.begin());
   
@@ -668,7 +668,7 @@ BOOST_AUTO_TEST_CASE ( sequence_parser ) {
     (JTokenizer<string::iterator>::Instantiate(builtins.begin(), builtins.end()));
   string::iterator iter = test1.begin();
   
-  JTokenizer<string::iterator>::result_type res( parser->parse(&iter, test1.end( ) ) );
+  JTokenizer<string::iterator>::return_type res( parser->parse(&iter, test1.end( ) ) );
   
   // JTokenSequence* js(static_cast<JTokenSequence*>(res.get()));
   // BOOST_CHECK_EQUAL(distance(js->begin(), js->end()), 6);

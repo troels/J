@@ -135,16 +135,17 @@ public:
 
 template <typename Iterator>
 class ParseNoun: public Parser<Iterator, JNoun::Ptr > { 
-  InterspersedParser1<Iterator, ParsedNumberBase::Ptr, void> parser;
-
+  typedef InterspersedParser1<Iterator, ParsedNumberBase::Ptr, void> parser_type;
+  parser_type parser;
+  
 public:
   ParseNoun(): parser(NumberParser<Iterator>::Instantiate(), 
 		      WhitespaceParser<Iterator>::Instantiate()) {}
   
   JNoun::Ptr parse(Iterator* begin, Iterator end) const { 
-    typename VecPtr<ParsedNumberBase::Ptr>::type v(parser.parse(begin, end));
+    typename parser_type::return_type v(parser.parse(begin, end));
     assert(v->size() > 0);
-    typename vector<ParsedNumberBase::Ptr>::iterator iter = v->begin();
+    typename deque<ParsedNumberBase::Ptr>::iterator iter = v->begin();
     
     j_value_type highest_j_value_type = (*iter)->get_value_type();
     ++iter;
@@ -153,7 +154,7 @@ public:
       highest_j_value_type = highest_j_value(*iter, highest_j_value_type);
     }
 
-    return create_jarray(highest_j_value_type, v);
+    return create_jarray(highest_j_value_type, v->begin(), v->end());
   }
 };
 
@@ -256,19 +257,20 @@ public:
   
 
 template <typename Iterator>
-class JTokenizer: public Parser<Iterator, shared_ptr<vector<JTokenBase::Ptr> > >  {
+class JTokenizer: public Parser<Iterator, 
+				typename InterspersedParser1<Iterator, JTokenBase::Ptr>::return_type>  {
+  typedef InterspersedParser1<Iterator, JTokenBase::Ptr> parser_type;
+
 public:
-  typedef shared_ptr<vector<JTokenBase::Ptr> > result_type;
-  typedef typename Parser<Iterator, result_type>::Ptr Ptr;
+  typedef typename parser_type::return_type return_type;
+  typedef typename Parser<Iterator, return_type>::Ptr Ptr;
 
 private:
-  typedef typename InterspersedParser1<Iterator, JTokenBase::Ptr>::return_type parser_return_type;
-  typedef typename Parser<Iterator, parser_return_type >::Ptr parser_ptr;
-  parser_ptr parser;
+  Ptr parser;
 
 public:
   template <typename T>
-  JTokenizer(T begin, T end): parser(new InterspersedParser1<Iterator, JTokenBase::Ptr>
+  JTokenizer(T begin, T end): parser(new parser_type
 				     (ParseOr<Iterator, JTokenBase::Ptr>::Instantiate()
 				      ->add_or(ParseConstant<Iterator>::Instantiate("(") >>
 					       ConstantParser<Iterator, JTokenBase::Ptr>::Instantiate
@@ -295,7 +297,7 @@ public:
     return Ptr(new JTokenizer(begin, end));
   }
   
-  result_type parse(Iterator* begin, Iterator end) const {
+  return_type parse(Iterator* begin, Iterator end) const {
     return parser->parse(begin, end);
   }
 };

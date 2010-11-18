@@ -13,8 +13,9 @@
 #include <functional>
 #include <cassert>
 #include <utility>
-
+#include <deque>
 namespace ParserCombinators { 
+using std::deque;
 using std::pair;
 using std::string;
 using std::vector;
@@ -183,7 +184,11 @@ public:
 };
 
 template <typename Iterator, typename Res, typename InterRes = void>
-class InterspersedParser: public Parser<Iterator, shared_ptr<vector<Res> > > { 
+class InterspersedParser: public Parser<Iterator, shared_ptr<deque<Res> > > { 
+public:
+  typedef shared_ptr<deque<Res> > return_type;
+  
+private:
   typename Parser<Iterator, Res>::Ptr parser;
   typename Parser<Iterator, InterRes>::Ptr inter_parser;
 
@@ -191,9 +196,9 @@ public:
   InterspersedParser(typename Parser<Iterator, Res>::Ptr parser, 
 		     typename Parser<Iterator, InterRes>::Ptr inter_parser): 
     parser(parser), inter_parser(inter_parser) {}
-
-  shared_ptr<vector<Res> > parse(Iterator* begin, Iterator end) const {
-    shared_ptr<vector<Res> > output(new vector<Res>());
+  
+  return_type parse(Iterator* begin, Iterator end) const {
+    return_type output(new deque<Res>());
     Iterator cached_begin = *begin;
     try { 
       output->push_back(parser->parse(begin, end));
@@ -223,17 +228,19 @@ struct VecPtr {
 };
 
 template <typename Iterator, typename Res, typename InterRes = void>
-class InterspersedParser1: public Parser<Iterator, shared_ptr<vector<Res> > > { 
+class InterspersedParser1: public Parser<Iterator, 
+					 typename InterspersedParser<Iterator, Res, InterRes>::return_type> { 
   InterspersedParser<Iterator, Res, InterRes> parser;
+
 public:
-  typedef shared_ptr<vector<Res> > return_type;
+  typedef typename InterspersedParser<Iterator, Res, InterRes>::return_type return_type;
   InterspersedParser1(typename Parser<Iterator, Res>::Ptr parser,
 		      typename Parser<Iterator, InterRes>::Ptr inter_parser):
     parser(parser, inter_parser) {}
 
   return_type parse(Iterator* begin, Iterator end) const { 
     Iterator cached_begin = *begin;
-    shared_ptr<vector<Res> > res(parser.parse(begin, end));
+    return_type res(parser.parse(begin, end));
     if (res->size() == 0) { 
       throw MatchFailure("Failed to match InterspersedParser1");
     }  else {
