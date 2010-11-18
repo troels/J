@@ -11,7 +11,7 @@ void JResult::add_noun(shared_ptr<JNoun> noun) {
     
   if (get_value_type() && *get_value_type() != noun->get_value_type()) 
     throw JIllegalValueTypeException();
-    
+
   if (!rank) {
     max_dims = shared_ptr<vector<int> >(new vector<int>(noun->get_dims().begin(), noun->get_dims().end()));
     rank = noun->get_rank();
@@ -34,15 +34,19 @@ void JResult::add_noun(shared_ptr<JNoun> noun) {
 }
   
 shared_ptr<JNoun> JResult::assemble_result() const { 
-  switch(*get_value_type()) { 
-  case j_value_type_int:
+  if (get_value_type()) {
+    switch(*get_value_type()) { 
+    case j_value_type_int:
+      return assemble_result_internal<JInt>();
+    case j_value_type_float:
+      return assemble_result_internal<JFloat>();
+    case j_value_type_char:
+    case j_value_type_box:
+    case j_value_type_complex:
+      assert(0);
+    }
+  } else {
     return assemble_result_internal<JInt>();
-  case j_value_type_float:
-    return assemble_result_internal<JFloat>();
-  case j_value_type_char:
-  case j_value_type_box:
-  case j_value_type_complex:
-    assert(0);
   }
   assert(0);
 }
@@ -61,7 +65,7 @@ shared_ptr<JNoun> JResult::assemble_result_internal() const {
   for (;nounlist_ptr != nounlist_end; ++nounlist_ptr, ptr += content_dims_len) {
     boost::static_pointer_cast<JArray<T>, JNoun>(*nounlist_ptr)->extend_into(content_dims, ptr);
   }
-    
+  
   return shared_ptr<JNoun>(new JArray<T>(res, v));
 }
 

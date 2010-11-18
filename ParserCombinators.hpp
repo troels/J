@@ -89,20 +89,6 @@ public:
   }
 };    
 
-template <typename Iterator>
-class ParseConstant: public Parser<Iterator, void> { 
-  string str;
-public:
-  ParseConstant(const string& str): str(str) {}
-  void parse(Iterator* begin, Iterator end) const { 
-    if (distance(*begin, end) < distance(str.begin(), str.end()) ||
-	!equal(str.begin(), str.end(), *begin)) {
-      throw MatchFailure("Expected: " + str);
-    } 
-    
-    advance(*begin, distance(str.begin(), str.end()));
-  }
-};
 
 using boost::enable_shared_from_this;
 
@@ -188,7 +174,7 @@ public:
     
     throw MatchFailure("ParseOr failed");
   }
-
+  
   Ptr add_or(OurParserPtr parser) const {
     if (parser_list) 
       return Ptr(new ParseOr<Iterator, Res>(parser_list->cons(parser)));
@@ -325,6 +311,74 @@ public:
     regexp.parse(begin, end);
   }
 };
+
+template <typename Iterator, typename Res, typename Res1 = void>
+class ComposeParser: public Parser<Iterator, Res> {
+  typedef typename Parser<Iterator, Res1>::Ptr first_parser_type;
+  typedef typename Parser<Iterator, Res>::Ptr second_parser_type;
+  
+  first_parser_type first_parser;
+  second_parser_type second_parser;
+  
+public:
+
+  typedef typename Parser<Iterator, Res>::Ptr Ptr;
+
+  static Ptr Instantiate(first_parser_type first_parser, second_parser_type second_parser) { 
+    return Ptr(new ComposeParser<Iterator, Res>(first_parser, second_parser));
+  }
+
+  ComposeParser(first_parser_type first_parser, second_parser_type second_parser):
+    first_parser(first_parser), second_parser(second_parser) {}
+  
+  Res parse(Iterator* begin, Iterator end) const { 
+    first_parser->parse(begin, end);
+    return second_parser->parse(begin, end);
+  }
+};
+
+template <typename Iterator>
+class ParseConstant: public Parser<Iterator, void> { 
+  string str;
+public:
+  typedef typename Parser<Iterator, void>::Ptr Ptr;
+  static Ptr Instantiate(const string& str) {
+    return Ptr(new ParseConstant<Iterator>(str));
+  }
+
+  ParseConstant(const string& str): str(str) {}
+
+  void parse(Iterator* begin, Iterator end) const { 
+    if (distance(*begin, end) < distance(str.begin(), str.end()) ||
+	!equal(str.begin(), str.end(), *begin)) {
+      throw MatchFailure("Expected: " + str);
+    } 
+    
+    advance(*begin, distance(str.begin(), str.end()));
+  }
+};
+
+template <typename Iterator, typename Res>
+class ConstantParser: public Parser<Iterator, Res> { 
+  Res ret;
+public:
+  typedef typename Parser<Iterator, Res>::Ptr Ptr;
+  static Ptr Instantiate(const Res& ret) {
+    return Ptr(new ConstantParser<Iterator, Res>(ret));
+  }
+
+  ConstantParser(const Res& ret): ret(ret) {}
+  
+  Res parse(Iterator*, Iterator) const {
+    return ret;
+  }
+};
+
+template <typename Iterator, typename Res, typename Res1> 
+typename Parser<Iterator, Res>::Ptr operator>>(shared_ptr<Parser<Iterator, Res1> > first, 
+					       shared_ptr<Parser<Iterator, Res> > second) {
+  return ComposeParser<Iterator, Res, Res1>::Instantiate(first, second);
+}
 }
 
 #endif

@@ -8,8 +8,10 @@
 #include <utility>
 #include <cmath>
 #include <iostream>
+#include <boost/optional.hpp>
 
 namespace J {
+using boost::optional;
 using std::pair;
 
 class JNoun: public JWord {
@@ -23,14 +25,15 @@ private:
 public:
   JNoun(const Dimensions& d, j_value_type value_type);
   virtual string to_string() const = 0;
-  virtual shared_ptr<JNoun> coordinate(int nr_coords, ...) const = 0;
-  virtual shared_ptr<JNoun> clone() const = 0;
-
+  virtual JNoun::Ptr subarray(int start, int end) const = 0;
+  virtual JNoun::Ptr coordinate(int nr_coords, ...) const = 0;
+  virtual JNoun::Ptr clone() const = 0;
+  
   virtual bool operator==(const JNoun& n) const = 0;
   virtual bool operator!=(const JNoun& n) const = 0;
-  virtual shared_ptr<JNoun> extend(const Dimensions &d) const = 0;
+  virtual JNoun::Ptr extend(const Dimensions &d) const = 0;
     
-  bool is_scalar() const { return get_dims().get_rank() == 0; }
+  bool is_scalar() const { return get_rank() == 0; }
   bool is_array() const { return !is_scalar(); }
     
   int get_rank() const { return get_dims().get_rank(); }
@@ -59,11 +62,11 @@ public:
   JArray(const Dimensions& d, shared_ptr<container> v);
   JArray(const Dimensions& d, shared_ptr<container> v, iter begin, iter end);
   JArray(const Dimensions& d, const JArray<T>& arr, iter begin, iter end);
-  JArray();
   JArray(const Dimensions &d, ...);
+  JArray();
 
   JArray<T> operator[](int n) const;
-  shared_ptr<JNoun> coordinate(int nr_coords, ...) const;
+  JNoun::Ptr coordinate(int nr_coords, ...) const;
     
 
   bool operator==(const JNoun& j) const;
@@ -74,8 +77,9 @@ public:
   string to_string() const;
   string content_string() const;
 
-  shared_ptr<JNoun> clone() const;
-  virtual shared_ptr<JNoun> extend(const Dimensions &d) const;
+  JNoun::Ptr clone() const;
+  JNoun::Ptr subarray(int start, int end) const;
+  virtual JNoun::Ptr extend(const Dimensions &d) const;
   void extend_into(const Dimensions& d, iter new_begin) const;
 
   shared_ptr<container> get_content() const { return content; }
@@ -89,8 +93,6 @@ shared_ptr<JArray<T> > filled_array(const Dimensions &dims, T val) {
   shared_ptr<vector<T> > v(new vector<T>(dims.number_of_elems(), val));
   return shared_ptr<JArray<T> >(new JArray<T>(dims, v));
 }
-
-
 }
 
 #endif

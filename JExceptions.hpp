@@ -42,6 +42,18 @@ public:
     JException(msg, "JIllegalGrammarClassException") {}
 };
 
+class JIllegalSyntaxException: public JException { 
+public:
+  JIllegalSyntaxException(string msg = "Illegal syntax"):
+    JException(msg, "JIllegalSyntaxException") {}
+};
+
+class JIllegalImportException: public JException { 
+public:
+  JIllegalImportException(string msg = "Illegal import performed"): 
+    JException(msg, "JIllegalImportException") {}
+};
+
 class JUnimplementedOperationException: public JException {
 public:
   JUnimplementedOperationException(string msg = "Unimplemented operation"): 

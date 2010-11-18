@@ -6,8 +6,10 @@
 namespace J {
 class JAdverb: public JWord {
 public:
+  typedef shared_ptr<JAdverb> Ptr;
+
   JAdverb(): JWord(grammar_class_adverb) {}
-  virtual shared_ptr<JWord> operator()(shared_ptr<JMachine> m, shared_ptr<JWord> word) const = 0;
+  virtual JWord::Ptr operator()(JMachine::Ptr m, JWord::Ptr word) const = 0;
 };
 }
 #endif

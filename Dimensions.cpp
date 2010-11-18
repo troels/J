@@ -30,9 +30,13 @@ bool Dimensions::operator==(const Dimensions& d) const {
 
       
 int Dimensions::operator[](int n) const {
-  assert(n < get_rank() && n >= 0);
-      
-  return *(begin() + n);
+  if (n >= 0) { 
+    assert(n < get_rank());
+    return *(begin() + n);
+  } else {
+    assert(-n <= get_rank());
+    return *(begin() + (get_rank() + n));
+  }
 }    
   
 Dimensions Dimensions::suffix(int n) const {

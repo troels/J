@@ -12,25 +12,30 @@
 namespace J {
 class Dyad {
   int lrank,  rrank;
+
 public:
+  typedef shared_ptr<Dyad> Ptr;
+
   virtual ~Dyad() {};
   Dyad(int lrank, int rrank): lrank(lrank), rrank(rrank) {}
     
   int get_lrank() const { return lrank; }
   int get_rrank() const { return rrank; }
 
-  virtual shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& larg, const JNoun& rarg) const = 0;
+  virtual JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& larg, const JNoun& rarg) const = 0;
 };
 
 class Monad { 
   int rank;
+
 public:
+  typedef shared_ptr<Monad> Ptr;
   virtual ~Monad()  {}
   Monad(int rank): rank(rank) {}
     
   int get_rank() const { return rank;}
     
-  virtual shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& arg) const = 0;
+  virtual JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& arg) const = 0;
 };
 
 class JVerb: public JWord {
@@ -38,15 +43,17 @@ class JVerb: public JWord {
   shared_ptr<Dyad> dyad;
 
 public:
+  typedef shared_ptr<JVerb> Ptr;
+
   virtual ~JVerb() {}
-  JVerb(shared_ptr<Monad> monad, shared_ptr<Dyad> dyad):
+  JVerb(Monad::Ptr monad, Dyad::Ptr dyad):
     JWord(grammar_class_verb), monad(monad), dyad(dyad) {}
     
-  shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& larg, const JNoun& rarg) const {
+  JNoun::Ptr operator()(shared_ptr<JMachine> m, const JNoun& larg, const JNoun& rarg) const {
     return (*dyad)(m, larg, rarg);
   }
     
-  shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& arg) const { 
+  JNoun::Ptr operator()(shared_ptr<JMachine> m, const JNoun& arg) const { 
     return (*monad)(m, arg);
   }
 

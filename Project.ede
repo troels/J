@@ -7,8 +7,8 @@
    (ede-proj-target-makefile-program "test"
     :name "test"
     :path ""
-    :source '("test.cpp" "Dimensions.cpp" "JNoun.cpp" "utils.cpp" "JVerbs.cpp" "JArithmeticVerbs.cpp" "VerbHelpers.cpp" "JBasicAdverbs.cpp" "JTypeSolver.cpp" "JGrammar.cpp" "JBasicConjunctions.cpp" "JMachine.cpp" "JParser.cpp" "ParsedNumbers.cpp" "JAST.cpp")
-    :auxsource '("JGrammar.hpp" "J.hpp" "Dimensions.hpp" "JNoun.hpp" "utils.hpp" "JVerbs.hpp" "JExceptions.hpp" "JArithmeticVerbs.hpp" "VerbHelpers.hpp" "JAdverbs.hpp" "JBasicAdverbs.hpp" "JTypeSolver.hpp" "JConjunctions.hpp" "JBasicConjunctions.hpp" "JMachine.hpp" "JParser.hpp" "ParserCombinators.hpp" "ParsedNumbers.hpp" "JAST.hpp")
+    :source '("test.cpp" "Dimensions.cpp" "JNoun.cpp" "utils.cpp" "JVerbs.cpp" "JArithmeticVerbs.cpp" "VerbHelpers.cpp" "JBasicAdverbs.cpp" "JTypeSolver.cpp" "JGrammar.cpp" "JBasicConjunctions.cpp" "JMachine.cpp" "JParser.cpp" "ParsedNumbers.cpp" "JEvaluator.cpp" "JToken.cpp" "Trains.cpp" "Locale.cpp")
+    :auxsource '("JGrammar.hpp" "J.hpp" "Dimensions.hpp" "JNoun.hpp" "utils.hpp" "JVerbs.hpp" "JExceptions.hpp" "JArithmeticVerbs.hpp" "VerbHelpers.hpp" "JAdverbs.hpp" "JBasicAdverbs.hpp" "JTypeSolver.hpp" "JConjunctions.hpp" "JBasicConjunctions.hpp" "JMachine.hpp" "JParser.hpp" "ParserCombinators.hpp" "ParsedNumbers.hpp" "JEvaluator.hpp" "JToken.hpp" "Trains.hpp" "Locale.hpp")
     :configuration-variables 'nil
     :ldlibs '("boost_unit_test_framework" "boost_regex")
     )
