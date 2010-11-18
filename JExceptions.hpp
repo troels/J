@@ -54,6 +54,12 @@ public:
     JException(msg, "JIllegalImportException") {}
 };
 
+class JParserException: public JException {
+public:
+  JParserException(string msg = "Failed to parse") :
+    JException(msg, "JParserException") {}
+};
+  
 class JUnimplementedOperationException: public JException {
 public:
   JUnimplementedOperationException(string msg = "Unimplemented operation"): 
