@@ -927,6 +927,84 @@ BOOST_AUTO_TEST_CASE ( transformation_rule6 ) {
 
   BOOST_CHECK(rule(&lst, lst.begin()));
   BOOST_CHECK_EQUAL(lst.size(), 3);
+  
+  iter = lst.begin(); 
+  adverb = get_word<JAdverb>(*++iter, m);
+  verb = boost::static_pointer_cast<JVerb>((*adverb)(m, plus));
+  
+  BOOST_CHECK_EQUAL(*(*verb)(m, 
+			     JArray<JInt>(Dimensions(3, 2,2,3), 10,10,10,10,10,10,10,10,10,10,10,10),
+			     JArray<JInt>(Dimensions(2, 2, 3), 10, 10, 10,10,10,10)),
+		    JArray<JInt>(Dimensions(3,2,2,3), 20,20,20,20,20,20,20,20,20,20,20,20));
+}
+
+BOOST_AUTO_TEST_CASE ( transformation_rule7 ) {
+  JMachine::Ptr m(JMachine::new_machine());
+  JRuleAssignment7 rule(m);
+  
+  list<JTokenBase::Ptr> lst;
+  lst.insert(lst.end(), JTokenName::Instantiate("a"));
+  lst.insert(lst.end(), JTokenAssignment::Instantiate("=:"));
+  lst.insert(lst.end(), JTokenWord<JNoun>::Instantiate
+	     (JNoun::Ptr(new JArray<JInt>(Dimensions(0), 10))));
+  lst.insert(lst.end(), JTokenDummy::Instantiate());
+  
+  BOOST_CHECK(rule(&lst, lst.begin()));
+  BOOST_CHECK_EQUAL(lst.size(), 2);
+  
+  optional<JWord::Ptr> word(m->lookup_name("a"));
+  BOOST_CHECK(word);
+  BOOST_CHECK_EQUAL(static_cast<JNoun&>(**word),
+		    JArray<JInt>(Dimensions(0), 10));
+}
+
+BOOST_AUTO_TEST_CASE ( transformation_rule8 ) {
+  JMachine::Ptr m(JMachine::new_machine());
+  JRuleParens8 rule(m);
+  
+  list<JTokenBase::Ptr> lst;
+  lst.insert(lst.end(), JTokenLParen::Instantiate());
+  lst.insert(lst.end(), JTokenWord<JNoun>::Instantiate
+	     (JNoun::Ptr(new JArray<JInt>(Dimensions(0), 25))));
+  lst.insert(lst.end(), JTokenRParen::Instantiate());
+  lst.insert(lst.end(), JTokenDummy::Instantiate());
+
+  BOOST_CHECK(rule(&lst, lst.begin()));
+  BOOST_CHECK_EQUAL(lst.size(), 2);
+  
+  BOOST_CHECK_EQUAL(*get_word<JNoun>(lst.front(), m),
+		    JArray<JInt>(Dimensions(0), 25));
+}
+
+BOOST_AUTO_TEST_CASE ( big_eval_loop_test ) {
+  JMachine::Ptr m(JMachine::new_machine());
+  
+vector<JTokenBase::Ptr> program;
+
+  program.push_back(JTokenStart::Instantiate());
+  program.push_back(JTokenOperator::Instantiate("+"));
+  program.push_back(JTokenOperator::Instantiate("/"));
+  program.push_back(JTokenWord<JNoun>::Instantiate
+		    (JNoun::Ptr(new JArray<JInt>(Dimensions(2, 2, 3), 1,2,3,4,5,6))));
+
+  JNoun::Ptr res(boost::static_pointer_cast<JNoun>(big_eval_loop(m, program.rbegin(), program.rend())));
+  BOOST_CHECK_EQUAL(*res, JArray<JInt>(Dimensions(1, 3), 5, 7, 9));
+
+  program.clear();
+  program.push_back(JTokenStart::Instantiate());
+  program.push_back(JTokenOperator::Instantiate("+"));
+  program.push_back(JTokenOperator::Instantiate("/"));
+  program.push_back(JTokenLParen::Instantiate());
+  program.push_back(JTokenOperator::Instantiate("\""));
+  program.push_back(JTokenWord<JNoun>::Instantiate
+		    (JNoun::Ptr(new JArray<JInt>(Dimensions(0), 1))));
+  program.push_back(JTokenRParen::Instantiate());
+  program.push_back(JTokenWord<JNoun>::Instantiate
+		    (JNoun::Ptr(new JArray<JInt>(Dimensions(2, 2, 3), 1,2,3,4,5,6))));
+  
+  res = boost::static_pointer_cast<JNoun>(big_eval_loop(m, program.rbegin(), program.rend()));
+  BOOST_CHECK_EQUAL(*res, JArray<JInt>(Dimensions(1, 2), 6, 15));
+  
 }
   
 BOOST_AUTO_TEST_SUITE_END()

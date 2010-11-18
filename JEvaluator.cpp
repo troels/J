@@ -171,9 +171,8 @@ bool JRuleAssignment7::transform(list<JTokenBase::Ptr>* lst, list<JTokenBase::Pt
   list<JTokenBase::Ptr>::iterator saved_iter(iter);
   string name(boost::static_pointer_cast<JTokenName>(*iter)->get_name());
   string assignment(boost::static_pointer_cast<JTokenAssignment>(*++iter)->get_assignment_name());
-  ++iter;
-  JWord::Ptr word(get_bare_word(*iter, get_machine()));
-  
+  JWord::Ptr word(get_bare_word(*++iter, get_machine()));
+
   if (assignment == "=:") {
     get_machine()->add_public_symbol(name, word);
     } else if (assignment == "=.") {
@@ -187,9 +186,9 @@ bool JRuleAssignment7::transform(list<JTokenBase::Ptr>* lst, list<JTokenBase::Pt
 }
 
 bool JRuleParens8::transform(list<JTokenBase::Ptr>* lst, list<JTokenBase::Ptr>::iterator iter) const { 
-  lst->erase(iter);
-  advance(iter, 2);
-  lst->erase(iter);
+  lst->erase(iter++);
+  ++iter;
+  lst->erase(iter++);
   return true;
 }
 

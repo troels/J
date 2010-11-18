@@ -27,7 +27,8 @@ enum j_token_elem_type {
   j_token_elem_type_lparen,
   j_token_elem_type_rparen,
   j_token_elem_type_cap,
-  j_token_elem_type_dummy
+  j_token_elem_type_dummy,
+  j_token_elem_type_start
 };
 
 template <typename T>
@@ -166,6 +167,15 @@ public:
   }
 
   JTokenRParen(): JTokenBase(j_token_elem_type_rparen) {}
+};
+
+class JTokenStart: public JTokenBase { 
+public:
+  static Ptr Instantiate() {
+    return Ptr(new JTokenStart());
+  }
+
+  JTokenStart(): JTokenBase(j_token_elem_type_start) {}
 };
 
 template <typename T>

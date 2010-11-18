@@ -115,10 +115,18 @@ public:
   }
 };
 
+class JFillerCriteria: public JCriteriaCollection { 
+public:
+  JFillerCriteria(JMachine::Ptr m): JCriteriaCollection(m) {
+    add_token(j_token_elem_type_start);
+    add_token(j_token_elem_type_dummy);
+  }
+};
 
 class JEdgeCriteria: public JCriteriaCollection { 
 public:
   JEdgeCriteria(JMachine::Ptr m): JCriteriaCollection(m) {
+    add_token(j_token_elem_type_start);
     add_token(j_token_elem_type_lparen);
     add_token(j_token_elem_type_assignment);
   }
@@ -199,6 +207,8 @@ class JRule {
   JMachine::Ptr jmachine;
 
 public:
+  typedef shared_ptr<JRule> Ptr;
+
   JRule(JMachine::Ptr m, JCriteria::Ptr first, JCriteria::Ptr second, JCriteria::Ptr third, JCriteria::Ptr fourth);
   virtual ~JRule() = 0;
 
@@ -236,7 +246,8 @@ public:
 				      mc<JEdgeAVNCriteria>(m), mc<JWordCriteria<JVerb> >(m),
 				      mc<JWordCriteria<JVerb> >(m), mc<JWordCriteria<JNoun> >(m))
   {}
-  
+
+protected:  
   bool transform(list<JTokenBase::Ptr>* lst, list<JTokenBase::Ptr>::iterator iter) const;
 };
 
@@ -246,6 +257,7 @@ public:
 				     mc<JEdgeAVNCriteria>(m), mc<JWordCriteria<JNoun> >(m),
 				     mc<JWordCriteria<JVerb> >(m), mc<JWordCriteria<JNoun> >(m)) {}
   
+protected:
   bool transform(list<JTokenBase::Ptr>* lst, list<JTokenBase::Ptr>::iterator iter) const;
 };
 
@@ -255,6 +267,7 @@ public:
 				       mc<JEdgeAVNCriteria>(m), mc<JVerbNounCriteria>(m),
 				       mc<JWordCriteria<JAdverb> >(m), mc<JAnyCriteria>(m)) {}
 
+protected:
   bool transform(list<JTokenBase::Ptr>* lst, list<JTokenBase::Ptr>::iterator iter) const;
 };
 
@@ -264,6 +277,7 @@ public:
 					    mc<JEdgeAVNCriteria>(m), mc<JVerbNounCriteria>(m),
 					    mc<JWordCriteria<JConjunction> >(m), mc<JVerbNounCriteria>(m)) {}
   
+protected:
   bool transform(list<JTokenBase::Ptr>* lst, list<JTokenBase::Ptr>::iterator iter) const;
 };
 
@@ -272,7 +286,7 @@ public:
   JRuleFork5(JMachine::Ptr m): JRule(m,
 				     mc<JEdgeAVNCriteria>(m), mc<JVerbNounCapCriteria>(m),
 				     mc<JWordCriteria<JVerb> >(m), mc<JWordCriteria<JVerb> >(m)) {}
-  
+protected:
   bool transform(list<JTokenBase::Ptr>* lst, list<JTokenBase::Ptr>::iterator iter) const;
 };						       
 
@@ -283,27 +297,100 @@ public:
 	  mc<JEdgeCriteria>(m), mc<JCAVNCriteria>(m), 
 	  mc<JCAVNCriteria>(m), mc<JAnyCriteria>(m)) {}
   
+protected:
   bool transform(list<JTokenBase::Ptr>* lst, list<JTokenBase::Ptr>::iterator iter) const;
 };
 
 
 class JRuleAssignment7: public JRule { 
+public:
   JRuleAssignment7(JMachine::Ptr m): 
     JRule(m, 
 	  mc<JNameCriteria>(m), mc<JAssignmentCriteria>(m),
 	  mc<JCAVNCriteria>(m), mc<JAnyCriteria>(m)) {};
   
+protected:
   bool transform(list<JTokenBase::Ptr>* lst, list<JTokenBase::Ptr>::iterator iter) const;
 };
 
 class JRuleParens8: public JRule { 
+public:
   JRuleParens8(JMachine::Ptr m): 
     JRule(m,
 	  mc<JLParenCriteria>(m), mc<JCAVNCriteria>(m),
 	  mc<JRParenCriteria>(m), mc<JAnyCriteria>(m)) {}
   
+protected:
   bool transform(list<JTokenBase::Ptr>* lst, list<JTokenBase::Ptr>::iterator iter) const;
 };
+
+template <typename T>
+JRule::Ptr mr(JMachine::Ptr m) {
+  return JRule::Ptr(new T(m));
+}
+
+
+class JRuleSet { 
+  vector<JRule::Ptr> rules;
+
+public:			  
+  JRuleSet(JMachine::Ptr m): rules(9) {
+    rules[0] = mr<JRuleMonad0>(m);
+    rules[1] = mr<JRuleMonad1>(m);
+    rules[2] = mr<JRuleDyad2>(m);
+    rules[3] = mr<JRuleAdverb3>(m);
+    rules[4] = mr<JRuleConjunction4>(m);
+    rules[5] = mr<JRuleFork5>(m);
+    rules[6] = mr<JRuleBident6>(m);
+    rules[7] = mr<JRuleAssignment7>(m);
+    rules[8] = mr<JRuleParens8>(m);
+  }
+
+  bool operator()(list<JTokenBase::Ptr> *lst, list<JTokenBase::Ptr>::iterator lst_iter) const {
+    for(vector<JRule::Ptr>::const_iterator iter = rules.begin(), end = rules.end(); iter != end; ++iter) { 
+      if ((**iter)(lst, lst_iter)) return true;
+    }
+    return false;
+  }
+};
+
+template <typename Iterator>
+JWord::Ptr big_eval_loop(JMachine::Ptr m, Iterator iter, Iterator end) {
+  list<JTokenBase::Ptr> lst;
+
+  lst.insert(lst.end(), JTokenDummy::Instantiate());
+  lst.insert(lst.end(), JTokenDummy::Instantiate());
+  lst.insert(lst.end(), JTokenDummy::Instantiate());
+  lst.insert(lst.end(), JTokenDummy::Instantiate());
+  
+  JRuleSet ruleset(m);
+  list<JTokenBase::Ptr>::iterator safe_haven(lst.begin());
+  for(;iter != end; ++iter) {
+    lst.insert(lst.begin(), *iter);
+    bool cont = true;
+    list<JTokenBase::Ptr>::iterator lst_iter(lst.begin());
+    while (cont) {
+      if(ruleset(&lst, lst_iter)) {
+	lst_iter = safe_haven;
+	--lst_iter;
+      } else {
+	if (lst_iter == lst.begin()) {
+	  cont = false;
+	}  else {
+	  --lst_iter;
+	}
+      }
+    }
+  }
+  
+  lst.remove_if(JFillerCriteria(m));
+  if (lst.size() != 1) {
+    throw JIllegalSyntaxException();
+  }
+  
+  return get_bare_word(lst.front(), m);
+}
+  
 }}
 
 #endif
