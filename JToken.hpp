@@ -70,6 +70,7 @@ public:
   j_token_elem_type get_j_token_elem_type() const { 
     return type;
   }
+  virtual string to_string() const = 0;
 };
 
 class JTokenDummy: public JTokenBase { 
@@ -78,8 +79,13 @@ public:
     return Ptr(new JTokenDummy());
   } 
   
+  string to_string() const { 
+    return "JTokenDummy[]";
+  }
+
   JTokenDummy(): JTokenBase(j_token_elem_type_dummy) {}
 };
+
 
 template <typename T>
 class JTokenWord: public JTokenBase {
@@ -94,6 +100,29 @@ public:
     
   JTokenWord(typename T::Ptr word): 
     JTokenBase(JTokenTraits<T>::token_type), word(word) {}
+  
+  string to_string() const {
+    std::stringstream ss;
+    ss << "JTokenWord<";
+    JWord::Ptr converted_word(boost::static_pointer_cast<JWord>(word));
+    switch (converted_word->get_grammar_class()) {
+    case grammar_class_verb:
+      ss << "JVerb>[]";
+      break;
+    case grammar_class_conjunction:
+      return "JConjunction>[]";
+      break;
+    case grammar_class_adverb:
+      return "JAdverb>[]";
+      break;
+    case grammar_class_noun:
+      ss << "JNoun>[" << static_cast<JNoun&>(*converted_word) << "]";    
+      return ss.str();
+    default:
+      throw std::logic_error("Unknown grammar class");
+    }
+    return ss.str();
+  }
 
   typename T::Ptr get_word() const { return word; } 
 };
@@ -111,6 +140,12 @@ public:
   string get_operator_name() const { 
     return operator_name;
   }
+
+  string to_string() const { 
+    std::stringstream ss;
+    ss << "JTokenOperator[" << get_operator_name() << "]";
+    return ss.str();
+  }
 };
 
 class JTokenName: public JTokenBase {
@@ -126,6 +161,12 @@ public:
   string get_name() const { 
     return name;
   }
+
+  string to_string() const { 
+    std::stringstream ss;
+    ss << "JTokenName[" << get_name() << "]";
+    return ss.str();
+  }
 };
 
 class JTokenCap: public JTokenBase { 
@@ -133,7 +174,14 @@ public:
   static JTokenBase::Ptr Instantiate() {
     return JTokenBase::Ptr(new JTokenCap());
   }
-
+  
+  string to_string() const { 
+    std::stringstream ss;
+    ss << "JTokenCap[]";
+    return ss.str();
+  }
+    
+  
   JTokenCap(): JTokenBase(j_token_elem_type_cap) {}
 };
   
@@ -148,6 +196,13 @@ public:
   JTokenAssignment(const string& operator_name): 
     JTokenBase(j_token_elem_type_assignment), operator_name(operator_name) {}
 
+  
+  string to_string() const { 
+    std::stringstream ss;
+    ss << "JTokenAssignment[" << get_assignment_name() << "]";
+    return ss.str();
+  }
+
   string get_assignment_name() const { return operator_name; }
 };
 
@@ -155,6 +210,12 @@ class JTokenLParen: public JTokenBase {
 public:
   static Ptr Instantiate() { 
     return Ptr(new JTokenLParen());
+  }
+
+  string to_string() const { 
+    std::stringstream ss;
+    ss << "JTokenLParen[]";
+    return ss.str();
   }
 
   JTokenLParen():  JTokenBase(j_token_elem_type_lparen) {}
@@ -166,6 +227,12 @@ public:
     return Ptr(new JTokenRParen());
   }
 
+  string to_string() const { 
+    std::stringstream ss;
+    ss << "JTokenRParen[]";
+    return ss.str();
+  }
+
   JTokenRParen(): JTokenBase(j_token_elem_type_rparen) {}
 };
 
@@ -173,6 +240,12 @@ class JTokenStart: public JTokenBase {
 public:
   static Ptr Instantiate() {
     return Ptr(new JTokenStart());
+  }
+  
+  string to_string() const { 
+    std::stringstream ss;
+    ss << "JTokenStart[]";
+    return ss.str();
   }
 
   JTokenStart(): JTokenBase(j_token_elem_type_start) {}

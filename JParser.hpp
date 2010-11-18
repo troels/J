@@ -298,7 +298,9 @@ public:
   }
   
   return_type parse(Iterator* begin, Iterator end) const {
-    return parser->parse(begin, end);
+    return_type res(parser->parse(begin, end));
+    res->push_front(JTokenStart::Instantiate());
+    return res;
   }
 };
 }}
