@@ -900,11 +900,35 @@ BOOST_AUTO_TEST_CASE ( transformation_rule6 ) {
   
   BOOST_CHECK_EQUAL(*(*total)(m, JArray<JInt>(Dimensions(2, 3, 3), 1,2,3,4,5,6, 7, 8, 9)),
 		    JArray<JInt>(Dimensions(2, 3, 3), 1,2,3, 5,7,9, 12,15,18));
-
   
-}  
-						       
-						       
+  
+  lst.clear();
+  lst.insert(lst.end(), JTokenLParen::Instantiate());
+  lst.insert(lst.end(), JTokenOperator::Instantiate("+"));
+  lst.insert(lst.end(), JTokenOperator::Instantiate("-"));
+  lst.insert(lst.end(), JTokenDummy::Instantiate());
+
+  BOOST_CHECK(rule(&lst, lst.begin()));
+  BOOST_CHECK_EQUAL(lst.size(), 3);
+  
+  iter = lst.begin();
+  JVerb::Ptr verb(get_word<JVerb>(*++iter, m));
+  BOOST_CHECK_EQUAL(*(*verb)(m, 
+			     JArray<JInt>(Dimensions(0), 1),
+			     JArray<JInt>(Dimensions(0), 5)),
+		    JArray<JInt>(Dimensions(0), -4));
+  
+  lst.clear();
+  lst.insert(lst.end(), JTokenLParen::Instantiate());
+  lst.insert(lst.end(), JTokenOperator::Instantiate("\""));
+  lst.insert(lst.end(), JTokenWord<JNoun>::Instantiate
+	     (JNoun::Ptr(new JArray<JInt>(Dimensions(0), 1))));
+  lst.insert(lst.end(), JTokenRParen::Instantiate());
+
+  BOOST_CHECK(rule(&lst, lst.begin()));
+  BOOST_CHECK_EQUAL(lst.size(), 3);
+}
+  
 BOOST_AUTO_TEST_SUITE_END()
   
   

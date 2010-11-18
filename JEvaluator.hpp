@@ -129,12 +129,13 @@ class JEdgeAVNCriteria: public JCriteria {
   JWordCriteria<JVerb> verb;
   JWordCriteria<JNoun> noun;
   JWordCriteria<JAdverb> adverb;
-
+  JWordCriteria<JConjunction> conjunction;
+  
 public:
-  JEdgeAVNCriteria(JMachine::Ptr m): JCriteria(m), edge(m), verb(m), noun(m), adverb(m) {}
+  JEdgeAVNCriteria(JMachine::Ptr m): JCriteria(m), edge(m), verb(m), noun(m), adverb(m), conjunction(m) {}
 
   bool operator()(JTokenBase::Ptr token) const { 
-    return edge(token) || verb(token) || noun(token) || adverb(token);
+    return edge(token) || verb(token) || noun(token) || adverb(token) || conjunction(token);
   }
 };
 

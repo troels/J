@@ -11,31 +11,32 @@ using boost::shared_ptr;
 class RankConjunction: public JConjunction { 
   class RankVerb: public JVerb { 
     class MyMonad: public Monad { 
-      shared_ptr<JVerb> verb;
+      JVerb::Ptr verb;
 
     public:
-      MyMonad(int rank, shared_ptr<JVerb> verb): Monad(rank), verb(verb) {}
-      shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& arg) const {
+      MyMonad(int rank, JVerb::Ptr verb): Monad(rank), verb(verb) {}
+      JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& arg) const {
 	return monadic_apply(get_rank(), m, arg, *verb);
       }
     };
 	
     class MyDyad: public Dyad { 
-      shared_ptr<JVerb> verb;
+      JVerb::Ptr verb;
 	
     public:
-      MyDyad(int lrank, int rrank, shared_ptr<JVerb> verb): Dyad(lrank, rrank),  verb(verb) {}
-      shared_ptr<JNoun> operator()(shared_ptr<JMachine> m, const JNoun& larg, const JNoun& rarg) const { 
+      MyDyad(int lrank, int rrank, JVerb::Ptr verb): Dyad(lrank, rrank),  verb(verb) {}
+      JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& larg, const JNoun& rarg) const { 
 	return dyadic_apply(get_lrank(), get_rrank(), m, larg, rarg, *verb);
       }
     };
   public:
-    RankVerb(shared_ptr<JVerb> verb, int rank, int lrank, int rrank): 
-      JVerb(shared_ptr<Monad>(new MyMonad(rank, verb)),
-	    shared_ptr<Dyad>(new MyDyad(lrank, rrank, verb))) {}
+    RankVerb(JVerb::Ptr verb, int rank, int lrank, int rrank): 
+      JVerb(Monad::Ptr(new MyMonad(rank, verb)),
+	    Dyad::Ptr(new MyDyad(lrank, rrank, verb))) {}
   };
+
 public:
-  shared_ptr<JWord> operator()(shared_ptr<JMachine> m, shared_ptr<JWord> lword, shared_ptr<JWord> rword) const;
+  JWord::Ptr operator()(JMachine::Ptr m, JWord::Ptr lword, JWord::Ptr rword) const;
   RankConjunction(): JConjunction() {}
 };
 }

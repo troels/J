@@ -127,7 +127,7 @@ bool JRuleBident6::transform(list<JTokenBase::Ptr>* lst, list<JTokenBase::Ptr>::
   JWord::Ptr word0(get_bare_word(*iter, get_machine()));
   JWord::Ptr word1(get_bare_word(*++iter, get_machine()));
   ++iter;
-
+  
   if(word0->get_grammar_class() == grammar_class_adverb &&
      word1->get_grammar_class() == grammar_class_adverb) {
     JAdverb::Ptr adverb(CompositeAdverb::Instantiate(boost::static_pointer_cast<JAdverb>(word0),
