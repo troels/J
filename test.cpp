@@ -458,6 +458,9 @@ BOOST_AUTO_TEST_CASE ( test_prefix_infix_adverb ) {
   BOOST_CHECK_EQUAL((*(*otherverbwithinsert)(m, JArray<JInt>(Dimensions(0), -4), *noun1)),
 		    JArray<JInt>(Dimensions(1, 2), -2, -1));
 
+  BOOST_CHECK_EQUAL((*(*otherverbwithinsert)(m, JArray<JInt>(Dimensions(1, 2), -4, 4), *noun1)),
+		    JArray<JInt>(Dimensions(2, 2, 3), -2, -1, 0, -2, -2, -2));
+
   BOOST_CHECK_EQUAL((*(*otherverbwithinsert)(m, JArray<JInt>(Dimensions(2, 0, 4)))),
 					     JArray<JInt>(Dimensions(2, 0, 4)));
   BOOST_CHECK_EQUAL((*(*otherverbwithinsert)(m, JArray<JInt>(Dimensions(3, 10, 0, 4)))),
@@ -877,14 +880,29 @@ BOOST_AUTO_TEST_CASE ( transformation_rule5 ) {
 		    JArray<JInt>(Dimensions(0), 0));
 }
 
-// BOOST_AUTO_TEST_CASE ( transformation_rule6 ) {
-//   JMachine::Ptr m(JMachine::new_machine());
-//   JRuleBident6 rule(m);
+BOOST_AUTO_TEST_CASE ( transformation_rule6 ) {
+  JMachine::Ptr m(JMachine::new_machine());
+  JRuleBident6 rule(m);
   
-//   list<JTokenBase::Ptr> lst;
-//   lst.insert(JTokenLParen::Instantiate());
-//   lst.insert(
-// }  
+  list<JTokenBase::Ptr> lst;
+  lst.insert(lst.end(), JTokenLParen::Instantiate());
+  lst.insert(lst.end(), JTokenOperator::Instantiate("/"));
+  lst.insert(lst.end(), JTokenOperator::Instantiate("\\"));
+  lst.insert(lst.end(), JTokenDummy::Instantiate());
+
+  BOOST_CHECK(rule(&lst, lst.begin()));
+  BOOST_CHECK_EQUAL(lst.size(), 3);
+  
+  list<JTokenBase::Ptr>::iterator iter(lst.begin());
+  JAdverb::Ptr adverb(get_word<JAdverb>(*++iter, m));
+  JVerb::Ptr plus(new PlusVerb());
+  JVerb::Ptr total(boost::static_pointer_cast<JVerb>((*adverb)(m, plus)));
+  
+  BOOST_CHECK_EQUAL(*(*total)(m, JArray<JInt>(Dimensions(2, 3, 3), 1,2,3,4,5,6, 7, 8, 9)),
+		    JArray<JInt>(Dimensions(2, 3, 3), 1,2,3, 5,7,9, 12,15,18));
+
+  
+}  
 						       
 						       
 BOOST_AUTO_TEST_SUITE_END()

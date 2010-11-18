@@ -46,7 +46,7 @@ public:
   typedef shared_ptr<JVerb> Ptr;
 
   virtual ~JVerb() {}
-  JVerb(shared_ptr<Monad> monad, shared_ptr<Dyad> dyad):
+  JVerb(Monad::Ptr monad, Dyad::Ptr dyad):
     JWord(grammar_class_verb), monad(monad), dyad(dyad) {}
     
   JNoun::Ptr operator()(shared_ptr<JMachine> m, const JNoun& larg, const JNoun& rarg) const {
