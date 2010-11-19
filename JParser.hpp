@@ -307,9 +307,8 @@ public:
 
 typedef shared_ptr<deque<JTokenBase::Ptr> > TokenSequence;
 
-string trim_string(const string& str);
-
 TokenSequence parse_string(JMachine::Ptr m, const string& str);
+
 }}
 
 #endif

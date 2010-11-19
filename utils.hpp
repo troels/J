@@ -116,6 +116,6 @@ string join_str(T begin, T end, const string& joiner) {
 
 bool escape_char_p(char c);
 string escape_regex(const string& s);
-
+string trim_string(const string& s); 
 }	
 #endif
