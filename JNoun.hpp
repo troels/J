@@ -29,8 +29,6 @@ public:
   virtual JNoun::Ptr coordinate(int nr_coords, ...) const = 0;
   virtual JNoun::Ptr clone() const = 0;
   
-  virtual bool operator==(const JNoun& n) const = 0;
-  virtual bool operator!=(const JNoun& n) const = 0;
   virtual JNoun::Ptr extend(const Dimensions &d) const = 0;
     
   bool is_scalar() const { return get_rank() == 0; }
@@ -39,8 +37,6 @@ public:
   int get_rank() const { return get_dims().get_rank(); }
   j_value_type get_value_type() const { return value_type; }
   const Dimensions& get_dims() const { return dims; } 
-
-  friend std::ostream& operator<<(std::ostream& os, const JNoun& d);
 };
   
 template <typename T> 
@@ -69,8 +65,8 @@ public:
   JNoun::Ptr coordinate(int nr_coords, ...) const;
     
 
-  bool operator==(const JNoun& j) const;
-  bool operator!=(const JNoun& arr) const { 
+  bool operator==(const JWord& j) const;
+  bool operator!=(const JWord& arr) const { 
     return !(*this == arr); 
   }
 

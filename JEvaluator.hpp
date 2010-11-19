@@ -1,5 +1,5 @@
 #ifndef JEVALUATOR_HPP
-#define JEVALUATOR
+#define JEVALUATOR_HPP
 
 #include <stdexcept>
 #include <boost/shared_ptr.hpp>

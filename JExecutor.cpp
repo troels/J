@@ -28,6 +28,6 @@ JExecutor::token_sequence JExecutor::parse_line(const string& line) const {
 JWord::Ptr JExecutor::operator()(const string& line) {
   token_sequence seq(parse_line(line));
   
-  return J::JEvaluator::big_eval_loop(jmachine, seq->begin(), seq->end());
+  return J::JEvaluator::big_eval_loop(jmachine, seq->rbegin(), seq->rend());
 }
 }

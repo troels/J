@@ -192,9 +192,11 @@ JNoun::Ptr JArray<T>::subarray(int start, int end) const {
 }    
     
 template <typename T>
-bool JArray<T>::operator==(const JNoun& other) const {
-  return other.get_value_type() == get_value_type() &&
-    get_dims() == other.get_dims() &&
+bool JArray<T>::operator==(const JWord& other) const {
+  return 
+    other.get_grammar_class() == get_grammar_class() &&
+    static_cast<const JNoun&>(other).get_value_type() == get_value_type() &&
+    get_dims() == static_cast<const JNoun&>(other).get_dims() &&
     equal(begin(), end(), static_cast< const JArray<T>& >(other).begin());
 }
 
@@ -212,10 +214,6 @@ int JArray<int>::get_field_width() const {
   int min_len = min != end() && *min < 0 ? std::floor(std::log10(std::abs(*min))) + 2 : 1;
     
   return std::max(max_len, min_len);
-}
-
-std::ostream& operator<<(std::ostream& os, const JNoun& noun) {
-  return (os << noun.to_string());
 }
 
 template class JArray<JInt>;

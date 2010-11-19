@@ -1,6 +1,7 @@
 #include "J.hpp"
 #include "ParserCombinators.hpp"
 #include "JEvaluator.hpp"
+#include "JExecutor.hpp"
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE J
@@ -979,7 +980,7 @@ BOOST_AUTO_TEST_CASE ( transformation_rule8 ) {
 BOOST_AUTO_TEST_CASE ( big_eval_loop_test ) {
   JMachine::Ptr m(JMachine::new_machine());
   
-vector<JTokenBase::Ptr> program;
+  vector<JTokenBase::Ptr> program;
 
   program.push_back(JTokenStart::Instantiate());
   program.push_back(JTokenOperator::Instantiate("+"));
@@ -1006,7 +1007,15 @@ vector<JTokenBase::Ptr> program;
   BOOST_CHECK_EQUAL(*res, JArray<JInt>(Dimensions(1, 2), 6, 15));
   
 }
+
+BOOST_AUTO_TEST_CASE( executor_test ) {
+  JMachine::Ptr m(JMachine::new_machine());
+  JExecutor executor(m);
+  JNoun::Ptr res(boost::static_pointer_cast<JNoun>(executor("10 10 10 + 20 20 20")));
   
+  BOOST_CHECK_EQUAL(*boost::static_pointer_cast<JNoun>(executor("30 30 30")), *res);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
   
   

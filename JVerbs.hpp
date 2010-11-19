@@ -60,11 +60,14 @@ public:
   int get_dyad_lrank() const { return dyad->get_lrank(); }
   int get_dyad_rrank() const { return dyad->get_rrank(); }
   int get_monad_rank() const { return monad->get_rank(); }
-      
-  virtual shared_ptr<JNoun> unit(const Dimensions&) const { 
+  
+  string to_string() const;
+  virtual JNoun::Ptr unit(const Dimensions&) const { 
     throw JNoUnitException();
   }
+  
 };
+
 }
 
 #endif

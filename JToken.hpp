@@ -10,9 +10,13 @@
 #include "JAdverbs.hpp"
 #include "JConjunctions.hpp"
 #include <iostream>
+#include <deque>
+#include <list>
 
 namespace J { namespace JTokens { 
 using boost::shared_ptr;
+using std::list;
+using std::deque;
 using std::vector;
 using std::string;
 
@@ -284,6 +288,10 @@ typename T::Ptr get_word_as_type(JWord::Ptr word) {
   
 JWord::Ptr get_bare_word(JTokenBase::Ptr token, JMachine::Ptr m);
 JTokenBase::Ptr construct_token(JWord::Ptr word);
+
+std::ostream& operator<<(std::ostream& os, JTokenBase::Ptr base);
+std::ostream& operator<<(std::ostream& os, const list<JTokenBase::Ptr>& lst);
+std::ostream& operator<<(std::ostream& os, const deque<JTokenBase::Ptr>& lst);
 }}
 
 

@@ -55,4 +55,26 @@ JTokenBase::Ptr construct_token(JWord::Ptr word) {
     throw std::logic_error("Word is of illegal type");
   }
 }
+
+std::ostream& operator<<(std::ostream& os, JTokenBase::Ptr base) {
+  return (os << base->to_string());
+}
+
+std::ostream& operator<<(std::ostream& os, const list<JTokenBase::Ptr>& lst) {
+  os << "TokenBaseList[";
+  for (list<JTokenBase::Ptr>::const_iterator iter(lst.begin()); iter != lst.end(); ++iter) {
+    os << (*iter);
+  }
+  os << "]";
+  return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const deque<JTokenBase::Ptr>& lst) {
+  os << "TokenBaseList[";
+  for (deque<JTokenBase::Ptr>::const_iterator iter(lst.begin()); iter != lst.end(); ++iter) {
+    os << (*iter);
+  }
+  os << "]";
+  return os;
+}
 }}

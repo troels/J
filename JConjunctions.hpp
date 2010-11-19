@@ -12,6 +12,10 @@ public:
   virtual ~JConjunction() {}
   JConjunction(): JWord(grammar_class_conjunction) {}
   virtual JWord::Ptr operator()(JMachine::Ptr m, JWord::Ptr lword, JWord::Ptr rword) const = 0;
+
+  string to_string() const {
+    return "Conjunction";
+  }
 };
 }
 

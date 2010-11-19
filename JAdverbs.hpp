@@ -10,6 +10,9 @@ public:
 
   JAdverb(): JWord(grammar_class_adverb) {}
   virtual JWord::Ptr operator()(JMachine::Ptr m, JWord::Ptr word) const = 0;
+  string to_string() const { 
+    return "Adverb";
+  }
 };
 }
 #endif
