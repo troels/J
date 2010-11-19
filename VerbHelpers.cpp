@@ -170,4 +170,5 @@ std::auto_ptr<OperationIteratorBase> get_operation_iterator(const JNoun& arg, co
     assert(0);
   }
 }
+
 }

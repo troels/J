@@ -206,7 +206,7 @@ int JArray<T>::get_field_width() const {
 }
 
 template <>
-int JArray<int>::get_field_width() const {
+int JArray<JInt>::get_field_width() const {
   iter max = std::max_element(begin(), end());
   iter min = std::min_element(begin(), end());
     

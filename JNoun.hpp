@@ -28,9 +28,8 @@ public:
   virtual JNoun::Ptr subarray(int start, int end) const = 0;
   virtual JNoun::Ptr coordinate(int nr_coords, ...) const = 0;
   virtual JNoun::Ptr clone() const = 0;
-  
+
   virtual JNoun::Ptr extend(const Dimensions &d) const = 0;
-    
   bool is_scalar() const { return get_rank() == 0; }
   bool is_array() const { return !is_scalar(); }
     
@@ -89,6 +88,8 @@ shared_ptr<JArray<T> > filled_array(const Dimensions &dims, T val) {
   shared_ptr<vector<T> > v(new vector<T>(dims.number_of_elems(), val));
   return shared_ptr<JArray<T> >(new JArray<T>(dims, v));
 }
+
+
 }
 
 #endif

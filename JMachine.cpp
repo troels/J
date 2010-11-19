@@ -2,6 +2,7 @@
 #include "JArithmeticVerbs.hpp"
 #include "JBasicAdverbs.hpp"
 #include "JBasicConjunctions.hpp"
+#include "ShapeVerbs.hpp"
 
 namespace J {
 JMachine::JMachine(): operators(), cur_locale(Locale::Instantiate()) {
@@ -13,6 +14,7 @@ JMachine::JMachine(): operators(), cur_locale(Locale::Instantiate()) {
   operators.insert(p("/", JWord::Ptr(new JInsertTableAdverb())));
   operators.insert(p("\"", JWord::Ptr(new RankConjunction())));
   operators.insert(p("\\", JWord::Ptr(new PrefixInfixAdverb())));
+  operators.insert(p("$", JWord::Ptr(new ShapeVerb())));
 }
 
 JMachine::Ptr JMachine::new_machine() { 

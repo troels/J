@@ -81,7 +81,8 @@ struct create_noun {
       *out_iter = static_cast<ParsedNumber<T>*>(in_iter->get())->get_nr();
     }
     
-    return JNoun::Ptr(new JArray<T>(Dimensions(1, v->size()), v));
+    
+    return JNoun::Ptr(new JArray<T>(v->size() == 1 ? Dimensions(0) : Dimensions(1, v->size()), v));
   }
 };
 

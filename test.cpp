@@ -1012,8 +1012,43 @@ BOOST_AUTO_TEST_CASE( executor_test ) {
   JMachine::Ptr m(JMachine::new_machine());
   JExecutor executor(m);
   JNoun::Ptr res(boost::static_pointer_cast<JNoun>(executor("10 10 10 + 20 20 20")));
+
+  BOOST_CHECK_EQUAL(*executor("10"), JArray<JInt>(Dimensions(0), 10));
+  BOOST_CHECK_EQUAL(*executor("30 30 30"), *res);
   
-  BOOST_CHECK_EQUAL(*boost::static_pointer_cast<JNoun>(executor("30 30 30")), *res);
+  BOOST_CHECK_EQUAL(*executor("a=:10 10 10 + - 10"), *executor("0 0 0"));
+}
+
+BOOST_AUTO_TEST_CASE ( executor_shape_test ) {
+  JMachine::Ptr m(JMachine::new_machine());
+  JExecutor executor(m);
+  BOOST_CHECK_EQUAL(*executor("10 $ 1"), *executor("1 1 1 1 1 1 1 1 1 1"));
+  BOOST_CHECK_EQUAL(*executor("2 2 $ 1 2 3"), JArray<JInt>(Dimensions(2,2,2), 
+							   1, 2,3,1));
+
+  BOOST_CHECK_EQUAL(*executor("0 $ 1 2 3"), JArray<JInt>(Dimensions(1,0)));
+  BOOST_CHECK_EQUAL(*executor("$ 2 2 2 $ 1 2 3"), *executor("2 2 2"));
+  BOOST_CHECK_EQUAL(*executor("$ $ 2 2 2 $ 1 2 3"), *executor("1 $ 3"));
+  BOOST_CHECK_EQUAL(*executor("$ $ $ 2 2 2 $ 1 2 3"), *executor("1 $ 1"));
+  BOOST_CHECK_EQUAL(*executor("2 3 4 $ 1 2 3 4 5 6 7"),
+		    JArray<JInt>(Dimensions(3, 2,3,4), 
+				 1,2,3,4,5,6,7,
+				 1,2,3,4,5,6,7,
+				 1,2,3,4,5,6,7,
+				 1,2,3));
+
+  BOOST_CHECK_EQUAL(*executor("10 $ 10 0 10 $ 1 2 3"),
+		    JArray<JInt>(Dimensions(3, 10, 0, 10)));
+  
+  BOOST_CHECK_EQUAL(*executor("1 2 3 ($\"1 0) 1 2 3"),
+		    JArray<JInt>(Dimensions(4, 3, 1,2,3),
+				 1,1,1,1,1,1,
+				 2,2,2,2,2,2,
+				 3,3,3,3,3,3));
+  BOOST_CHECK_EQUAL(*executor("0 0 $ 0 0 10 $ 0"), 
+		    JArray<JInt>(Dimensions(4, 0, 0, 0, 10)));
+  BOOST_CHECK_THROW(*executor("2 2 $ 0 10 10 $ 10"), 
+		    JIllegalDimensionsException)
 }
 
 BOOST_AUTO_TEST_SUITE_END()

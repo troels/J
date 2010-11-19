@@ -245,6 +245,56 @@ public:
   VerbContainer(JMachine::Ptr jmachine, JVerb::Ptr verb): verb(verb), jmachine(jmachine) {}
 };
 
+
+template <template <typename> class Op, typename Ret>
+struct JArrayCaller { 
+  Ret operator()(const JNoun& noun) const {
+    switch(noun.get_value_type()) {
+    case j_value_type_int:
+      return Op<JInt>()(static_cast<const JArray<JInt>&>(noun));
+    case j_value_type_float:
+      return Op<JFloat>()(static_cast<const JArray<JFloat>&>(noun));
+    default:
+      assert(0);
+    }
+  };
+ 
+  template <typename Arg1>
+  Ret operator()(const JNoun& noun, Arg1& arg) const {
+    switch(noun.get_value_type()) {
+    case j_value_type_int:
+      return Op<JInt>()(static_cast<const JArray<JInt>&>(noun), arg);
+    case j_value_type_float:
+      return Op<JFloat>()(static_cast<const JArray<JFloat>&>(noun), arg);
+    default:
+      assert(0);
+    }
+  }
+
+  template <typename Arg1, typename Arg2>
+  Ret operator()(const JNoun& noun, Arg1& arg1, Arg2& arg2) const {
+    switch(noun.get_value_type()) {
+    case j_value_type_int:
+      return Op<JInt>()(static_cast<const JArray<JInt>&>(noun), arg1, arg2);
+    case j_value_type_float:
+      return Op<JFloat>()(static_cast<const JArray<JFloat>&>(noun), arg1, arg2);
+    default:
+      assert(0);
+    }
+  }    
+
+  template <typename Arg1, typename Arg2, typename Arg3>
+  Ret operator()(const JNoun& noun, Arg1& arg1, Arg2& arg2, Arg3& arg3) const {
+    switch(noun.get_value_type()) {
+    case j_value_type_int:
+      return Op<JInt>()(static_cast<const JArray<JInt>&>(noun), arg1, arg2, arg3);
+    case j_value_type_float:
+      return Op<JFloat>()(static_cast<const JArray<JFloat>&>(noun), arg1, arg2, arg3);
+    default:
+      assert(0);
+    }
+  }
+};
 }
 
 #endif

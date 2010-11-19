@@ -34,7 +34,7 @@ public:
 
   iter begin() const { return begin_iter; }
   iter end() const { return end_iter; }
-
+  
   int get_rank() const { return rank; }
   string to_string() const;
     
