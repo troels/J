@@ -254,6 +254,8 @@ struct JArrayCaller {
       return Op<JInt>()(static_cast<const JArray<JInt>&>(noun));
     case j_value_type_float:
       return Op<JFloat>()(static_cast<const JArray<JFloat>&>(noun));
+    case j_value_type_box:
+      return Op<JBox>()(static_cast<const JArray<JBox>&>(noun));
     default:
       assert(0);
     }
@@ -266,6 +268,8 @@ struct JArrayCaller {
       return Op<JInt>()(static_cast<const JArray<JInt>&>(noun), arg);
     case j_value_type_float:
       return Op<JFloat>()(static_cast<const JArray<JFloat>&>(noun), arg);
+    case j_value_type_box:
+      return Op<JBox>()(static_cast<const JArray<JBox>&>(noun), arg);
     default:
       assert(0);
     }
@@ -278,6 +282,8 @@ struct JArrayCaller {
       return Op<JInt>()(static_cast<const JArray<JInt>&>(noun), arg1, arg2);
     case j_value_type_float:
       return Op<JFloat>()(static_cast<const JArray<JFloat>&>(noun), arg1, arg2);
+    case j_value_type_box:
+      return Op<JBox>()(static_cast<const JArray<JBox>&>(noun), arg1, arg2);
     default:
       assert(0);
     }
@@ -290,6 +296,8 @@ struct JArrayCaller {
       return Op<JInt>()(static_cast<const JArray<JInt>&>(noun), arg1, arg2, arg3);
     case j_value_type_float:
       return Op<JFloat>()(static_cast<const JArray<JFloat>&>(noun), arg1, arg2, arg3);
+    case j_value_type_box:
+      return Op<JBox>()(static_cast<const JArray<JBox>&>(noun), arg1, arg2, arg3);
     default:
       assert(0);
     }

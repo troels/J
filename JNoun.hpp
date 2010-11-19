@@ -4,6 +4,7 @@
 #include "JGrammar.hpp"
 #include "Dimensions.hpp"
 
+#include <stdexcept>
 #include <iomanip>
 #include <utility>
 #include <cmath>

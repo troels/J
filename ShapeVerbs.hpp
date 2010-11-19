@@ -19,10 +19,11 @@ struct ShapeDyadOp {
     int rarg_number_of_elems = rarg.get_dims().number_of_elems();
 
     if (final_dims.number_of_elems() != 0 && rarg_number_of_elems == 0) {
-      throw JIllegalDimensionsException("First dimension must be above 0");
+      throw JIllegalDimensionsException("Must have more than zero elements in input, when wanted in output.");
     }
     
-    shared_ptr<vector<T> > container(new vector<T>(final_dims.number_of_elems()));
+    shared_ptr<vector<T> > container(new vector<T>(final_dims.number_of_elems(), 
+						   JTypeTrait<T>::base_elem()));
 
     if (rarg_number_of_elems != 0) {
       typename vector<T>::iterator out_iter(container->begin());

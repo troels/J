@@ -30,7 +30,19 @@ typedef int JInt;
 typedef double JFloat;
 typedef std::complex<JFloat> JComplex;
 typedef char JChar;
+
+class JWord;
+class JBox {
+  shared_ptr<JWord> contents;
+public:
+  JBox(shared_ptr<JWord> contents): contents(contents) { assert(contents); }
   
+  bool operator==(const JBox& box) const;
+  shared_ptr<JWord> get_contents() const { return contents; } ;
+};
+
+std::ostream& operator<<(std::ostream& os, const JBox& b);
+
 template <typename T> 
 class JTypeTrait {};
   
@@ -50,6 +62,12 @@ template <>
 struct JTypeTrait<JComplex> {
   static JFloat base_elem() { return 0.0; }
   static const j_value_type value_type = j_value_type_complex;
+};
+
+template <>
+struct JTypeTrait<JBox> {
+  static JBox base_elem(); 
+  static const j_value_type value_type = j_value_type_box;
 };
 
 class JWord { 
@@ -72,6 +90,7 @@ public:
 
 std::ostream& operator<<(std::ostream& os, const JWord& d);
 std::ostream& operator<<(std::ostream& os, JWord::Ptr d);
+
 
 }
     

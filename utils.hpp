@@ -36,7 +36,7 @@ public:
     
   bool at_end() const;
   OperationIteratorBase& operator++();
-  virtual shared_ptr<JNoun> operator*() const = 0; 
+  virtual JNoun::Ptr operator*() const = 0; 
 
 protected:
   virtual void increment_iterator() = 0;
@@ -57,7 +57,7 @@ protected:
 public:
   OperationIterator(const JArray<T>& c, const Dimensions& frame, int output_rank);
 
-  shared_ptr<JNoun > operator*() const;
+  JNoun::Ptr operator*() const;
 };
 
 template <typename T>
