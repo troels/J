@@ -152,8 +152,12 @@ class DefaultMonad: public Monad {
 public:
   DefaultMonad(int rank, Op op): Monad(rank), op(op) {}
   
+  static Ptr Instantiate(int rank, Op op) {
+    return Ptr(new DefaultMonad(rank, op));
+  }
+
   JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& arg) const { 
-    return monad_apply(get_rank(), m, arg, op);
+    return monadic_apply(get_rank(), m, arg, op);
   }
 };
 

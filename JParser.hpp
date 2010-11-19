@@ -305,10 +305,6 @@ public:
   }
 };
 
-typedef shared_ptr<deque<JTokenBase::Ptr> > TokenSequence;
-
-TokenSequence parse_string(JMachine::Ptr m, const string& str);
-
 }}
 
 #endif
