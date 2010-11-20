@@ -135,7 +135,7 @@ struct JArrayCaller {
 
 template <typename From, typename To> 
 struct ConvertType { 
-  To operator()(From from) const { 
+  To operator()(From) const { 
     throw JIllegalTypeCastException();
   }
 };
