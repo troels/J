@@ -81,7 +81,6 @@ JArray<T> expand_to_rank(int rank, const JArray<T>& array) {
   return JArray<T>(new_dims_vector, array.get_content());
 }
   
-  
 template <typename T>
 struct AppendOp {
   JNoun::Ptr operator()(const JArray<T>& larg, const JNoun& rarg_, JMachine::Ptr) const { 
@@ -134,11 +133,11 @@ struct AppendOp {
     JResult res(frame);
 
     for (int i = 0; i < larg_first_dim; ++i) {
-      res.add_noun(new_larg.subarray(i, i + 1));
+      res.add_noun(new_larg.coordinate(1, i));
     }
     
     for (int i = 0; i < rarg_first_dim; ++i) {
-      res.add_noun(new_rarg.subarray(i, i + 1));
+      res.add_noun(new_rarg.coordinate(1, i));
     }
     return res.assemble_result();
   };

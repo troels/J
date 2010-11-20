@@ -10,6 +10,7 @@
 #include <algorithm>
 #include "JGrammar.hpp"
 #include "JNoun.hpp"
+#include "JTypes.hpp"
 
 namespace J { namespace JParser { 
 using std::vector;
@@ -19,13 +20,6 @@ using boost::shared_ptr;
 template <typename T>
 struct VecPtr {
   typedef shared_ptr<vector<T> > type;
-};
-
-template <typename From, typename To> 
-struct ConvertNumber { 
-  static To convert(From from) { 
-    return static_cast<To>(from);
-  }
 };
 
 class ParsedNumberBase { 

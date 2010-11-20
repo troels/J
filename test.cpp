@@ -1057,6 +1057,25 @@ BOOST_AUTO_TEST_CASE ( test_ravel_append ) {
   
   BOOST_CHECK_EQUAL(*executor(", 2 3 $ 1 2 3 4 5 6"), 
 		    *executor("1 2 3 4 5 6"));
+
+  BOOST_CHECK_EQUAL(*executor("1, 2 3"),
+		    *executor("1 2 3"));
+  BOOST_CHECK_EQUAL(*executor("1, 1"),
+		    *executor("1 1"));
+  BOOST_CHECK_EQUAL(*executor("1 2, 1"),
+		    *executor("1 2 1"));
+
+  BOOST_CHECK_EQUAL(*executor("1, 2 3 $ 1 2 3 4 5 6"),
+		    *executor("3 3 $ 1 1 1 1 2 3 4 5 6"));
+  
+  BOOST_CHECK_EQUAL(*executor("(2 3 $ 1 2 3 4 5 6), 1"),
+		    *executor("3 3 $ 1 2 3 4 5 6 1 1 1"));
+  
+  BOOST_CHECK_EQUAL(*executor("(1 $ 1), 1 2 2 $ 1 2 3 4"),
+		    *executor("2 2 2 $ 1 0 0 0 1 2 3 4"));
+
+  BOOST_CHECK_EQUAL(*executor("(1 2 3 $ 1 2 3 4 5 6), (5 10)"),
+		    *executor("2 2 3 $ 1 2 3 4 5 6 5 10 0 0 0 0"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

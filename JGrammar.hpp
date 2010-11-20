@@ -53,6 +53,12 @@ struct JTypeTrait<JInt> {
 };
 
 template <>
+struct JTypeTrait<JChar> {
+  static JChar base_elem() { return ' '; }
+  static const j_value_type value_type = j_value_type_char;
+};
+
+template <>
 struct JTypeTrait<JFloat> {
   static JFloat base_elem() { return 0.0; }
   static const j_value_type value_type = j_value_type_float;

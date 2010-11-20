@@ -24,6 +24,12 @@ public:
   JIllegalRankException(string msg = "Illegal rank given"): JException(msg, "JIllegalRankException") {}
 };
 
+class JIllegalTypeCastException: public JException { 
+public:
+  JIllegalTypeCastException(string msg = "Failed to cast type"):
+    JException(msg, "JIllegalTypeCastException") {}
+};
+
 class JIllegalValueTypeException: public JException {
 public:
   JIllegalValueTypeException(string msg = "Illegal value type given"): 

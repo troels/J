@@ -19,19 +19,20 @@ j_value_type highest_j_value(ParsedNumberBase::Ptr a, j_value_type type) {
   } 
   return a->get_value_type();
 }
-
-
-
-
+  
+template <typename From>
+struct ParsedNumberConverter  {
+  template <typename To>
+  struct Impl {
+    ParsedNumberBase::Ptr operator()(From from) const {
+      return ParsedNumberBase::Ptr(new ParsedNumber<To>(ConvertType<From, To>()(from)));
+    }
+  };
+};
+      
 template <typename Number>
 ParsedNumberBase::Ptr ParsedNumber<Number>::convert_to(j_value_type type) const {
-  if (type == j_value_type_int) { 
-    return ParsedNumberBase::Ptr(new ParsedNumber<JInt>(ConvertNumber<Number, JInt>::convert(get_nr())));
-  } else if (type == j_value_type_float) { 
-    return ParsedNumberBase::Ptr(new ParsedNumber<JFloat>(ConvertNumber<Number, JFloat>::convert(get_nr())));
-  } else { 
-    throw std::logic_error("Invalid type conversion to type.");
-  } 
+  return JTypeDispatcher<ParsedNumberConverter<Number>::template Impl, ParsedNumberBase::Ptr>()(type, get_nr());
 }
 
 template <typename Number>

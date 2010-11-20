@@ -3,6 +3,7 @@
 
 #include "JNoun.hpp"
 #include "JVerbs.hpp"
+#include "JTypes.hpp"
 #include <boost/shared_ptr.hpp>
 
 namespace J {
@@ -11,6 +12,7 @@ using boost::optional;
 
 std::auto_ptr<OperationIteratorBase> get_operation_iterator(const JNoun& arg, const Dimensions& frame, 
 							    int output_rank);
+
 
 class JResult { 
   typedef vector<JNoun::Ptr > JNounList;
@@ -89,14 +91,28 @@ JNoun::Ptr dyadic_apply(int lrank, int rrank,
   return res.assemble_result();
 }
 
-template <template <typename, typename> class OpType, typename Arg, typename Res> 
-shared_ptr<JArray<Res> > scalar_monadic_apply(const JArray<Arg>& arg, OpType<Arg, Res> op) {
-  Dimensions d(arg.get_dims());
-  shared_ptr<vector<Res> > v(new vector<Res>(d.number_of_elems()));
-  transform(arg.begin(), arg.end(), v->begin(), op);
+
+template <template <typename> class Op> 
+struct scalar_monadic_apply {
+
+  template <typename T>
+  struct Impl {
+    typedef Op<T> our_op;
+    typedef typename our_op::result_type result_type;
+    typedef typename our_op::argument_type argument_type;
     
-  return shared_ptr<JArray<Res> >(new JArray<Res>(d, v));
-}
+    JNoun::Ptr
+    operator()(const JArray<argument_type>& arg) {
+      Dimensions d(arg.get_dims());
+      shared_ptr<vector<result_type> > v
+	(new vector<result_type>(d.number_of_elems(), JTypeTrait<result_type>::base_elem()));
+      transform(arg.begin(), arg.end(), v->begin(), our_op());
+      
+      return JNoun::Ptr(new JArray<result_type>(d, v));
+    }
+  };
+
+};
 
 template <typename OpType>
 shared_ptr<JNoun > monadic_apply(int rank, JMachine::Ptr m, const JNoun& arg, OpType op) {
@@ -140,12 +156,16 @@ public:
   }
 };
 
-template <template <typename, typename> class Op>
+template <template <typename> class Op>
 struct ScalarMonad: public Monad { 
   ScalarMonad(): Monad(0) {}
-  inline JNoun::Ptr operator()(shared_ptr<JMachine> m, const JNoun& arg) const;
+  
+  JNoun::Ptr operator()(JMachine::Ptr, const JNoun& arg) const {
+    JArrayCaller<scalar_monadic_apply<Op>::template Impl, JNoun::Ptr> caller;
+    return caller(arg);
+  }
 };
-
+  
 template <typename Op>
 class DefaultMonad: public Monad { 
   Op op;
@@ -160,18 +180,6 @@ public:
     return monadic_apply(get_rank(), m, arg, op);
   }
 };
-
-template <template <typename, typename> class Op>
-inline JNoun::Ptr ScalarMonad<Op>::operator()(shared_ptr<JMachine>, const JNoun& arg) const {
-  if (arg.get_value_type() == j_value_type_int) {
-    return scalar_monadic_apply<Op, JInt, JInt>(static_cast<const JArray<JInt> &>(arg),
-						Op<JInt, JInt>());
-  } else if (arg.get_value_type() == j_value_type_float) {
-    return scalar_monadic_apply<Op, JFloat, JFloat>(static_cast<const JArray<JFloat> &>(arg),
-						    Op<JFloat, JFloat>());
-  }
-  throw JIllegalValueTypeException();
-}
       
 template <template <typename, typename, typename> class Op>  
 inline JNoun::Ptr ScalarDyad<Op>::operator()(shared_ptr<JMachine>, const JNoun& larg, 
@@ -186,7 +194,7 @@ inline JNoun::Ptr ScalarDyad<Op>::operator()(shared_ptr<JMachine>, const JNoun& 
 							   static_cast<const JArray<JFloat>& >(rarg),
 							   Op<JFloat, JFloat, JFloat>());
   }
-    
+  
   if(larg.get_value_type() != rarg.get_value_type()) {
     if (larg.get_value_type() == j_value_type_float && rarg.get_value_type() == j_value_type_int) {
 	
@@ -202,7 +210,6 @@ inline JNoun::Ptr ScalarDyad<Op>::operator()(shared_ptr<JMachine>, const JNoun& 
 	(jarray_int_to_float(static_cast<const JArray<JInt>&>(larg)), 
 	 static_cast<const JArray<JFloat>& >(rarg),
 	 Op<JFloat, JFloat, JFloat>());
-	  
     }
   }
   throw JIllegalValueTypeException();
@@ -245,64 +252,6 @@ public:
   VerbContainer(JMachine::Ptr jmachine, JVerb::Ptr verb): verb(verb), jmachine(jmachine) {}
 };
 
-
-template <template <typename> class Op, typename Ret>
-struct JArrayCaller { 
-  Ret operator()(const JNoun& noun) const {
-    switch(noun.get_value_type()) {
-    case j_value_type_int:
-      return Op<JInt>()(static_cast<const JArray<JInt>&>(noun));
-    case j_value_type_float:
-      return Op<JFloat>()(static_cast<const JArray<JFloat>&>(noun));
-    case j_value_type_box:
-      return Op<JBox>()(static_cast<const JArray<JBox>&>(noun));
-    default:
-      assert(0);
-    }
-  };
- 
-  template <typename Arg1>
-  Ret operator()(const JNoun& noun, Arg1& arg) const {
-    switch(noun.get_value_type()) {
-    case j_value_type_int:
-      return Op<JInt>()(static_cast<const JArray<JInt>&>(noun), arg);
-    case j_value_type_float:
-      return Op<JFloat>()(static_cast<const JArray<JFloat>&>(noun), arg);
-    case j_value_type_box:
-      return Op<JBox>()(static_cast<const JArray<JBox>&>(noun), arg);
-    default:
-      assert(0);
-    }
-  }
-
-  template <typename Arg1, typename Arg2>
-  Ret operator()(const JNoun& noun, Arg1& arg1, Arg2& arg2) const {
-    switch(noun.get_value_type()) {
-    case j_value_type_int:
-      return Op<JInt>()(static_cast<const JArray<JInt>&>(noun), arg1, arg2);
-    case j_value_type_float:
-      return Op<JFloat>()(static_cast<const JArray<JFloat>&>(noun), arg1, arg2);
-    case j_value_type_box:
-      return Op<JBox>()(static_cast<const JArray<JBox>&>(noun), arg1, arg2);
-    default:
-      assert(0);
-    }
-  }    
-
-  template <typename Arg1, typename Arg2, typename Arg3>
-  Ret operator()(const JNoun& noun, Arg1& arg1, Arg2& arg2, Arg3& arg3) const {
-    switch(noun.get_value_type()) {
-    case j_value_type_int:
-      return Op<JInt>()(static_cast<const JArray<JInt>&>(noun), arg1, arg2, arg3);
-    case j_value_type_float:
-      return Op<JFloat>()(static_cast<const JArray<JFloat>&>(noun), arg1, arg2, arg3);
-    case j_value_type_box:
-      return Op<JBox>()(static_cast<const JArray<JBox>&>(noun), arg1, arg2, arg3);
-    default:
-      assert(0);
-    }
-  }
-};
 }
 
 #endif

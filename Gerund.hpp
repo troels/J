@@ -7,9 +7,11 @@
 
 #include "JNoun.hpp"
 #include "JVerbs.hpp"
+#include "VerbHelpers.hpp"
 
 namespace J {
-
+    
+  
 bool is_gerund(JWord::Ptr word);
 
 

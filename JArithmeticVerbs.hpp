@@ -22,42 +22,50 @@ public:
   shared_ptr<JNoun> unit(const Dimensions& dims) const;
 };
 
-class PlusVerb: public JArithmeticVerb<JInt> { 
-  template <typename Arg, typename Res>
-  struct MonadOp: std::unary_function<Arg, Res> {
-    Res operator()(Arg arg) const { 
-      return arg;
-    }
-  };
+template <typename Arg>
+struct PlusMonadOp: public std::unary_function<Arg, Arg> {
+  Arg operator()(Arg arg) const { 
+    return arg;
+  }
+};
 
-  struct PlusMonad: public ScalarMonad<MonadOp> {};
-    
+template <>
+struct PlusMonadOp<JBox>: public std::unary_function<JBox, JBox> {
+  JBox operator()(JBox) const { 
+    throw JIllegalValueTypeException();
+  }
+};
+
+
+class PlusVerb: public JArithmeticVerb<JInt> { 
   template <typename LArg, typename RArg, typename Res>
   struct DyadOp: std::binary_function<LArg, RArg, Res> {
     Res operator()(LArg larg, RArg rarg) const {
       return larg + rarg;
     }
   };
-
-  struct PlusDyad: public ScalarDyad<DyadOp> {};
       
 public:
   PlusVerb(): 
-    JArithmeticVerb(shared_ptr<Monad>(new PlusMonad()), 
-		    shared_ptr<Dyad>(new PlusDyad()),
-		    0) {}
+    JArithmeticVerb(Monad::Ptr(new ScalarMonad<PlusMonadOp>()), 
+		    Dyad::Ptr(new ScalarDyad<DyadOp>()), 0) {}
+};
+
+template <typename Arg>
+struct MinusMonadOp: public std::unary_function<Arg, Arg> {
+  Arg operator()(Arg arg) const { 
+    return -arg;
+  }
+};
+
+template <>
+struct MinusMonadOp<JBox>: public std::unary_function<JBox, JBox> {
+  JBox operator()(JBox) const { 
+    throw JIllegalValueTypeException();
+  }
 };
 
 class MinusVerb: public JArithmeticVerb<JInt> { 
-  template <typename Arg, typename Res>
-  struct MonadOp: std::unary_function<Arg, Res> {
-    Res operator()(Arg arg) const { 
-      return -arg;
-    }
-  };
-    
-  struct MinusMonad: public ScalarMonad<MonadOp> {};
-    
   template <typename LArg, typename RArg, typename Res>
   struct DyadOp: std::binary_function<LArg, RArg, Res> {
     Res operator()(LArg larg, RArg rarg) const {
@@ -65,11 +73,9 @@ class MinusVerb: public JArithmeticVerb<JInt> {
     }
   };
 
-  struct MinusDyad: public ScalarDyad<DyadOp> {};
-
 public:
-  MinusVerb(): JArithmeticVerb(shared_ptr<Monad>(new MinusMonad()), 
-			       shared_ptr<Dyad>(new MinusDyad()), 0) {}
+  MinusVerb(): JArithmeticVerb(Monad::Ptr(new ScalarMonad<MinusMonadOp>()), 
+			       Dyad::Ptr(new ScalarDyad<DyadOp>()), 0) {}
 };    
 
 class IDotVerb: public JVerb { 
