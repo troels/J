@@ -1051,6 +1051,14 @@ BOOST_AUTO_TEST_CASE ( executor_shape_test ) {
 		    JIllegalDimensionsException)
 }
 
+BOOST_AUTO_TEST_CASE ( test_ravel_append ) {
+  JMachine::Ptr m(JMachine::new_machine());
+  JExecutor executor(m);
+  
+  BOOST_CHECK_EQUAL(*executor(", 2 3 $ 1 2 3 4 5 6"), 
+		    *executor("1 2 3 4 5 6"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
   
   

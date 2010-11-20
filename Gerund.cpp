@@ -10,10 +10,6 @@ struct is_verb_in_box {
   bool operator()(bool accum, JBox& box) const { 
     return accum && (*this)(box);
   }
-
-  bool operator()(JBox& box, bool accum) const { 
-    return accum && (*this)(box);
-  }
 };
 
 bool is_gerund(JWord::Ptr word) {

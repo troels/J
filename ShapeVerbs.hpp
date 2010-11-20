@@ -2,6 +2,7 @@
 #define SHAPEVERBS_HPP
 
 #include "JVerbs.hpp"
+#include "JNoun.hpp"
 #include "VerbHelpers.hpp"
 #include "JExceptions.hpp"
 
@@ -61,6 +62,109 @@ public:
   ShapeVerb(): JVerb(DefaultMonad<MonadOp>::Instantiate(rank_infinity, MonadOp()),
 		     DefaultDyad<DyadOp>::Instantiate(1, rank_infinity, DyadOp())) {}
 };
+
+template <typename T>
+struct RavelOp {
+  JNoun::Ptr operator()(const JArray<T>& arg) const {
+    return JNoun::Ptr(new JArray<T>(Dimensions(1, arg.get_dims().number_of_elems()), 
+				    arg.get_content()));
+  }
+};
+
+template <typename T>
+JArray<T> expand_to_rank(int rank, const JArray<T>& array) {
+  assert(rank >= array.get_rank());
+  Dimensions old_dims(array.get_dims());
+  shared_ptr<vector<int> > new_dims_vector(new vector<int>(rank, 1));
+
+  copy(old_dims.begin(), old_dims.end(), new_dims_vector->begin() + (rank - array.get_rank()));
+  return JArray<T>(new_dims_vector, array.get_content());
 }
+  
+  
+template <typename T>
+struct AppendOp {
+  JNoun::Ptr operator()(const JArray<T>& larg, const JNoun& rarg_, JMachine::Ptr) const { 
+    const JArray<T>& rarg = static_cast<const JArray<T>&>(rarg_);
+    
+    if (larg.is_scalar() && rarg.is_scalar()) {
+      shared_ptr<vector<T> > res(new vector<T>(2, JTypeTrait<T>::base_elem()));
+      (*res)[0] = (*larg.begin());
+      (*res)[1] = (*rarg.begin());
+      return JNoun::Ptr(new JArray<T>(Dimensions(1, 2), res));
+    } 
+    
+    if (rarg.is_scalar()) {
+      int total_larg_elems(larg.get_dims().number_of_elems());
+      Dimensions larg_dims(larg.get_dims());
+
+      shared_ptr<vector<T> > res(new vector<T>(total_larg_elems + larg_dims.suffix(-1).number_of_elems(),
+					       JTypeTrait<T>::base_elem()));
+      
+      copy(larg.begin(), larg.end(), res->begin());
+      fill(res->begin() + total_larg_elems, res->end(), (*rarg.begin()));
+      
+      shared_ptr<vector<int> > dim_vector(new vector<int>(larg_dims.begin(), larg_dims.end()));
+      (*dim_vector->begin())++;
+      return JNoun::Ptr(new JArray<T>(Dimensions(dim_vector), res));
+    } else if (larg.is_scalar()) {
+      Dimensions rarg_dims(rarg.get_dims());
+      int item_size = rarg_dims.suffix(-1).number_of_elems();
+      shared_ptr<vector<T> > res(new vector<T>(rarg_dims.number_of_elems() + item_size,
+					       JTypeTrait<T>::base_elem()));
+
+      fill(res->begin(), res->begin() + item_size, (*larg.begin()));
+      copy(rarg.begin(), rarg.end(), res->begin() + item_size);
+
+      shared_ptr<vector<int> > dim_vector(new vector<int>(rarg.get_dims().begin(), rarg.get_dims().end()));
+      (*dim_vector)[0]++;
+
+      return JNoun::Ptr(new JArray<T>(Dimensions(dim_vector), res));      
+    }
+    
+    JArray<T> new_larg(larg.get_rank() < rarg.get_rank() ? 
+		       expand_to_rank(rarg.get_rank(), larg) : larg);
+    JArray<T> new_rarg(rarg.get_rank() < larg.get_rank() ?
+		       expand_to_rank(larg.get_rank(), rarg) : rarg);
+    
+    int larg_first_dim(new_larg.get_dims()[0]);
+    int rarg_first_dim(new_rarg.get_dims()[0]);
+
+    Dimensions frame(Dimensions(1, larg_first_dim + rarg_first_dim));
+    JResult res(frame);
+
+    for (int i = 0; i < larg_first_dim; ++i) {
+      res.add_noun(new_larg.subarray(i, i + 1));
+    }
+    
+    for (int i = 0; i < rarg_first_dim; ++i) {
+      res.add_noun(new_rarg.subarray(i, i + 1));
+    }
+    return res.assemble_result();
+  };
+};
+
+class RavelAppendVerb: public JVerb { 
+  struct MonadOp {
+    JNoun::Ptr operator()(JMachine::Ptr, const JNoun& arg) const { 
+      return JArrayCaller<RavelOp, JNoun::Ptr>()(arg);
+    }
+  };
+
+  struct DyadOp {
+    JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& larg, const JNoun& rarg) const { 
+      if (larg.get_value_type() != rarg.get_value_type()) {
+	throw JIllegalValueTypeException("Needs the same types");
+      }
+
+      return JArrayCaller<AppendOp, JNoun::Ptr>()(larg, rarg, m);
+    }
+  };
+
+public:
+  RavelAppendVerb(): JVerb(DefaultMonad<MonadOp>::Instantiate(rank_infinity, MonadOp()),
+			   DefaultDyad<DyadOp>::Instantiate(rank_infinity, rank_infinity, DyadOp())) {}
+};
+}	
 
 #endif
