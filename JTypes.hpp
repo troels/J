@@ -3,6 +3,7 @@
 
 #include "JGrammar.hpp"
 #include "JExceptions.hpp"
+#include "JNoun.hpp"
 #include <map>
 #include <boost/shared_ptr.hpp>
 #include <boost/optional.hpp>
@@ -46,7 +47,7 @@ struct JTypeDispatcher {
   }
 
   template <typename Arg1, typename Arg2>
-  Ret operator()(j_value_type t, Arg1& arg1, Arg2& arg2) const { 
+  Ret operator()(j_value_type t, const Arg1& arg1, const Arg2& arg2) const { 
     switch (t) {
     case j_value_type_int:
       return Op<JInt>()(arg1, arg2);
@@ -61,7 +62,7 @@ struct JTypeDispatcher {
 
 
   template <typename Arg1, typename Arg2, typename Arg3>
-  Ret operator()(j_value_type t, Arg1& arg1, Arg2& arg2, Arg3& arg3) const { 
+  Ret operator()(j_value_type t, const Arg1& arg1, const Arg2& arg2, const Arg3& arg3) const { 
     switch (t) {
     case j_value_type_int:
       return Op<JInt>()(arg1, arg2, arg3);
@@ -75,7 +76,7 @@ struct JTypeDispatcher {
   }
 
   template <typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-  Ret operator()(j_value_type t, Arg1& arg1, Arg2& arg2, Arg3& arg3, Arg4& arg4) const { 
+  Ret operator()(j_value_type t, const Arg1& arg1, const Arg2& arg2, const Arg3& arg3, const Arg4& arg4) const { 
     switch (t) {
     case j_value_type_int:
       return Op<JInt>()(arg1, arg2, arg3);
@@ -179,35 +180,15 @@ class TypeConversions {
   typedef multimap<j_value_type, j_value_type> our_map;
   our_map type_conversions;
 
-  TypeConversions(): type_conversions() {
-    typedef pair<j_value_type, j_value_type> p;
-    
-    type_conversions.insert(p(j_value_type_int, j_value_type_float));
-    type_conversions.insert(p(j_value_type_int, j_value_type_complex));
-    type_conversions.insert(p(j_value_type_float, j_value_type_complex));
-  }
+  TypeConversions();
 
 public:
   typedef shared_ptr<TypeConversions> Ptr;
   
-  static Ptr get_instance() { 
-    static Ptr type_conversions = Ptr(new TypeConversions());
-    return type_conversions;
-  }
+  static Ptr get_instance();
     
-  bool is_convertible_to(j_value_type from, j_value_type to) const { 
-    for(our_map::const_iterator it(type_conversions.find(from)); it != type_conversions.end(); ++it) {
-      if (it->second == to) return true;
-    }
-    return false;
-  }
-
-  optional<j_value_type> find_best_type_conversion(j_value_type t1, j_value_type t2) const { 
-    if (t1 == t2) return optional<j_value_type>(t1);
-    if (is_convertible_to(t1, t2)) return optional<j_value_type>(t2);
-    if (is_convertible_to(t2, t1)) return optional<j_value_type>(t1);
-    return optional<j_value_type>();
-  }
+  bool is_convertible_to(j_value_type from, j_value_type to) const;
+  optional<j_value_type> find_best_type_conversion(j_value_type t1, j_value_type t2) const;
 };
 
 template <typename T>
@@ -230,12 +211,9 @@ struct ConversionOp {
   }
 };
 
-struct GetNounAsJArray {
-  JNoun::Ptr operator()(const JNoun& arg, j_value_type to_type) const {
-    if (arg.get_value_type() == to_type) return arg.clone();
-    return JArrayCaller<ConversionOp, JNoun::Ptr>()(arg, to_type);
-  }
+struct GetNounAsJArrayOfType {
+  JNoun::Ptr operator()(const JNoun& arg, j_value_type to_type) const;
 };
-}  
+} 
 
 #endif

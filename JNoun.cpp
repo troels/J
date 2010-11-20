@@ -52,7 +52,23 @@ template <>
 JArray<JBox>::JArray(const Dimensions &d, ...): JNoun(d, j_value_type_box) {
   throw std::logic_error("THis method must no be called with jbox");
 }
-  
+
+template <>
+JArray<JChar>::JArray(const Dimensions &d, ...): 
+  JNoun(d, JTypeTrait<JChar>::value_type), 
+  content(new container(d.number_of_elems(), JTypeTrait<JChar>::base_elem())),
+  begin_iter(content->begin()), end_iter(content->end()) 
+{
+  va_list va;
+  va_start(va, d);
+    
+  for (iter i = begin_iter; i != end_iter; ++i) {
+    *i = static_cast<JChar>(va_arg(va, int));
+  }
+
+  va_end(va);
+}
+
 template <typename T> 
 JArray<T> JArray<T>::operator[](int n) const {
   assert(get_rank() > 0);
@@ -224,6 +240,8 @@ int JArray<JInt>::get_field_width() const {
 template class JArray<JInt>;
 template class JArray<JFloat>;
 template class JArray<JBox>;
+template class JArray<JChar>;
+template class JArray<JComplex>;
 }
     
   
