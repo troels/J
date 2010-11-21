@@ -55,7 +55,7 @@ public:
 };
 
 template <typename To>
-struct ConvertTo { 
+struct ConvertParsedNumberTo { 
   To operator()(ParsedNumberBase::Ptr parsed) const { 
     return static_cast<ParsedNumber<To>&>(*parsed->convert_to(JTypeTrait<To>::value_type)).get_nr();
   }
@@ -68,7 +68,7 @@ struct create_noun {
     int size(distance(begin, end));
     shared_ptr<vector<T> > vec(new vector<T>(size, JTypeTrait<T>::base_elem()));
 
-    transform(begin, end, vec->begin(), ConvertTo<T>());
+    transform(begin, end, vec->begin(), ConvertParsedNumberTo<T>());
     return JNoun::Ptr(new JArray<T>(size == 1 ? Dimensions(0) : Dimensions(1, size), vec));
   }
 };

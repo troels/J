@@ -36,19 +36,21 @@ struct PlusMonadOp<JBox>: public std::unary_function<JBox, JBox> {
   }
 };
 
+template <typename Arg>
+struct PlusDyadOp: std::binary_function<Arg, Arg, Arg> {
+  Arg operator()(Arg larg, Arg rarg) const {
+    return larg + rarg;
+  }
+};
+
+template <>
+struct PlusDyadOp<JBox>: BadScalarDyadOp<JBox> {};
 
 class PlusVerb: public JArithmeticVerb<JInt> { 
-  template <typename LArg, typename RArg, typename Res>
-  struct DyadOp: std::binary_function<LArg, RArg, Res> {
-    Res operator()(LArg larg, RArg rarg) const {
-      return larg + rarg;
-    }
-  };
-      
 public:
   PlusVerb(): 
     JArithmeticVerb(Monad::Ptr(new ScalarMonad<PlusMonadOp>()), 
-		    Dyad::Ptr(new ScalarDyad<DyadOp>()), 0) {}
+		    Dyad::Ptr(new ScalarDyad<PlusDyadOp>()), 0) {}
 };
 
 template <typename Arg>
@@ -58,24 +60,25 @@ struct MinusMonadOp: public std::unary_function<Arg, Arg> {
   }
 };
 
+
 template <>
-struct MinusMonadOp<JBox>: public std::unary_function<JBox, JBox> {
-  JBox operator()(JBox) const { 
-    throw JIllegalValueTypeException();
+struct MinusMonadOp<JBox>: public BadScalarMonadOp<JBox> {};
+
+template <typename Arg>
+struct MinusDyadOp: std::binary_function<Arg, Arg, Arg> {
+  Arg operator()(Arg larg, Arg rarg) const {
+    return larg - rarg;
   }
 };
 
+template <>
+struct MinusDyadOp<JBox>: public BadScalarDyadOp<JBox> {};
+
 class MinusVerb: public JArithmeticVerb<JInt> { 
-  template <typename LArg, typename RArg, typename Res>
-  struct DyadOp: std::binary_function<LArg, RArg, Res> {
-    Res operator()(LArg larg, RArg rarg) const {
-      return larg - rarg;
-    }
-  };
 
 public:
   MinusVerb(): JArithmeticVerb(Monad::Ptr(new ScalarMonad<MinusMonadOp>()), 
-			       Dyad::Ptr(new ScalarDyad<DyadOp>()), 0) {}
+			       Dyad::Ptr(new ScalarDyad<MinusDyadOp>()), 0) {}
 };    
 
 class IDotVerb: public JVerb { 
