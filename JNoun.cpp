@@ -83,13 +83,13 @@ JArray<T> JArray<T>::operator[](int n) const {
   
 template <typename T> 
 void JArray<T>::extend_into(const Dimensions &d, iter new_ptr) const {
-  assert(d.get_rank() == get_rank());
-    
-  if (get_rank() == 1 || get_dims() == d) {
+  if (d.number_of_elems() == 0) return;
+  
+  if ((get_rank() == 1 && d.get_rank() == 1) || get_dims() == d) {
     copy(begin(), end(), new_ptr);
   } else {
-    iter old_ptr = begin(), old_end = end();
-      
+    iter old_ptr(begin()), old_end(end());
+    
     VectorCounter vc1(get_dims());
     VectorCounter vc2(d);
       

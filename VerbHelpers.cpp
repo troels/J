@@ -48,10 +48,9 @@ JNoun::Ptr JResult::assemble_result_internal() const {
   Dimensions content_dims(get_elem_dims());
   Dimensions res = get_frame() + content_dims;
   shared_ptr<vector<T> > v(new vector<T>(res.number_of_elems(), JTypeTrait<T>::base_elem()));
-    
-  typename vector<T>::iterator ptr = v->begin();
-  typename JNounList::const_iterator nounlist_ptr = get_nouns().begin();
-  typename JNounList::const_iterator nounlist_end = get_nouns().end();
+  
+  typename vector<T>::iterator ptr(v->begin());
+  typename JNounList::const_iterator nounlist_ptr(get_nouns().begin()), nounlist_end(get_nouns().end());
     
   int content_dims_len = content_dims.number_of_elems();
   for (;nounlist_ptr != nounlist_end; ++nounlist_ptr, ptr += content_dims_len) {
