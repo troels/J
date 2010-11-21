@@ -13,7 +13,7 @@ shared_ptr<JNoun> JArithmeticVerb<T>::unit(const Dimensions& dims) const {
 template class JArithmeticVerb<JInt>;
   
 shared_ptr<JNoun> IDotVerb::IDotMonad::operator()(JMachine::Ptr m, const JNoun& arg) const { 
-  JArray<JInt> int_arg = require_ints(arg);
+  JArray<JInt> int_arg(require_type<JInt>(arg));
 
   return monadic_apply< MonadOp<JInt, JInt> >(get_rank(), m, int_arg, MonadOp<JInt, JInt>());
 }

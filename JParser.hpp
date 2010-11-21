@@ -148,14 +148,19 @@ public:
     assert(v->size() > 0);
     typename deque<ParsedNumberBase::Ptr>::iterator iter = v->begin();
     
-    j_value_type highest_j_value_type = (*iter)->get_value_type();
+    j_value_type best_type = (*iter)->get_value_type();
     ++iter;
 
     for(;iter != v->end(); ++iter) { 
-      highest_j_value_type = highest_j_value(*iter, highest_j_value_type);
+      optional<j_value_type> new_best_type(TypeConversions::get_instance()->
+					   find_best_type_conversion(best_type, (*iter)->get_value_type()));
+      if (new_best_type) 
+	best_type = *new_best_type;
+      else 
+	throw JParserException("Invalid combination of types");
     }
 
-    return create_jarray(highest_j_value_type, v->begin(), v->end());
+    return create_jarray(best_type, v->begin(), v->end());
   }
 };
 

@@ -48,57 +48,45 @@ public:
   ParsedNumber(Number nr): ParsedNumberBase(JTypeTrait<Number>::value_type), nr(nr) {}
   bool operator==(const ParsedNumberBase& that) const;
   
-  Ptr convert_to(j_value_type type) const;
-
+  Ptr convert_to(j_value_type t) const;
   string to_string() const;
 
   Number get_nr() const { return nr; }
 };
 
-static const j_value_type j_number_type_hierarchy[] = {
-  j_value_type_int,
-  j_value_type_float,
-  j_value_type_complex
+template <typename To>
+struct ConvertTo { 
+  To operator()(ParsedNumberBase::Ptr parsed) const { 
+    return static_cast<ParsedNumber<To>&>(*parsed->convert_to(JTypeTrait<To>::value_type)).get_nr();
+  }
 };
-
-int get_j_value_type_place_in_hierarchy(j_value_type t);
-j_value_type highest_j_value(ParsedNumberBase::Ptr a, j_value_type type);
-
+  
 template <typename T>
 struct create_noun {
   template <typename Iterator>
-  static JNoun::Ptr apply(Iterator begin, Iterator end) {
-    shared_ptr<vector<T> > v(new vector<T>(distance(begin, end)));
-    typename vector<T>::iterator out_iter(v->begin());
-    
-    for (Iterator in_iter(begin); in_iter != end; ++in_iter, ++out_iter) {
-      *out_iter = static_cast<ParsedNumber<T>*>(in_iter->get())->get_nr();
-    }
-    
-    
-    return JNoun::Ptr(new JArray<T>(v->size() == 1 ? Dimensions(0) : Dimensions(1, v->size()), v));
+  JNoun::Ptr operator()(Iterator begin, Iterator end) {
+    int size(distance(begin, end));
+    shared_ptr<vector<T> > vec(new vector<T>(size, JTypeTrait<T>::base_elem()));
+
+    transform(begin, end, vec->begin(), ConvertTo<T>());
+    return JNoun::Ptr(new JArray<T>(size == 1 ? Dimensions(0) : Dimensions(1, size), vec));
   }
 };
 
 template <typename Iterator>
-shared_ptr<JNoun> create_jarray(j_value_type value_type, Iterator begin, Iterator end) {
-  typename VecPtr<ParsedNumberBase::Ptr>::type v2(new vector<ParsedNumberBase::Ptr>(distance(begin, end)));
-  vector<ParsedNumberBase::Ptr>::iterator iter = v2->begin();
-
-  for (Iterator arg_iter = begin; arg_iter != end; ++arg_iter) {
-    *iter = (*arg_iter)->convert_to(value_type);
-    ++iter;
-  }
-
-  switch (value_type) { 
-  case j_value_type_int:
-    return create_noun<JInt>::apply(v2->begin(), v2->end());
-  case j_value_type_float:
-    return create_noun<JFloat>::apply(v2->begin(), v2->end());
-  default:
-    throw std::logic_error("Clauses missing");
-  }
+JNoun::Ptr create_jarray(j_value_type value_type, Iterator begin, Iterator end) {
+  return JTypeDispatcher<create_noun, JNoun::Ptr>()(value_type, begin, end);
 }
+
+template <typename From>
+struct ParsedNumberConverter  {
+  template <typename To>
+  struct Impl {
+    ParsedNumberBase::Ptr operator()(From from) const {
+      return ParsedNumberBase::Ptr(new ParsedNumber<To>(ConvertType<From, To>()(from)));
+    }
+  };
+};
 
 }}
 

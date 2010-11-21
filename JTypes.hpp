@@ -214,6 +214,9 @@ struct ConversionOp {
 struct GetNounAsJArrayOfType {
   JNoun::Ptr operator()(const JNoun& arg, j_value_type to_type) const;
 };
-} 
+
+template <typename T>
+JArray<T> require_type(const JNoun& noun);
+}
 
 #endif

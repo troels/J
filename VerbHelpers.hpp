@@ -215,7 +215,7 @@ inline JNoun::Ptr ScalarDyad<Op>::operator()(shared_ptr<JMachine>, const JNoun& 
   throw JIllegalValueTypeException();
 }
 
-JArray<JInt> require_ints(const JNoun& noun); 
+
 
 class DimensionCounter { 
   vector<int> reference;

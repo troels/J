@@ -35,4 +35,22 @@ JNoun::Ptr GetNounAsJArrayOfType::operator()(const JNoun& arg, j_value_type to_t
   return JArrayCaller<ConversionOp, JNoun::Ptr>()(arg, to_type);
 }
 
+template <typename T>
+JArray<T> require_type(const JNoun& noun) { 
+  if (noun.get_value_type() == JTypeTrait<T>::value_type) {
+    return static_cast<const JArray<T>&>(noun);
+  }
+  
+  if (TypeConversions::get_instance()->is_convertible_to(noun.get_value_type(), JTypeTrait<T>::value_type)) {
+    return static_cast<JArray<T>&>(*GetNounAsJArrayOfType()(noun, JTypeTrait<T>::value_type));
+  }
+  
+  throw JIllegalValueTypeException();
+}
+
+template JArray<JInt> require_type<JInt>(const JNoun& noun);
+template JArray<JFloat> require_type<JFloat>(const JNoun& noun);
+template JArray<JBox> require_type<JBox>(const JNoun& noun);
+template JArray<JChar> require_type<JChar>(const JNoun& noun);
+template JArray<JComplex> require_type<JComplex>(const JNoun& noun);
 }

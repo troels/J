@@ -10,7 +10,7 @@ JWord::Ptr RankConjunction::operator()(JMachine::Ptr, JWord::Ptr lword, JWord::P
   shared_ptr<JVerb> verb = boost::static_pointer_cast<JVerb>(lword);
   shared_ptr<JNoun> new_rank = boost::static_pointer_cast<JNoun>(rword);
     
-  JArray<JInt> array = require_ints(*new_rank);
+  JArray<JInt> array = require_type<JInt>(*new_rank);
   if (array.get_rank() > 1 || 
       (array.get_rank() == 1 && (array.get_dims()[0] > 3 || array.get_dims()[0] <= 0))) {
     throw JIllegalDimensionsException();

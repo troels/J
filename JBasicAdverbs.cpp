@@ -64,7 +64,7 @@ JNoun::Ptr PrefixInfixAdverb::PrefixInfixVerb::MonadOp::operator()(JMachine::Ptr
 
 JNoun::Ptr 
 PrefixInfixAdverb::PrefixInfixVerb::DyadOp::operator()(JMachine::Ptr m, const JNoun& larg, const JNoun& rarg) const { 
-  JArray<JInt> ints(require_ints(larg));
+  JArray<JInt> ints(require_type<JInt>(larg));
   int len = *(ints.begin());
   
   Dimensions dims(rarg.get_rank() == 0 ? Dimensions(1,1): rarg.get_dims());

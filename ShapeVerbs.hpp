@@ -11,7 +11,7 @@ namespace J {
 template <typename T>
 struct ShapeDyadOp {
   JNoun::Ptr operator()(const JArray<T>& rarg, const JNoun& noun) const { 
-    JArray<JInt> larg(require_ints(noun));
+    JArray<JInt> larg(require_type<JInt>(noun));
     Dimensions from_larg(larg.is_scalar() ? 
 			 Dimensions(1, *(larg.begin())) : 
 			 Dimensions(larg.get_content()));
