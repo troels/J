@@ -68,7 +68,6 @@ JNoun::Ptr dyadic_apply(int lrank, int rrank,
 
 template <template <typename> class Op> 
 struct scalar_monadic_apply {
-
   template <typename T>
   struct Impl {
     typedef Op<T> our_op;
@@ -113,11 +112,9 @@ template <template <typename> class OpType>
 struct scalar_dyadic_apply {
   template <typename T>
   struct Impl {
-    JNoun::Ptr operator()(JMachine::Ptr, const JNoun& larg_, const JNoun& rarg_) const { 
+    JNoun::Ptr operator()(const JArray<T>& larg, const JArray<T>& rarg, JMachine::Ptr) const { 
       typedef typename OpType<T>::result_type result_type;
       typedef vector<result_type> res_vec;
-      const JArray<T>& larg = static_cast<const JArray<T>&>(larg_);
-      const JArray<T>& rarg = static_cast<const JArray<T>&>(rarg_);
       
       if (larg.get_dims() == rarg.get_dims()) {
 	Dimensions d(larg.get_dims());
@@ -148,14 +145,7 @@ template <template <typename> class Op>
 struct ScalarDyad: public Dyad {
   ScalarDyad(): Dyad(0, 0) {}
   JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& larg, const JNoun& rarg) const {
-    optional<j_value_type> type(TypeConversions::get_instance()
-				->find_best_type_conversion(larg.get_value_type(),
-							    rarg.get_value_type()));
-    if (!type) throw JIllegalValueTypeException();
-    JNoun::Ptr larg_right_type(GetNounAsJArrayOfType()(larg, *type));
-    JNoun::Ptr rarg_right_type(GetNounAsJArrayOfType()(rarg, *type));
-    return JTypeDispatcher<scalar_dyadic_apply<Op>::template Impl , JNoun::Ptr>()(*type, m, *larg_right_type, 
-										  *rarg_right_type);
+    return CallWithCommonType<scalar_dyadic_apply<Op>::template Impl, JNoun::Ptr>()(larg, rarg, m);
   }
 };
 

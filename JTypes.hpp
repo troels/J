@@ -215,6 +215,82 @@ struct GetNounAsJArrayOfType {
   JNoun::Ptr operator()(const JNoun& arg, j_value_type to_type) const;
 };
 
+template <template <typename> class Op, typename Res>
+struct DualArrayConverter { 
+  template <typename T>
+  struct Impl {
+    Res operator()(const JNoun& larg, const JNoun& rarg) const { 
+      return Op<T>()(static_cast<const JArray<T>&>(larg), 
+		     static_cast<const JArray<T>&>(rarg));
+    }
+
+    template <typename Arg1>
+    Res operator()(const JNoun& larg, const JNoun& rarg, const Arg1& arg1) const { 
+      return Op<T>()(static_cast<const JArray<T>&>(larg), 
+		     static_cast<const JArray<T>&>(rarg),
+		     arg1);
+    }
+
+    template <typename Arg1, typename Arg2>
+    Res operator()(const JNoun& larg, const JNoun& rarg, const Arg1& arg1, const Arg2& arg2) const { 
+      return Op<T>()(static_cast<const JArray<T>&>(larg), 
+		     static_cast<const JArray<T>&>(rarg),
+		     arg1, arg2);
+    }
+
+    template <typename Arg1, typename Arg2, typename Arg3>
+    Res operator()(const JNoun& larg, const JNoun& rarg, 
+		   const Arg1& arg1, const Arg2& arg2, const Arg3& arg3) const { 
+      return Op<T>()(static_cast<const JArray<T>&>(larg), 
+		     static_cast<const JArray<T>&>(rarg), 
+		     arg1, arg2, arg3);
+    }
+  };
+};
+
+template <template <typename> class Op, typename Res>
+struct CallWithCommonType { 
+  typedef pair<JNoun::Ptr, JNoun::Ptr> JNounCouple;
+
+  JNounCouple do_conversion(const JNoun& larg, const JNoun& rarg) const { 
+    optional<j_value_type> type(TypeConversions::get_instance()
+				->find_best_type_conversion(larg.get_value_type(),
+							    rarg.get_value_type()));
+    if (!type) throw JIllegalValueTypeException();
+    JNoun::Ptr larg_right_type(GetNounAsJArrayOfType()(larg, *type));
+    JNoun::Ptr rarg_right_type(GetNounAsJArrayOfType()(rarg, *type));
+    return JNounCouple(larg_right_type, rarg_right_type);
+  }
+
+  Res operator()(const JNoun& larg, const JNoun& rarg) const { 
+    JNounCouple convertee(do_conversion(larg, rarg));
+    return JTypeDispatcher<DualArrayConverter<Op, Res>::template Impl, Res>()(convertee.first->get_value_type(),
+									      *convertee.first, *convertee.second);
+  }
+	
+  template <typename Arg1>
+  Res operator()(const JNoun& larg, const JNoun& rarg, const Arg1& arg1) {
+    JNounCouple convertee(do_conversion(larg, rarg));
+    return JTypeDispatcher<DualArrayConverter<Op, Res>::template Impl, Res>()(convertee.first->get_value_type(),
+				    *convertee.first, *convertee.second, arg1);
+  }
+
+  template <typename Arg1, typename Arg2>
+  Res operator()(const JNoun& larg, const JNoun& rarg, const Arg1& arg1, const Arg2& arg2) {
+    JNounCouple convertee(do_conversion(larg, rarg));
+    return JTypeDispatcher<DualArrayConverter<Op, Res>::template Impl, Res>()(convertee.first->get_value_type(),
+				    *convertee.first, *convertee.second, arg1, arg2);
+  }
+
+  template <typename Arg1, typename Arg2, typename Arg3>
+  Res operator()(const JNoun& larg, const JNoun& rarg, const Arg1& arg1, const Arg2& arg2, const Arg3& arg3) {
+    JNounCouple convertee(do_conversion(larg, rarg));
+    return JTypeDispatcher<DualArrayConverter<Op, Res>::template Impl, Res>()
+			   (convertee.first->get_value_type(),
+			    *convertee.first, *convertee.second, arg1, arg2, arg3);
+  }
+};
+
 template <typename T>
 JArray<T> require_type(const JNoun& noun);
 }

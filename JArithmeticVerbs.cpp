@@ -39,7 +39,7 @@ shared_ptr<JNoun > IDotVerb::MonadOp<JInt, JInt>::operator()(JMachine::Ptr, cons
   return shared_ptr<JArray<JInt> >(new JArray<JInt>(Dimensions(dims_vec), res));
 }
 
-shared_ptr<JNoun> IDotVerb::IDotDyad::operator()(shared_ptr<JMachine>, const JNoun& larg, const JNoun& rarg) const {
+shared_ptr<JNoun> IDotVerb::IDotDyad::operator()(JMachine::Ptr, const JNoun& larg, const JNoun& rarg) const {
   if (larg.get_value_type() == j_value_type_int &&
       rarg.get_value_type() == j_value_type_int) {
     return DyadOp<JInt, JInt, JInt>()(static_cast<const JArray<JInt> &>(larg),

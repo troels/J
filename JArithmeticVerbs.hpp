@@ -114,7 +114,7 @@ public:
   IDotVerb(): JVerb(shared_ptr<Monad>(new IDotMonad()), 
 		    shared_ptr<Dyad>(new IDotDyad())) {}
 };
-      
+
 }
 		  
 #endif
