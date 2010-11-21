@@ -78,8 +78,9 @@ struct MinusDyadOp<JBox>: public BadScalarDyadOp<JBox> {};
 
 class MinusVerb: public JArithmeticVerb<JInt> { 
 public:
-  MinusVerb(): JArithmeticVerb(Monad::Ptr(new ScalarMonad<MinusMonadOp>()), 
-			       Dyad::Ptr(new ScalarDyad<MinusDyadOp>()), 0) {}
+  MinusVerb(): JArithmeticVerb(ScalarMonad<MinusMonadOp>::Instantiate(),
+			       ScalarDyad<MinusDyadOp>::Instantiate(),0) {}
+
 };    
 
 template <typename T>
@@ -102,6 +103,47 @@ public:
 		    DefaultDyad<DyadOp>::Instantiate(rank_infinity, rank_infinity, DyadOp())) {}
 
 };
+
+namespace LessBoxVerbNS {
+
+template <typename T>
+struct DyadOp: public std::binary_function<T, T, JInt> { 
+  JInt operator()(const T& arg1, const T& arg2) const  {
+    return arg1 < arg2;
+  }
+};
+
+template <>
+struct DyadOp<JBox>: public BadScalarDyadOp<JBox> {};
+
+template <>
+struct DyadOp<JChar>: public BadScalarDyadOp<JChar> {};
+
+}
+
+
+class LessBoxVerb: public JVerb { 
+  struct MonadOp { 
+    JNoun::Ptr operator()(JMachine::Ptr, const JNoun& noun) const;
+  };
+  
+public:
+  LessBoxVerb(): JVerb(DefaultMonad<MonadOp>::Instantiate(rank_infinity, MonadOp()),
+		       ScalarDyad<J::LessBoxVerbNS::DyadOp>::Instantiate()) {};
+};
+
+// class MoreBoxVerb: public JVerb {
+//   struct MonadOp { 
+//     JNoun::Ptr operator()(JMachine::Ptr, const JNoun& noun) const;
+//   };
+
+//   struct DyadOp {
+//     JNoun::Ptr operator()(JMachine::Ptr, const JNoun& noun) const 
+//       };
+// public:  
+//   MoreBoxVerb(): JVerb(DefaultMonad<MonadOp>::Instantiate(rank_infinity, MonadOp()),
+// 		       ScalarDyad<J::MoreUnboxVerbNS::DyadOp>::Instantiate()) {}
+// };
 
 }
 		  

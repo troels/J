@@ -4,7 +4,11 @@
 #include "JNoun.hpp"
 #include "JVerbs.hpp"
 #include "JTypes.hpp"
+#include "utils.hpp"
 #include <boost/shared_ptr.hpp>
+#include <cmath>
+#include <functional>
+#include <algorithm>
 
 namespace J {
 using boost::shared_ptr;
@@ -20,18 +24,27 @@ class JResult {
   Dimensions frame;
   JNounList nouns;
   JNounList::iterator nouns_ptr;
-  shared_ptr<vector<int> > max_dims;
-  optional<int> rank;
+  typedef optional<shared_ptr<vector<int> > > elem_dims_t;
+  elem_dims_t elem_dims;
   optional<j_value_type> value_type;
 
   template <typename T>
   JNoun::Ptr assemble_result_internal() const;
+  
+  void update_elem_dims(const Dimensions& dims);
+
+  template <typename T>
+  struct assemble_result_helper { 
+    JNoun::Ptr operator()(const JResult& res) const {
+      return res.assemble_result_internal<T>();
+    }
+  };
 
 public:
   JResult(const Dimensions& frame);
     
   Dimensions get_frame() const { return frame; }
-  shared_ptr<vector<int> > get_max_dims() const { return max_dims; }
+  shared_ptr<vector<int> > get_elem_dims() const { return *elem_dims; }
   optional<j_value_type> get_value_type() const { return value_type; }
   void add_noun(JNoun::Ptr noun);
   const JNounList& get_nouns() const { return nouns; }
@@ -88,7 +101,7 @@ struct scalar_monadic_apply {
 };
 
 template <typename OpType>
-shared_ptr<JNoun > monadic_apply(int rank, JMachine::Ptr m, const JNoun& arg, OpType op) {
+JNoun::Ptr monadic_apply(int rank, JMachine::Ptr m, const JNoun& arg, OpType op) {
   if (rank < 0) {
     rank = std::max(0, arg.get_rank() + rank);
   }
@@ -144,6 +157,11 @@ struct scalar_dyadic_apply {
 template <template <typename> class Op>
 struct ScalarDyad: public Dyad {
   ScalarDyad(): Dyad(0, 0) {}
+
+  static Ptr Instantiate() {
+    return Ptr(new ScalarDyad<Op>());
+  }
+
   JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& larg, const JNoun& rarg) const {
     return CallWithCommonType<scalar_dyadic_apply<Op>::template Impl, JNoun::Ptr>()(larg, rarg, m);
   }
@@ -169,6 +187,10 @@ template <template <typename> class Op>
 struct ScalarMonad: public Monad { 
   ScalarMonad(): Monad(0) {}
   
+  static Ptr Instantiate() {
+    return Ptr(new ScalarMonad<Op>());
+  }
+
   JNoun::Ptr operator()(JMachine::Ptr, const JNoun& arg) const {
     JArrayCaller<scalar_monadic_apply<Op>::template Impl, JNoun::Ptr> caller;
     return caller(arg);
@@ -239,6 +261,7 @@ struct BadScalarDyadOp: std::binary_function<Arg, Arg, Arg> {
     throw JIllegalValueTypeException();
   }
 };  
+
 }
 
 #endif

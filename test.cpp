@@ -1078,6 +1078,17 @@ BOOST_AUTO_TEST_CASE ( test_ravel_append ) {
 		    *executor("2 2 3 $ 1 2 3 4 5 6 5 10 0 0 0 0"));
 }
 
+BOOST_AUTO_TEST_CASE ( test_less ) {
+  JMachine::Ptr m(JMachine::new_machine());
+  JExecutor executor(m);
+  
+  BOOST_CHECK_EQUAL(*executor("(i. 10) < 5"),
+		    *executor("1 1 1 1 1 0 0 0 0 0"));
+
+  BOOST_CHECK_EQUAL(*executor(", (i. 10 _20) < 50"),
+		    *executor("(40 $ 1), (10 $ 0), (10 $ 1), (140 $ 0)"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
   
   

@@ -1,59 +1,51 @@
 #include "VerbHelpers.hpp"
-#include <algorithm>
 
 namespace J {
 JResult::JResult(const Dimensions& frame):
   frame(frame), nouns(JNounList(frame.number_of_elems())), nouns_ptr(nouns.begin()), 
-  max_dims(),  rank(), value_type() {}
+  elem_dims(), value_type() {}
   
-void JResult::add_noun(shared_ptr<JNoun> noun) { 
-  assert(nouns_ptr != nouns.end());
+
+void JResult::update_elem_dims(const Dimensions& dims) {
+  if (!elem_dims) { 
+    elem_dims = elem_dims_t(shared_ptr<vector<int> >
+			    (new vector<int> (dims.begin(), dims.end())));
+  } else { 
+    int rank_diff = (*elem_dims)->size() - dims.get_rank();
     
+    if (rank_diff >= 0) {
+      std::transform(dims.begin(), dims.end(), (*elem_dims)->begin() + rank_diff, 
+		     (*elem_dims)->begin() + rank_diff, std::ptr_fun(std::max<int>));
+    }  else {
+      std::transform(dims.begin() - rank_diff, dims.end(), (*elem_dims)->begin(), (*elem_dims)->begin(), 
+		     std::ptr_fun(std::max<int>));
+      (*elem_dims)->insert((*elem_dims)->begin(), dims.begin(), dims.begin() - rank_diff);
+    }
+  }
+}
+
+void JResult::add_noun(JNoun::Ptr noun) { 
+  assert(nouns_ptr != nouns.end());
+  
   if (get_value_type() && *get_value_type() != noun->get_value_type()) 
     throw JIllegalValueTypeException();
 
-  if (!rank) {
-    max_dims = shared_ptr<vector<int> >(new vector<int>(noun->get_dims().begin(), noun->get_dims().end()));
-    rank = noun->get_rank();
-    value_type = noun->get_value_type();
-  } else {
-    if (*rank != noun->get_rank()) 
-      throw JIllegalRankException();
+  update_elem_dims(noun->get_dims());
 
-    vector<int>::iterator max_dims_ptr = max_dims->begin();
-    vector<int>::iterator noun_ptr = noun->get_dims().begin();
-    vector<int>::iterator noun_end = noun->get_dims().end();
-      
-    for (;noun_ptr != noun_end; ++noun_ptr, ++max_dims_ptr) {
-      *max_dims_ptr = std::max(*max_dims_ptr, *noun_ptr);
-    }
-  }
-    
+  if (!value_type) 
+    value_type = noun->get_value_type();
+  
   *nouns_ptr = noun;
   ++nouns_ptr;
 }
   
 shared_ptr<JNoun> JResult::assemble_result() const { 
-  if (get_value_type()) {
-    switch(*get_value_type()) { 
-    case j_value_type_int:
-      return assemble_result_internal<JInt>();
-    case j_value_type_float:
-      return assemble_result_internal<JFloat>();
-    case j_value_type_char:
-    case j_value_type_box:
-    case j_value_type_complex:
-      assert(0);
-    }
-  } else {
-    return assemble_result_internal<JInt>();
-  }
-  assert(0);
+  return JTypeDispatcher<assemble_result_helper, JNoun::Ptr>()(*get_value_type(), *this);
 }
     
 template <typename T> 
-shared_ptr<JNoun> JResult::assemble_result_internal() const {
-  Dimensions content_dims(get_max_dims());
+JNoun::Ptr JResult::assemble_result_internal() const {
+  Dimensions content_dims(get_elem_dims());
   Dimensions res = get_frame() + content_dims;
   shared_ptr<vector<T> > v(new vector<T>(res.number_of_elems(), JTypeTrait<T>::base_elem()));
     

@@ -70,4 +70,10 @@ JNoun::Ptr IDotDyadOp<T>::operator()(const JArray<T>& larg, const JArray<T>& rar
   
   return JNoun::Ptr(new JArray<JInt>(frame, res));
 }
+
+JNoun::Ptr LessBoxVerb::MonadOp::operator()(JMachine::Ptr, const JNoun& noun) const { 
+  shared_ptr<vector<JBox> > v(new vector<JBox>(1, JBox(noun.clone())));
+  return JNoun::Ptr(new JArray<JBox>(Dimensions(0), v));
+}
+
 }
