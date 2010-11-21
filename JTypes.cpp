@@ -42,7 +42,7 @@ JArray<T> require_type(const JNoun& noun) {
   }
   
   if (TypeConversions::get_instance()->is_convertible_to(noun.get_value_type(), JTypeTrait<T>::value_type)) {
-    return static_cast<JArray<T>&>(*GetNounAsJArrayOfType()(noun, JTypeTrait<T>::value_type));
+    return static_cast<const JArray<T>&>(*GetNounAsJArrayOfType()(noun, JTypeTrait<T>::value_type));
   }
   
   throw JIllegalValueTypeException();

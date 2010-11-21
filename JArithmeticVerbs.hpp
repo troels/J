@@ -7,8 +7,10 @@
 #include "JMachine.hpp"
 #include <functional>
 #include <numeric>
+#include <functional>
 #include <map>
 #include <boost/optional.hpp>
+#include <cmath>
 
 namespace J {
 using boost::optional;
@@ -75,44 +77,30 @@ template <>
 struct MinusDyadOp<JBox>: public BadScalarDyadOp<JBox> {};
 
 class MinusVerb: public JArithmeticVerb<JInt> { 
-
 public:
   MinusVerb(): JArithmeticVerb(Monad::Ptr(new ScalarMonad<MinusMonadOp>()), 
 			       Dyad::Ptr(new ScalarDyad<MinusDyadOp>()), 0) {}
 };    
 
+template <typename T>
+struct IDotDyadOp { 
+  JNoun::Ptr operator()(const JArray<T>& larg, const JArray<T>& rarg, JMachine::Ptr m,
+			const Dimensions& haystack_dims, const Dimensions& frame) const;
+};
+
 class IDotVerb: public JVerb { 
-  template <typename Arg, typename Res>
-  struct MonadOp: public std::unary_function<Arg, Res> {
+  struct MonadOp {
     JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& arg) const;
   };
 
-  struct IDotMonad: Monad { 
-    IDotMonad(): Monad(1) {}
-    JNoun::Ptr operator()(JMachine::Ptr, const JNoun& arg) const;
-  };
-    
-  template <typename LArg, typename RArg, typename Res>
-  struct DyadOp: public std::binary_function<LArg, RArg, Res> {
-    shared_ptr<JArray<Res> > operator()(const JArray<LArg>& larg,
-					const JArray<RArg>& rarg) const;
-  };
-
-  template <typename Arg>
-  struct DyadOp<Arg, Arg, JInt>: public std::binary_function<Arg, Arg, JInt> {
-    shared_ptr<JArray<JInt> > operator()(const JArray<Arg>& larg,
-					 const JArray<Arg>& rarg) const;
-  };
-
-
-  struct IDotDyad: Dyad {
-    IDotDyad(): Dyad(rank_infinity, rank_infinity) {}
+  struct DyadOp {
     JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& larg, const JNoun& rarg) const;
   };
-
+  
 public:
-  IDotVerb(): JVerb(shared_ptr<Monad>(new IDotMonad()), 
-		    shared_ptr<Dyad>(new IDotDyad())) {}
+  IDotVerb(): JVerb(DefaultMonad<MonadOp>::Instantiate(1, MonadOp()), 
+		    DefaultDyad<DyadOp>::Instantiate(rank_infinity, rank_infinity, DyadOp())) {}
+
 };
 
 }

@@ -79,15 +79,31 @@ struct JTypeDispatcher {
   Ret operator()(j_value_type t, const Arg1& arg1, const Arg2& arg2, const Arg3& arg3, const Arg4& arg4) const { 
     switch (t) {
     case j_value_type_int:
-      return Op<JInt>()(arg1, arg2, arg3);
+      return Op<JInt>()(arg1, arg2, arg3, arg4);
     case j_value_type_float:
-      return Op<JFloat>()(arg1, arg2, arg3);
+      return Op<JFloat>()(arg1, arg2, arg3, arg4);
     case j_value_type_box:
-      return Op<JBox>()(arg1, arg2, arg3);
+      return Op<JBox>()(arg1, arg2, arg3, arg4);
     default:
       throw JIllegalValueTypeException();
     }
   }
+
+  template <typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
+  Ret operator()(j_value_type t, const Arg1& arg1, const Arg2& arg2, const Arg3& arg3, const Arg4& arg4, 
+		 const Arg5& arg5) const { 
+    switch (t) {
+    case j_value_type_int:
+      return Op<JInt>()(arg1, arg2, arg3, arg4, arg5);
+    case j_value_type_float:
+      return Op<JFloat>()(arg1, arg2, arg3, arg4, arg5);
+    case j_value_type_box:
+      return Op<JBox>()(arg1, arg2, arg3, arg4, arg5);
+    default:
+      throw JIllegalValueTypeException();
+    }
+  }
+
 };
 
 template <template <typename> class Op, typename Ret>
