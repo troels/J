@@ -154,10 +154,6 @@ class MoreUnboxVerb: public JVerb {
     JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& noun) const;
   };
 
-  struct DyadOp {
-    JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& noun) const; 
-  };
-
 public:  
   MoreUnboxVerb(): JVerb(DefaultMonad<MonadOp>::Instantiate(0, MonadOp()),
 			 ScalarDyad<J::MoreUnboxVerbNS::DyadOp>::Instantiate()) {}

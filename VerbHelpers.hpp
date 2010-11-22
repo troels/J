@@ -111,6 +111,10 @@ JNoun::Ptr monadic_apply(int rank, JMachine::Ptr m, const JNoun& arg, OpType op)
   }
 
   Dimensions frame(rank == 0 ? arg.get_dims() : arg.get_dims().prefix(-rank));
+  if (frame.number_of_elems() == 0) {
+    return JNoun::Ptr(new JArray<JInt>(frame));
+  }
+
   JResult res(frame);
   
   for (std::auto_ptr<OperationIteratorBase> input(get_operation_iterator(arg, frame, rank)); 
@@ -138,6 +142,10 @@ struct scalar_dyadic_apply {
       
       Dimensions frame(find_frame(0, 0, larg.get_dims(), rarg.get_dims()));
     
+      if (frame.number_of_elems() == 0) { 
+	return JNoun::Ptr(new JArray<JInt>(frame));
+      }
+
       OperationScalarIterator<T> liter(larg, frame), riter(rarg, frame);
       
       shared_ptr<res_vec > v(new res_vec(frame.number_of_elems(), JTypeTrait<T>::base_elem()));

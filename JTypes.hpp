@@ -299,11 +299,21 @@ struct CallWithCommonType {
   }
 
   template <typename Arg1, typename Arg2, typename Arg3>
-  Res operator()(const JNoun& larg, const JNoun& rarg, const Arg1& arg1, const Arg2& arg2, const Arg3& arg3) {
+  Res operator()(const JNoun& larg, const JNoun& rarg, const Arg1& arg1, 
+		 const Arg2& arg2, const Arg3& arg3) {
     JNounCouple convertee(do_conversion(larg, rarg));
     return JTypeDispatcher<DualArrayConverter<Op, Res>::template Impl, Res>()
 			   (convertee.first->get_value_type(),
 			    *convertee.first, *convertee.second, arg1, arg2, arg3);
+  }
+
+  template <typename Arg1, typename Arg2, typename Arg3, typename Arg4>
+  Res operator()(const JNoun& larg, const JNoun& rarg, const Arg1& arg1, 
+		 const Arg2& arg2, const Arg3& arg3, const Arg4& arg4) {
+    JNounCouple convertee(do_conversion(larg, rarg));
+    return JTypeDispatcher<DualArrayConverter<Op, Res>::template Impl, Res>()
+			   (convertee.first->get_value_type(),
+			    *convertee.first, *convertee.second, arg1, arg2, arg3, arg4);
   }
 };
 

@@ -112,6 +112,16 @@ string join_str(T begin, T end, const string& joiner) {
   return ss.str();
 }
 
+template <typename T>
+JArray<T> expand_to_rank(int rank, const JArray<T>& array) {
+  assert(rank >= array.get_rank());
+  Dimensions old_dims(array.get_dims());
+  shared_ptr<vector<int> > new_dims_vector(new vector<int>(rank, 1));
+
+  copy(old_dims.begin(), old_dims.end(), new_dims_vector->begin() + (rank - array.get_rank()));
+  return JArray<T>(new_dims_vector, array.get_content());
+}
+  
 bool escape_char_p(char c);
 string escape_regex(const string& s);
 string trim_string(const string& s); 

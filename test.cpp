@@ -1097,6 +1097,9 @@ BOOST_AUTO_TEST_CASE ( test_boxing ) {
 		    *executor("(1 2 10 $ (10 10 10, 17 $ 0)),"
 		              "(1 2 10 $ (1 1 1), (7 $ 0), (1 1 1), (7 $ 0)),"
 		              "(1 2 10 $ (i. 10), (10 $ 0))"));
+
+  BOOST_CHECK_EQUAL(*executor("> $ 0"),
+		    *executor("$ 0"));
 }
 		    
 			      
