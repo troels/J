@@ -207,23 +207,20 @@ public:
   optional<j_value_type> find_best_type_conversion(j_value_type t1, j_value_type t2) const;
 };
 
+template <typename From>
+struct ConversionOpPerformer {
+  template <typename To>
+  struct Impl {
+    JNoun::Ptr operator()(const JArray<From>& from) const {
+      return boost::static_pointer_cast<JNoun>(ConvertJArray<From, To>()(from));
+    }
+  };
+};
+
 template <typename T>
 struct ConversionOp { 
   JNoun::Ptr operator()(const JArray<T>& from, j_value_type to_type) const { 
-    switch(to_type) {
-    case j_value_type_int:
-      return boost::static_pointer_cast<JNoun>(ConvertJArray<T, JInt>()(from));
-    case j_value_type_float:
-      return boost::static_pointer_cast<JNoun>(ConvertJArray<T, JFloat>()(from));
-    case j_value_type_complex:
-      return boost::static_pointer_cast<JNoun>(ConvertJArray<T, JComplex>()(from));
-    case j_value_type_char:
-      return boost::static_pointer_cast<JNoun>(ConvertJArray<T, JChar>()(from));
-    case j_value_type_box:
-      return boost::static_pointer_cast<JNoun>(ConvertJArray<T, JBox>()(from));
-    default:
-      throw JIllegalTypeCastException();
-    }
+    return JTypeDispatcher<ConversionOpPerformer<T>::template Impl, JNoun::Ptr>()(to_type, from);
   }
 };
 
