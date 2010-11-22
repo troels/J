@@ -17,6 +17,7 @@ JMachine::JMachine(): operators(), cur_locale(Locale::Instantiate()) {
   operators.insert(p("$", JWord::Ptr(new ShapeVerb())));
   operators.insert(p(",", JWord::Ptr(new RavelAppendVerb())));
   operators.insert(p("<", JWord::Ptr(new LessBoxVerb())));
+  operators.insert(p(">", JWord::Ptr(new MoreUnboxVerb())));
 }
 
 JMachine::Ptr JMachine::new_machine() { 

@@ -31,14 +31,14 @@ typedef double JFloat;
 typedef std::complex<JFloat> JComplex;
 typedef char JChar;
 
-class JWord;
+class JNoun;
 class JBox {
-  shared_ptr<JWord> contents;
+  shared_ptr<JNoun> contents;
 public:
-  JBox(shared_ptr<JWord> contents): contents(contents) { assert(contents); }
+  JBox(shared_ptr<JNoun> contents): contents(contents) { assert(contents); }
   
   bool operator==(const JBox& box) const;
-  shared_ptr<JWord> get_contents() const { return contents; } ;
+  shared_ptr<JNoun> get_contents() const { return contents; } ;
 };
 
 std::ostream& operator<<(std::ostream& os, const JBox& b);

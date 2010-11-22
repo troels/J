@@ -110,14 +110,14 @@ JNoun::Ptr monadic_apply(int rank, JMachine::Ptr m, const JNoun& arg, OpType op)
     return op(m, arg);
   }
 
-  Dimensions frame = arg.get_dims().prefix(-rank);
+  Dimensions frame(rank == 0 ? arg.get_dims() : arg.get_dims().prefix(-rank));
   JResult res(frame);
-      
+  
   for (std::auto_ptr<OperationIteratorBase> input(get_operation_iterator(arg, frame, rank)); 
        !input->at_end(); ++(*input)) {
     res.add_noun(op(m, ***input));
   }
-
+  
   return res.assemble_result();
 }
 
@@ -138,8 +138,7 @@ struct scalar_dyadic_apply {
       
       Dimensions frame(find_frame(0, 0, larg.get_dims(), rarg.get_dims()));
     
-      OperationScalarIterator<T> liter(larg, frame);
-      OperationScalarIterator<T> riter(rarg, frame);
+      OperationScalarIterator<T> liter(larg, frame), riter(rarg, frame);
       
       shared_ptr<res_vec > v(new res_vec(frame.number_of_elems(), JTypeTrait<T>::base_elem()));
       
@@ -261,6 +260,15 @@ struct BadScalarDyadOp: std::binary_function<Arg, Arg, Arg> {
     throw JIllegalValueTypeException();
   }
 };  
+
+
+template <typename T>
+struct new_operation_iterator { 
+  std::auto_ptr<OperationIteratorBase> operator()(const JArray<T>& arg, 
+						  const Dimensions& frame,  int output_rank) const {
+    return std::auto_ptr<OperationIteratorBase>(new OperationIterator<T>(arg, frame, output_rank));
+  }
+};
 
 }
 

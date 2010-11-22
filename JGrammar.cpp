@@ -4,7 +4,7 @@
 namespace J {
 
 std::ostream& operator<<(std::ostream& os, const JBox& b) {
-  return os << "JBox[" << (b.get_contents()) << "]";
+  return os << "JBox[" << (*b.get_contents()) << "]";
 }
 
 std::ostream& operator<<(std::ostream& os, const JWord& noun) {
@@ -16,7 +16,7 @@ std::ostream& operator<<(std::ostream& os, JWord::Ptr noun) {
 }
 
 JBox JTypeTrait<JBox>::base_elem() {
-  static JBox jbox(JWord::Ptr(new JArray<JInt>(Dimensions(1, 0)))); 
+  static JBox jbox(JNoun::Ptr(new JArray<JInt>(Dimensions(1, 0)))); 
   return jbox;
 }
 

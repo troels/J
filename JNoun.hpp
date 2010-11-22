@@ -77,8 +77,9 @@ public:
   JNoun::Ptr subarray(int start, int end) const;
   virtual JNoun::Ptr extend(const Dimensions &d) const;
   void extend_into(const Dimensions& d, iter new_begin) const;
+  shared_ptr<container> get_content() const;
 
-  shared_ptr<container> get_content() const { return content; }
+  T get_scalar_value() const { assert(is_scalar()); return *begin(); }
   iter begin() const { return begin_iter; }
   iter end() const { return end_iter; }
 };

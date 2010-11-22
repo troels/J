@@ -132,18 +132,36 @@ public:
 		       ScalarDyad<J::LessBoxVerbNS::DyadOp>::Instantiate()) {};
 };
 
-// class MoreBoxVerb: public JVerb {
-//   struct MonadOp { 
-//     JNoun::Ptr operator()(JMachine::Ptr, const JNoun& noun) const;
-//   };
+namespace MoreUnboxVerbNS {
 
-//   struct DyadOp {
-//     JNoun::Ptr operator()(JMachine::Ptr, const JNoun& noun) const 
-//       };
-// public:  
-//   MoreBoxVerb(): JVerb(DefaultMonad<MonadOp>::Instantiate(rank_infinity, MonadOp()),
-// 		       ScalarDyad<J::MoreUnboxVerbNS::DyadOp>::Instantiate()) {}
-// };
+template <typename T>
+struct DyadOp: public std::binary_function<T, T, JInt> {
+  JInt operator()(const T& arg1, const T& arg2) const { 
+    return arg1 > arg2;
+  }
+};
+
+template <> 
+struct DyadOp<JBox> : public BadScalarDyadOp<JBox> {};
+
+template <>
+struct DyadOp<JChar>: public BadScalarDyadOp<JChar> {};
+}
+    
+
+class MoreUnboxVerb: public JVerb {
+  struct MonadOp { 
+    JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& noun) const;
+  };
+
+  struct DyadOp {
+    JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& noun) const; 
+  };
+
+public:  
+  MoreUnboxVerb(): JVerb(DefaultMonad<MonadOp>::Instantiate(0, MonadOp()),
+			 ScalarDyad<J::MoreUnboxVerbNS::DyadOp>::Instantiate()) {}
+};
 
 }
 		  

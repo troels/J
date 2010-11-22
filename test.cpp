@@ -1089,6 +1089,19 @@ BOOST_AUTO_TEST_CASE ( test_less ) {
 		    *executor("(40 $ 1), (10 $ 0), (10 $ 1), (140 $ 0)"));
 }
 
+BOOST_AUTO_TEST_CASE ( test_boxing ) {
+  JMachine::Ptr m(JMachine::new_machine());
+  JExecutor executor(m);
+  
+  BOOST_CHECK_EQUAL(*executor("> (< 10 10 10),(< 2 3 $ 1), (< i. 10)"),
+		    *executor("(1 2 10 $ (10 10 10, 17 $ 0)),"
+		              "(1 2 10 $ (1 1 1), (7 $ 0), (1 1 1), (7 $ 0)),"
+		              "(1 2 10 $ (i. 10), (10 $ 0))"));
+}
+		    
+			      
+  
+    
 BOOST_AUTO_TEST_SUITE_END()
   
   

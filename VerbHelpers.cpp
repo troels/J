@@ -147,19 +147,10 @@ JArray<JInt> require_ints(const JNoun& noun) {
     
   throw JIllegalValueTypeException();
 }
-
+  
 std::auto_ptr<OperationIteratorBase> get_operation_iterator(const JNoun& arg, const Dimensions& frame, 
 							    int output_rank) { 
-  switch (arg.get_value_type()) {
-  case j_value_type_int:
-    return std::auto_ptr<OperationIteratorBase>
-      (new OperationIterator<JInt>(static_cast<const JArray<JInt>&>(arg), frame, output_rank));
-  case j_value_type_float:
-    return std::auto_ptr<OperationIteratorBase>
-      (new OperationIterator<JFloat>(static_cast<const JArray<JFloat>&>(arg), frame, output_rank));
-  default:
-    assert(0);
-  }
+  return JArrayCaller<new_operation_iterator, std::auto_ptr<OperationIteratorBase> >()(arg, frame, output_rank);
 }
 
 }

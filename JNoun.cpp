@@ -106,7 +106,7 @@ template <typename T>
 JNoun::Ptr JArray<T>::extend(const Dimensions &d) const {
   assert(d.get_rank() == get_rank());
     
-  if (d == get_dims()) return JNoun::Ptr(new JArray<T>(*this));
+  if (d == get_dims()) return clone();
     
   shared_ptr<container> nv(new container(d.number_of_elems(), JTypeTrait<T>::base_elem()));
     
@@ -188,7 +188,17 @@ template <typename T>
 JNoun::Ptr JArray<T>::clone() const { 
   return JNoun::Ptr(new JArray<T>(*this));
 }
-    
+
+template <typename T> 
+shared_ptr<typename JArray<T>::container> JArray<T>::get_content() const { 
+  return content; 
+}
+
+template <>
+shared_ptr<JArray<JBox>::container> JArray<JBox>::get_content() const { 
+  return shared_ptr<JArray<JBox>::container>(new JArray<JBox>::container(begin(), end()));
+}
+   
 template <typename T>
 JNoun::Ptr JArray<T>::subarray(int start, int end) const { 
   assert(start >= 0 && end >= 0);

@@ -76,4 +76,12 @@ JNoun::Ptr LessBoxVerb::MonadOp::operator()(JMachine::Ptr, const JNoun& noun) co
   return JNoun::Ptr(new JArray<JBox>(Dimensions(0), v));
 }
 
+JNoun::Ptr MoreUnboxVerb::MonadOp::operator()(JMachine::Ptr, const JNoun& noun) const {
+  if (noun.get_value_type() != j_value_type_box) 
+    return noun.clone();
+  
+  const JArray<JBox>& arg = static_cast<const JArray<JBox>&>(noun);
+  return boost::static_pointer_cast<JNoun>(arg.get_scalar_value().get_contents());
+}
+
 }
