@@ -82,7 +82,7 @@ JArray<T> JArray<T>::operator[](int n) const {
 }
   
 template <typename T> 
-void JArray<T>::extend_into(const Dimensions &d, iter new_ptr) const {
+void JArray<T>::extend_into(const Dimensions& d, iter new_ptr) const {
   if (d.number_of_elems() == 0) return;
   
   if ((get_rank() == 1 && d.get_rank() == 1) || get_dims() == d) {
