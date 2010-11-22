@@ -50,6 +50,18 @@ public:
   RavelAppendVerb(): JVerb(DefaultMonad<MonadOp>::Instantiate(rank_infinity, MonadOp()),
 			   DefaultDyad<DyadOp>::Instantiate(rank_infinity, rank_infinity, DyadOp())) {}
 };
+
+// class RazeLinkVerb: public JVerb { 
+//   struct MonadOp { 
+//     JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& arg) const;
+//   };
+
+//   struct DyadOp {
+//     JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& larg, const JNoun& rarg) const;
+//   };
+
+// public:
+//   RazeLinkVerb(): JVerb(DefaultMonad<MonadOp>::Instantiate(rank_infinitity) 
 }	
 
 #endif

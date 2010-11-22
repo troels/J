@@ -9,6 +9,7 @@
 #include <cmath>
 #include <functional>
 #include <algorithm>
+#include <iterator>
 
 namespace J {
 using boost::shared_ptr;

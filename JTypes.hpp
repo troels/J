@@ -258,6 +258,14 @@ struct DualArrayConverter {
 		     static_cast<const JArray<T>&>(rarg), 
 		     arg1, arg2, arg3);
     }
+
+    template <typename Arg1, typename Arg2, typename Arg3, typename Arg4>
+    Res operator()(const JNoun& larg, const JNoun& rarg, 
+		   const Arg1& arg1, const Arg2& arg2, const Arg3& arg3, Arg4& arg4) const { 
+      return Op<T>()(static_cast<const JArray<T>&>(larg), static_cast<const JArray<T>&>(rarg), 
+		     arg1, arg2, arg3, arg4);
+    }
+
   };
 };
 

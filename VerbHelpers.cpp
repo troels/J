@@ -6,6 +6,10 @@ JResult::JResult(const Dimensions& frame):
   elem_dims(), value_type() {}
   
 
+int my_max(int x, int y) {
+  return (x >= y) ? x : y;
+}
+
 void JResult::update_elem_dims(const Dimensions& dims) {
   if (!elem_dims) { 
     elem_dims = elem_dims_t(shared_ptr<vector<int> >
@@ -15,11 +19,14 @@ void JResult::update_elem_dims(const Dimensions& dims) {
     
     if (rank_diff >= 0) {
       std::transform(dims.begin(), dims.end(), (*elem_dims)->begin() + rank_diff, 
-		     (*elem_dims)->begin() + rank_diff, std::ptr_fun(std::max<int>));
+		     (*elem_dims)->begin() + rank_diff, std::ptr_fun(my_max));
+      std::transform((*elem_dims)->begin(), (*elem_dims)->begin() + rank_diff,
+		     (*elem_dims)->begin(), std::bind1st(std::ptr_fun(my_max), 1));
     }  else {
       std::transform(dims.begin() - rank_diff, dims.end(), (*elem_dims)->begin(), (*elem_dims)->begin(), 
 		     std::ptr_fun(std::max<int>));
-      (*elem_dims)->insert((*elem_dims)->begin(), dims.begin(), dims.begin() - rank_diff);
+      std::transform(dims.begin(), dims.begin() - rank_diff, inserter((**elem_dims), (*elem_dims)->begin()), 
+		     std::bind1st(std::ptr_fun(my_max), 1)); 
     }
   }
 }
