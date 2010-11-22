@@ -116,7 +116,7 @@ struct AppendOp {
       copy(rarg.begin(), rarg.end(), res->begin() + item_size);
 
       shared_ptr<vector<int> > dim_vector(new vector<int>(rarg.get_dims().begin(), rarg.get_dims().end()));
-      (*dim_vector)[0]++;
+      (*dim_vector->begin())++;
 
       return JNoun::Ptr(new JArray<T>(Dimensions(dim_vector), res));      
     }
