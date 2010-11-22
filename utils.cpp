@@ -95,15 +95,6 @@ OperationScalarIterator<T>& OperationScalarIterator<T>::operator++() {
   return *this;
 }
 
-JArray<JFloat> jarray_int_to_float(const JArray<JInt>& arr) {
-  Dimensions d(arr.get_dims());
-  shared_ptr<vector<JFloat> > v(new vector<JFloat>(d.number_of_elems()));
-    
-  copy(arr.begin(), arr.end(), v->begin());
-  JArray<JFloat> arr2(d, v);
-  return arr2;
-}
-
 string escape_regex(const string& s) {
   std::stringstream ss;
   string::const_iterator begin = s.begin(), end = s.end();

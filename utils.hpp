@@ -80,8 +80,6 @@ public:
   T operator*() const { return *ptr; }
 };
     
-  
-JArray<JFloat> jarray_int_to_float(const JArray<JInt>& arr);
 
 template <typename S, typename T>
 struct attr_fun_t {
