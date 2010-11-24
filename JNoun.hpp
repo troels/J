@@ -44,6 +44,7 @@ class JArray: public JNoun {
 public:
   typedef vector<T> container;
   typedef typename container::iterator iter;
+  typedef typename container::iterator iterator;
 
 private:
   shared_ptr<container> content;
@@ -75,7 +76,7 @@ public:
 
   JNoun::Ptr clone() const;
   JNoun::Ptr subarray(int start, int end) const;
-  virtual JNoun::Ptr extend(const Dimensions &d) const;
+  JNoun::Ptr extend(const Dimensions &d) const;
   void extend_into(const Dimensions& d, iter new_begin) const;
   shared_ptr<container> get_content() const;
 

@@ -123,4 +123,143 @@ JNoun::Ptr AppendOp<T>::operator()(const JArray<T>& larg, const JNoun& rarg_, JM
   return res.assemble_result();
 }
 
+
+template <typename T>
+struct get_boxed_content { 
+  typedef boost::function<JNoun::Ptr (JBox)> func_t;
+  typedef boost::transform_iterator<func_t, T> iterator;
+  typedef std::pair<iterator, iterator> result_type;
+
+  result_type operator()(T begin, T end) const {
+    return std::make_pair(get_iterator(begin), get_iterator(end));
+  }
+
+private:
+  iterator get_iterator(T iter) const {
+    return iterator(iter, boost::bind(&JBox::get_contents, _1));
+  }    
+};
+  
+template <typename T>
+struct get_dimensions { 
+  typedef boost::function<Dimensions (JNoun::Ptr)> func_t;
+  typedef boost::transform_iterator<func_t, T> iterator;
+  typedef std::pair<iterator, iterator> result_type;
+
+  result_type operator()(T begin, T end) const {
+    return std::make_pair(get_iterator(begin), get_iterator(end));
+  }
+
+private:
+  iterator get_iterator(T iter) const {
+    return iterator(iter, boost::bind(&JNoun::get_dims, _1));
+  }
+};
+
+template <typename T>
+struct filter_empty { 
+  typedef boost::function<bool (JNoun::Ptr)> func_t;
+  typedef boost::filter_iterator<func_t, T> iterator;
+  typedef std::pair<iterator, iterator> result_type;
+
+  result_type operator()(T begin, T end) const { 
+    return std::make_pair(get_iterator(begin, end), get_iterator(end, end));
+  } 
+
+private:
+  iterator get_iterator(T begin, T end) const {
+    return iterator(boost::bind(&Dimensions::number_of_elems, boost::bind(&JNoun::get_dims, _1)) != 0,
+		    begin, end);
+  }
+};
+
+template <typename T>
+struct AllocateArray { 
+  template <typename Iterator>
+  JNoun::Ptr operator()(Dimensions result_dims, Iterator begin, Iterator end) const {
+    assert(result_dims.get_rank() > 0);
+
+    shared_ptr<vector<T> > v(boost::make_shared<vector<T> >(result_dims.number_of_elems(),
+						JTypeTrait<T>::base_elem()));
+    
+    typename vector<T>::iterator out_iter(v->begin());
+    
+    int result_rank = result_dims.get_rank();
+    Dimensions item_dim(result_dims.suffix(-1));
+    int elems_per_item(item_dim.number_of_elems());
+
+    for(;begin != end; ++begin) {
+      JArray<T> arr(require_type<T>(**begin));
+      if (arr.get_rank() == result_rank) {
+	int highest_dim = arr.get_dims()[0];
+	for (int i = 0; i < highest_dim; ++i) {
+	  static_cast<JArray<T>&>(*arr.subarray(i, i + 1)).extend_into(item_dim, out_iter);
+	  out_iter += elems_per_item;
+	}
+      }
+    }
+    
+    return boost::static_pointer_cast<JNoun>(make_shared<JArray<T> >(result_dims, v));
+  }
+};
+
+JNoun::Ptr RazeLinkVerb::MonadOp::operator()(JMachine::Ptr m, const JNoun& arg) const {
+  using boost::make_transform_iterator;
+
+  if (arg.get_value_type() != j_value_type_box)  {
+    return RavelAppendVerb()(m, arg);
+  } 
+
+  if (arg.get_dims().number_of_elems() == 0) {
+    return JNoun::Ptr(new JArray<JInt>(Dimensions(1, 0)));
+  }
+  
+  const JArray<JBox>& box_arr = static_cast<const JArray<JBox>&>(arg);
+
+  typedef get_boxed_content<JArray<JBox>::iter> get_boxed;
+  get_boxed::result_type content_iters(get_boxed()(box_arr.begin(), box_arr.end()));
+  
+  typedef get_dimensions<get_boxed::iterator> get_dims;
+  get_dims::result_type dims_iters(get_dims()(content_iters.first, content_iters.second));
+
+  Dimensions dims(find_common_dims(dims_iters.first, dims_iters.second));
+  if (dims.get_rank() == 0) {
+    dims = Dimensions(1, arg.get_dims().number_of_elems());
+  }
+
+  typedef filter_empty<get_boxed::iterator> empty_filter;
+  empty_filter::result_type filtered(empty_filter()(content_iters.first, content_iters.second));
+
+  optional<j_value_type> otype(find_common_type_for_collection(filtered.first, filtered.second));
+  j_value_type type;
+
+  if (!otype) {
+    if (dims.number_of_elems() != 0) 
+      throw JIllegalValueTypeException();
+    
+    type = j_value_type_int;
+  } else {
+    type = *otype;
+  }
+  
+  int highest_coord = 0;
+
+  for (get_dims::iterator iter(dims_iters.first); iter != dims_iters.second; ++iter) {
+    if ((*iter).get_rank() == dims.get_rank()) {
+      highest_coord += dims[0];
+    } else {
+      ++highest_coord;
+    }
+  };
+
+  shared_ptr<vector<int> > new_dims_vec(boost::make_shared<vector<int> >(dims.begin(), dims.end()));
+  (*new_dims_vec)[0] = highest_coord;
+
+  Dimensions new_dims(new_dims_vec);
+  
+  return JTypeDispatcher<AllocateArray, JNoun::Ptr>()(type, new_dims, 
+						      content_iters.first, content_iters.second);
+}
+
+
 }

@@ -14,8 +14,8 @@ Dimensions::Dimensions(int rank, ...): dims(new vector<int>(rank)),
   va_end(va);
 }
 
-Dimensions::Dimensions(): dims(new vector<int>(0)), begin_iter(dims->begin()), 
-			  end_iter(dims->end()), rank(0) {}
+Dimensions::Dimensions(): dims(), begin_iter(0), 
+			  end_iter(0), rank(0) {}
 
 Dimensions::Dimensions(shared_ptr<vector<int> > dims): dims(dims), begin_iter(dims->begin()), 
 						       end_iter(dims->end()), rank(dims->size()) {}

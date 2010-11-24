@@ -5,6 +5,11 @@
 #include "JNoun.hpp"
 #include "VerbHelpers.hpp"
 #include "JExceptions.hpp"
+#include <boost/bind.hpp>
+#include <boost/iterator/transform_iterator.hpp>
+#include <boost/iterator/filter_iterator.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 
 namespace J {
 
@@ -51,17 +56,22 @@ public:
 			   DefaultDyad<DyadOp>::Instantiate(rank_infinity, rank_infinity, DyadOp())) {}
 };
 
-// class RazeLinkVerb: public JVerb { 
-//   struct MonadOp { 
-//     JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& arg) const;
-//   };
+class RazeLinkVerb: public JVerb { 
+  struct MonadOp { 
+    JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& arg) const;
+  };
 
-//   struct DyadOp {
-//     JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& larg, const JNoun& rarg) const;
-//   };
+  struct DyadOp {
+    JNoun::Ptr operator()(JMachine::Ptr m, const JNoun& larg, const JNoun& rarg) const {
+      return JNoun::Ptr();
+    }
+  };
 
-// public:
-//   RazeLinkVerb(): JVerb(DefaultMonad<MonadOp>::Instantiate(rank_infinitity) 
+public:
+  RazeLinkVerb(): JVerb(DefaultMonad<MonadOp>::Instantiate(rank_infinity, MonadOp()),
+			DefaultDyad<DyadOp>::Instantiate(rank_infinity, rank_infinity, DyadOp())) {}
+};
+
 }	
 
 #endif

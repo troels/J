@@ -1110,10 +1110,5 @@ BOOST_AUTO_TEST_CASE ( test_boxing ) {
   BOOST_CHECK_EQUAL(*executor("> (< 0 2 2 $ 1), (< i. 10)"),
 		    *executor("2 1 2 10 $ (20 $ 0), (i. 10), (10 $ 0)"));
 }
-		    
-			      
-  
-    
+
 BOOST_AUTO_TEST_SUITE_END()
-  
-  
