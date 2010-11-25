@@ -4,6 +4,7 @@
 #include "JNoun.hpp"
 #include "JVerbs.hpp"
 #include "JTypes.hpp"
+#include "Aggregates.hpp"
 #include "utils.hpp"
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
@@ -20,46 +21,12 @@ namespace J {
 using boost::shared_ptr;
 using boost::make_shared;
 using boost::optional;
+using J::Aggregates::JResult;
 
-std::auto_ptr<OperationIteratorBase> get_operation_iterator(const JNoun& arg, const Dimensions& frame, 
-							    int output_rank);
-
-class JResult { 
-  typedef vector<JNoun::Ptr > JNounList;
-
-  Dimensions frame;
-  JNounList nouns;
-  JNounList::iterator nouns_ptr;
-  typedef optional<shared_ptr<vector<int> > > elem_dims_t;
-  elem_dims_t elem_dims;
-  optional<j_value_type> value_type;
-
-  template <typename T>
-  JNoun::Ptr assemble_result_internal() const;
-  
-  void update_elem_dims(const Dimensions& dims);
-
-  template <typename T>
-  struct assemble_result_helper { 
-    JNoun::Ptr operator()(const JResult& res) const {
-      return res.assemble_result_internal<T>();
-    }
-  };
-
-public:
-  JResult(const Dimensions& frame);
-    
-  Dimensions get_frame() const { return frame; }
-  shared_ptr<vector<int> > get_elem_dims() const { return *elem_dims; }
-  optional<j_value_type> get_value_type() const { return value_type; }
-  void add_noun(JNoun::Ptr noun);
-  const JNounList& get_nouns() const { return nouns; }
-  JNoun::Ptr assemble_result() const;
-};
+OperationIteratorBase::Ptr get_operation_iterator(const JNoun& arg, const Dimensions& frame, 
+						  int output_rank);
   
 Dimensions find_frame(int lrank, int rrank, const Dimensions& larg, const Dimensions& rarg);
-
-
   
 template <typename Op>
 JNoun::Ptr dyadic_apply(int lrank, int rrank, 
@@ -71,8 +38,8 @@ JNoun::Ptr dyadic_apply(int lrank, int rrank,
     
   Dimensions frame = find_frame(lrank, rrank, larg.get_dims(), rarg.get_dims());
     
-  std::auto_ptr<OperationIteratorBase> liter(get_operation_iterator(larg, frame, lrank));
-  std::auto_ptr<OperationIteratorBase> riter(get_operation_iterator(rarg, frame, rrank));
+  OperationIteratorBase::Ptr liter(get_operation_iterator(larg, frame, lrank));
+  OperationIteratorBase::Ptr riter(get_operation_iterator(rarg, frame, rrank));
     
   JResult res(frame);
     
@@ -123,7 +90,7 @@ JNoun::Ptr monadic_apply(int rank, JMachine::Ptr m, const JNoun& arg, OpType op)
 
   JResult res(frame);
   
-  for (std::auto_ptr<OperationIteratorBase> input(get_operation_iterator(arg, frame, rank)); 
+  for (OperationIteratorBase::Ptr input(get_operation_iterator(arg, frame, rank)); 
        !input->at_end(); ++(*input)) {
     res.add_noun(op(m, ***input));
   }
@@ -278,9 +245,10 @@ struct BadScalarDyadOp: std::binary_function<Arg, Arg, Arg> {
 
 template <typename T>
 struct new_operation_iterator { 
-  std::auto_ptr<OperationIteratorBase> operator()(const JArray<T>& arg, 
-						  const Dimensions& frame,  int output_rank) const {
-    return std::auto_ptr<OperationIteratorBase>(new OperationIterator<T>(arg, frame, output_rank));
+  OperationIteratorBase::Ptr operator()(const JArray<T>& arg, 
+					const Dimensions& frame,  int output_rank) const {
+    return boost::static_pointer_cast<OperationIteratorBase>
+      (make_shared<OperationIterator<T> >(arg, frame, output_rank));
   }
 };
 

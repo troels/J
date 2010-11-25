@@ -1,71 +1,6 @@
 #include "VerbHelpers.hpp"
 
 namespace J {
-JResult::JResult(const Dimensions& frame):
-  frame(frame), nouns(JNounList(frame.number_of_elems())), nouns_ptr(nouns.begin()), 
-  elem_dims(), value_type() {}
-  
-
-int my_max(int x, int y) {
-  return (x >= y) ? x : y;
-}
-
-void JResult::update_elem_dims(const Dimensions& dims) {
-  if (!elem_dims) { 
-    elem_dims = elem_dims_t(shared_ptr<vector<int> >
-			    (new vector<int> (dims.begin(), dims.end())));
-  } else { 
-    int rank_diff = (*elem_dims)->size() - dims.get_rank();
-    
-    if (rank_diff >= 0) {
-      std::transform(dims.begin(), dims.end(), (*elem_dims)->begin() + rank_diff, 
-		     (*elem_dims)->begin() + rank_diff, std::ptr_fun(my_max));
-      std::transform((*elem_dims)->begin(), (*elem_dims)->begin() + rank_diff,
-		     (*elem_dims)->begin(), std::bind1st(std::ptr_fun(my_max), 1));
-    }  else {
-      std::transform(dims.begin() - rank_diff, dims.end(), (*elem_dims)->begin(), (*elem_dims)->begin(), 
-		     std::ptr_fun(std::max<int>));
-      std::transform(dims.begin(), dims.begin() - rank_diff, inserter((**elem_dims), (*elem_dims)->begin()), 
-		     std::bind1st(std::ptr_fun(my_max), 1)); 
-    }
-  }
-}
-
-void JResult::add_noun(JNoun::Ptr noun) { 
-  assert(nouns_ptr != nouns.end());
-  
-  if (get_value_type() && *get_value_type() != noun->get_value_type()) 
-    throw JIllegalValueTypeException();
-
-  update_elem_dims(noun->get_dims());
-
-  if (!value_type) 
-    value_type = noun->get_value_type();
-  
-  *nouns_ptr = noun;
-  ++nouns_ptr;
-}
-  
-shared_ptr<JNoun> JResult::assemble_result() const { 
-  return JTypeDispatcher<assemble_result_helper, JNoun::Ptr>()(*get_value_type(), *this);
-}
-    
-template <typename T> 
-JNoun::Ptr JResult::assemble_result_internal() const {
-  Dimensions content_dims(get_elem_dims());
-  Dimensions res = get_frame() + content_dims;
-  shared_ptr<vector<T> > v(new vector<T>(res.number_of_elems(), JTypeTrait<T>::base_elem()));
-  
-  typename vector<T>::iterator ptr(v->begin());
-  typename JNounList::const_iterator nounlist_ptr(get_nouns().begin()), nounlist_end(get_nouns().end());
-    
-  int content_dims_len = content_dims.number_of_elems();
-  for (;nounlist_ptr != nounlist_end; ++nounlist_ptr, ptr += content_dims_len) {
-    boost::static_pointer_cast<JArray<T>, JNoun>(*nounlist_ptr)->extend_into(content_dims, ptr);
-  }
-  
-  return shared_ptr<JNoun>(new JArray<T>(res, v));
-}
 
 
 Dimensions find_frame(int lrank, int rrank, const Dimensions& larg, const Dimensions& rarg) {
@@ -155,9 +90,9 @@ JArray<JInt> require_ints(const JNoun& noun) {
   throw JIllegalValueTypeException();
 }
   
-std::auto_ptr<OperationIteratorBase> get_operation_iterator(const JNoun& arg, const Dimensions& frame, 
-							    int output_rank) { 
-  return JArrayCaller<new_operation_iterator, std::auto_ptr<OperationIteratorBase> >()(arg, frame, output_rank);
+OperationIteratorBase::Ptr get_operation_iterator(const JNoun& arg, const Dimensions& frame, 
+						  int output_rank) { 
+  return JArrayCaller<new_operation_iterator, OperationIteratorBase::Ptr>()(arg, frame, output_rank);
 }
 
 }

@@ -5,9 +5,11 @@
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/iterator/filter_iterator.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include "JTypes.hpp"
 #include "JGrammar.hpp"
 #include "Dimensions.hpp"
 #include "JNoun.hpp"
@@ -22,6 +24,29 @@ using boost::make_shared;
 using boost::static_pointer_cast;
 using boost::function;
 
+class JResult { 
+  typedef vector<JNoun::Ptr> JNounList;
+
+  Dimensions frame;
+  JNounList nouns;
+  JNounList::iterator nouns_ptr;
+
+  template <typename T>
+  JNoun::Ptr assemble_result_internal(const Dimensions& dims) const;
+  
+  template <typename T>
+  struct assemble_result_helper { 
+    JNoun::Ptr operator()(const JResult& res, const Dimensions& dims) const {
+      return res.assemble_result_internal<T>(dims);
+    }
+  };
+
+public:
+  JResult(const Dimensions& frame);
+    
+  void add_noun(JNoun::Ptr noun);
+  JNoun::Ptr assemble_result() const;
+};
 
 template <typename Iterator>
 struct get_boxed_content { 
@@ -102,6 +127,25 @@ optional<j_value_type> find_common_type(Iterator iter, Iterator end) {
 }
 
 template <typename Iterator>
+optional<j_value_type> find_common_type_dropping_empty(Iterator in_begin, Iterator in_end) {
+  typedef filter_empty<Iterator> empty_filter;
+  typename empty_filter::result_type filtered(empty_filter()(in_begin, in_end));
+  
+  typedef get_value_type<typename empty_filter::iterator> value_type_iterator;
+  typename value_type_iterator::result_type value_type_iter(value_type_iterator()(filtered.first, filtered.second));
+
+  return find_common_type(value_type_iter.first, value_type_iter.second);
+}
+  
+template <typename Iterator>
+Dimensions find_common_dims_from_nouns(Iterator begin, Iterator end) {
+  typedef get_dimensions<Iterator> get_dims;
+  typename get_dims::result_type dims_iters(get_dims()(begin, end));
+  
+  return find_common_dims(dims_iters.first, dims_iters.second);
+}
+  
+template <typename Iterator>
 Dimensions find_common_dims(Iterator iter, Iterator end) { 
   assert(iter != end);
   
@@ -113,6 +157,8 @@ Dimensions find_common_dims(Iterator iter, Iterator end) {
     if(rank_diff >= 0) {
       transform(dim_cand->begin() + rank_diff, dim_cand->end(), dims.begin(), 
 		dim_cand->begin() + rank_diff, boost::bind(&std::max<int>, _1, _2));
+      transform(dim_cand->begin(), dim_cand->begin() + rank_diff, 
+		dim_cand->begin(), boost::bind(&std::max<int>, 1, _1));
     } else {
       dim_cand->insert(dim_cand->begin(), dims.begin(), dims.begin() - rank_diff);
       transform(dim_cand->begin(), dim_cand->begin() - rank_diff, dim_cand->begin(),
@@ -121,7 +167,7 @@ Dimensions find_common_dims(Iterator iter, Iterator end) {
 		dim_cand->begin() - rank_diff, boost::bind(&std::max<int>, _1, _2));
     }
   }
-
+  
   return Dimensions(dim_cand);
 }
 
@@ -167,21 +213,13 @@ JNoun::Ptr concatenate_nouns(Iterator in_begin, Iterator in_end) {
   if (in_begin == in_end) {
     return JNoun::Ptr(new JArray<JInt>(Dimensions(1, 0)));
   }
-  typedef get_dimensions<Iterator> get_dims;
-  typename get_dims::result_type dims_iters(get_dims()(in_begin, in_end));
   
-  Dimensions dims(find_common_dims(dims_iters.first, dims_iters.second));
+  Dimensions dims(find_common_dims_from_nouns(in_begin, in_end));
   if (dims.get_rank() == 0) {
     dims = Dimensions(1, std::distance(in_begin, in_end));
   }
   
-  typedef filter_empty<Iterator> empty_filter;
-  typename empty_filter::result_type filtered(empty_filter()(in_begin, in_end));
- 
-  typedef get_value_type<typename empty_filter::iterator> value_type_iterator;
-  typename value_type_iterator::result_type value_type_iter(value_type_iterator()(filtered.first, filtered.second));
-
-  optional<j_value_type> otype(find_common_type(value_type_iter.first, value_type_iter.second));
+  optional<j_value_type> otype(find_common_type_dropping_empty(in_begin, in_end));
   j_value_type type;
   
   if(otype) {
@@ -194,6 +232,10 @@ JNoun::Ptr concatenate_nouns(Iterator in_begin, Iterator in_end) {
   } 
   
   int highest_coord = 0;
+
+  typedef get_dimensions<Iterator> get_dims;
+  typename get_dims::result_type dims_iters(get_dims()(in_begin, in_end));
+  
   for (typename get_dims::iterator iter(dims_iters.first); iter != dims_iters.second; ++iter) {
     if ((*iter).get_rank() == dims.get_rank()) {
       highest_coord += (*iter)[0];

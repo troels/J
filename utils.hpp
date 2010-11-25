@@ -3,11 +3,16 @@
 
 #include "Dimensions.hpp"
 #include "JNoun.hpp"
+#include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <utility>
 #include <sstream>
 
 namespace J {
 using std::pair;
+using boost::shared_ptr;
+using boost::make_shared;
+
 class VectorCounter { 
   Dimensions dims;
   vector<int> v;
@@ -24,12 +29,14 @@ public:
 class OperationIteratorBase {
 protected:
   Dimensions output;
-
+  
 private:
   Dimensions frame;
   int iterator_increment_periodicity, counter_end, counter;
     
 public:
+  typedef shared_ptr<OperationIteratorBase> Ptr;
+
   virtual ~OperationIteratorBase() {}
   OperationIteratorBase(const Dimensions& frame, const Dimensions& object_dims, 
 			int output_rank);
