@@ -85,14 +85,14 @@ template <typename T>
 void JArray<T>::extend_into(const Dimensions& d, iter new_ptr) const {
   if (d.number_of_elems() == 0) return;
   
-  if ((get_rank() == 1 && d.get_rank() == 1) || get_dims() == d) {
+  if ((get_rank() == 1 || get_rank() == 0) || get_dims() == d) {
     copy(begin(), end(), new_ptr);
   } else {
     iter old_ptr(begin()), old_end(end());
     
     VectorCounter vc1(get_dims());
     VectorCounter vc2(d);
-      
+    
     while (old_ptr != old_end) {
       pair<int, int> p(add_row(vc1, vc2));
       copy(old_ptr, old_ptr + p.first, new_ptr);

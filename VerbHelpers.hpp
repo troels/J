@@ -14,6 +14,7 @@
 #include <boost/bind.hpp>
 #include <boost/iterator/filter_iterator.hpp>
 #include <boost/iterator/transform_iterator.hpp>
+#include <boost/foreach.hpp>
 
 namespace J {
 using boost::shared_ptr;
@@ -299,7 +300,7 @@ Dimensions find_common_dims(Iterator iter, Iterator end) {
       dim_cand->insert(dim_cand->begin(), dims.begin(), dims.begin() - rank_diff);
       transform(dim_cand->begin(), dim_cand->begin() - rank_diff, dim_cand->begin(),
 		boost::bind(&std::max<int>, _1, 1));
-      transform(dim_cand->begin() - rank_diff, dim_cand->end(), dims.begin(),
+      transform(dim_cand->begin() - rank_diff, dim_cand->end(), dims.begin() - rank_diff,
 		dim_cand->begin() - rank_diff, boost::bind(&std::max<int>, _1, _2));
     }
   }

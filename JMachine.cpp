@@ -18,6 +18,7 @@ JMachine::JMachine(): operators(), cur_locale(Locale::Instantiate()) {
   operators.insert(p(",", JWord::Ptr(new RavelAppendVerb())));
   operators.insert(p("<", JWord::Ptr(new LessBoxVerb())));
   operators.insert(p(">", JWord::Ptr(new MoreUnboxVerb())));
+  operators.insert(p(";", JWord::Ptr(new RazeLinkVerb())));
 }
 
 JMachine::Ptr JMachine::new_machine() { 
