@@ -1127,8 +1127,6 @@ BOOST_AUTO_TEST_CASE ( test_raze ) {
   
   BOOST_CHECK_EQUAL(*executor("; (< 1 0 20 $ 1), (< 1 20 3 1 $ 2), (<0 20 4 0 $ 1), (< 76)"),
   		    *executor("(1 0 20 $ 1), (1 20 3 1 $ 2), (0 20 4 0 $ 1), (20 4 20 $ 76)"));
-
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

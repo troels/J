@@ -8,7 +8,7 @@
     :name "test"
     :path ""
     :source '("test.cpp" "Dimensions.cpp" "JNoun.cpp" "utils.cpp" "JVerbs.cpp" "JArithmeticVerbs.cpp" "VerbHelpers.cpp" "JBasicAdverbs.cpp" "JGrammar.cpp" "JBasicConjunctions.cpp" "JMachine.cpp" "JParser.cpp" "ParsedNumbers.cpp" "JEvaluator.cpp" "JToken.cpp" "Trains.cpp" "Locale.cpp" "JExecutor.cpp" "ShapeVerbs.cpp" "Gerund.cpp" "JTypes.cpp")
-    :auxsource '("JGrammar.hpp" "J.hpp" "Dimensions.hpp" "JNoun.hpp" "utils.hpp" "JVerbs.hpp" "JExceptions.hpp" "JArithmeticVerbs.hpp" "VerbHelpers.hpp" "JAdverbs.hpp" "JBasicAdverbs.hpp" "JConjunctions.hpp" "JBasicConjunctions.hpp" "JMachine.hpp" "JParser.hpp" "ParserCombinators.hpp" "ParsedNumbers.hpp" "JEvaluator.hpp" "JToken.hpp" "Trains.hpp" "Locale.hpp" "JExecutor.hpp" "ShapeVerbs.hpp" "Gerund.hpp" "JTypes.hpp")
+    :auxsource '("JGrammar.hpp" "J.hpp" "Dimensions.hpp" "JNoun.hpp" "utils.hpp" "JVerbs.hpp" "JExceptions.hpp" "JArithmeticVerbs.hpp" "VerbHelpers.hpp" "JAdverbs.hpp" "JBasicAdverbs.hpp" "JConjunctions.hpp" "JBasicConjunctions.hpp" "JMachine.hpp" "JParser.hpp" "ParserCombinators.hpp" "ParsedNumbers.hpp" "JEvaluator.hpp" "JToken.hpp" "Trains.hpp" "Locale.hpp" "JExecutor.hpp" "ShapeVerbs.hpp" "Gerund.hpp" "JTypes.hpp" "Aggregates.hpp")
     :configuration-variables 'nil
     :ldlibs '("boost_unit_test_framework" "boost_regex")
     )

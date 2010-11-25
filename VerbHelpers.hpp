@@ -284,58 +284,7 @@ struct new_operation_iterator {
   }
 };
 
-template <typename Iterator>
-Dimensions find_common_dims(Iterator iter, Iterator end) { 
-  assert(iter != end);
-  
-  shared_ptr<vector<int> > dim_cand(make_shared<vector<int> >(iter->begin(), iter->end()));
-  ++iter;
-  for(;iter != end; ++iter) { 
-    const Dimensions& dims = *iter;
-    int rank_diff = dim_cand->size() - dims.get_rank();
-    if(rank_diff >= 0) {
-      transform(dim_cand->begin() + rank_diff, dim_cand->end(), dims.begin(), 
-		dim_cand->begin() + rank_diff, boost::bind(&std::max<int>, _1, _2));
-    } else {
-      dim_cand->insert(dim_cand->begin(), dims.begin(), dims.begin() - rank_diff);
-      transform(dim_cand->begin(), dim_cand->begin() - rank_diff, dim_cand->begin(),
-		boost::bind(&std::max<int>, _1, 1));
-      transform(dim_cand->begin() - rank_diff, dim_cand->end(), dims.begin() - rank_diff,
-		dim_cand->begin() - rank_diff, boost::bind(&std::max<int>, _1, _2));
-    }
-  }
 
-  return Dimensions(dim_cand);
-}
-
-template <typename Iterator>
-optional<j_value_type> find_common_type(Iterator iter, Iterator end) {
-  if (iter == end) return optional<j_value_type>();
-  j_value_type res = *iter;
-  for(;iter != end; ++iter) {
-    optional<j_value_type> t(TypeConversions::get_instance()->find_best_type_conversion(*iter, res));
-    if (!t) return optional<j_value_type>();
-    res = *t;
-  }
-  
-  return boost::make_optional(res);
-}
-
-template <typename Iterator>
-optional<j_value_type> find_common_type_for_collection(Iterator begin, Iterator end) {
-  using boost::make_filter_iterator;
-  using boost::make_transform_iterator;
-  using boost::bind;
-
-  return find_common_type(make_transform_iterator(make_filter_iterator(bind(&Dimensions::number_of_elems, 
-									    bind(&JNoun::get_dims, _1)) != 0,
-								       begin, end),
-						  bind(&JNoun::get_value_type, _1)),
-			  make_transform_iterator(make_filter_iterator(bind(&Dimensions::number_of_elems, 
-									    bind(&JNoun::get_dims, _1)) != 0,
-								       end, end),
-						  bind(&JNoun::get_value_type, _1)));
-}
 
 }
   
