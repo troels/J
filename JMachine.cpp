@@ -16,9 +16,15 @@ JMachine::JMachine(): operators(), cur_locale(Locale::Instantiate()) {
   operators.insert(p("\\", JWord::Ptr(new PrefixInfixAdverb())));
   operators.insert(p("$", JWord::Ptr(new ShapeVerb())));
   operators.insert(p(",", JWord::Ptr(new RavelAppendVerb())));
+  operators.insert(p(";", JWord::Ptr(new RazeLinkVerb())));
+  operators.insert(p("*", JWord::Ptr(new SignumTimesVerb())));
+  operators.insert(p("%", JWord::Ptr(new ReciprocalDivideVerb())));
   operators.insert(p("<", JWord::Ptr(new LessBoxVerb())));
   operators.insert(p(">", JWord::Ptr(new MoreUnboxVerb())));
-  operators.insert(p(";", JWord::Ptr(new RazeLinkVerb())));
+  operators.insert(p("<.", JWord::Ptr(new FloorLesserofVerb())));
+  operators.insert(p(">.", JWord::Ptr(new CeilingGreaterofVerb())));
+  operators.insert(p("<:", JWord::Ptr(new DecrementLessequalVerb())));
+  operators.insert(p(">:", JWord::Ptr(new IncrementMoreequalVerb())));
 }
 
 JMachine::Ptr JMachine::new_machine() { 

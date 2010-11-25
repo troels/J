@@ -6,6 +6,7 @@
 #include "VerbHelpers.hpp"
 #include "JExceptions.hpp"
 #include "Aggregates.hpp"
+#include "JArithmeticVerbs.hpp"
 #include <boost/bind.hpp>
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/iterator/filter_iterator.hpp>
@@ -58,9 +59,7 @@ class RazeLinkVerb: public JVerb {
   };
 
   struct DyadOp {
-    JNoun::Ptr operator()(JMachine::Ptr, const JNoun&, const JNoun&) const {
-      return JNoun::Ptr();
-    }
+    JNoun::Ptr operator()(JMachine::Ptr, const JNoun&, const JNoun&) const;
   };
 
 public:

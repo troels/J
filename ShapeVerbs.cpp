@@ -68,7 +68,6 @@ JNoun::Ptr RavelAppendVerb::DyadOp::operator()(JMachine::Ptr, const JNoun& larg,
 }
 
 JNoun::Ptr RazeLinkVerb::MonadOp::operator()(JMachine::Ptr m, const JNoun& arg) const {
-  
   if (arg.get_dims().number_of_elems() == 0) {
     return JNoun::Ptr(new JArray<JInt>(Dimensions(1, 0)));
   }
@@ -83,6 +82,11 @@ JNoun::Ptr RazeLinkVerb::MonadOp::operator()(JMachine::Ptr m, const JNoun& arg) 
   get_boxed::result_type content_iters(get_boxed()(box_arr.begin(), box_arr.end()));
   
   return J::Aggregates::concatenate_nouns(content_iters.first, content_iters.second);
+}
+
+JNoun::Ptr RazeLinkVerb::DyadOp::operator()(JMachine::Ptr m, const JNoun& larg, const JNoun& rarg) const { 
+  return RavelAppendVerb()(m, *LessBoxVerb()(m, larg), 
+			   rarg.get_value_type() == j_value_type_box ? rarg : *LessBoxVerb()(m, rarg));
 }
 
 }

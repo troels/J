@@ -1129,4 +1129,14 @@ BOOST_AUTO_TEST_CASE ( test_raze ) {
   		    *executor("(1 0 20 $ 1), (1 20 3 1 $ 2), (0 20 4 0 $ 1), (20 4 20 $ 76)"));
 }
 
+BOOST_AUTO_TEST_CASE ( test_link ) {
+  JMachine::Ptr m(JMachine::new_machine());
+  JExecutor executor(m);
+  
+  BOOST_CHECK_EQUAL(*executor("10 ; 20; 30; 40"),
+		    *executor("(< 10),(<20), (<30),(<40)"));
+}
+
+
+
 BOOST_AUTO_TEST_SUITE_END()

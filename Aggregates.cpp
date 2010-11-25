@@ -29,7 +29,6 @@ shared_ptr<JNoun> JResult::assemble_result() const {
     type = *otype;
   }
     
-  
   return JTypeDispatcher<assemble_result_helper, JNoun::Ptr>()(type, *this, cell_dims);
 }
     

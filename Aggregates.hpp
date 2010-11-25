@@ -252,7 +252,6 @@ JNoun::Ptr concatenate_nouns(Iterator in_begin, Iterator in_end) {
   return JTypeDispatcher<AllocateArray, JNoun::Ptr>()(type, new_dims, in_begin, in_end);
 }
 
-
 }}
 
 #endif
