@@ -7,6 +7,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <cmath>
+#include <iterator>
 #include <vector>
 #include <algorithm>
 #include "JTypes.hpp"
@@ -99,8 +100,18 @@ private:
 
 template <typename Iterator>
 struct get_value_type { 
-  typedef boost::function<j_value_type (JNoun::Ptr)> func_t;
-  typedef boost::transform_iterator<func_t, Iterator> iterator;
+  typedef typename std::iterator_traits<Iterator>::value_type input_type;
+
+private:
+  struct op_get_value_type: public std::unary_function<input_type, j_value_type> { 
+    j_value_type operator()(input_type  v) const {
+      return v->get_value_type();
+    }
+  };
+
+public:
+  typedef boost::transform_iterator<op_get_value_type, Iterator> iterator;
+
   typedef std::pair<iterator, iterator> result_type;
 
   result_type operator()(Iterator begin, Iterator end) const { 
@@ -109,8 +120,9 @@ struct get_value_type {
 
 private:
   iterator get_iterator(Iterator iter) const {
-    return iterator(iter, boost::bind(&JNoun::get_value_type, _1));
+    return iterator(iter, op_get_value_type());
   }
+
 };
 
 template <typename Iterator>

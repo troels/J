@@ -23,4 +23,5 @@ bool ParsedNumber<Number>::operator==(const ParsedNumberBase& that) const {
 
 template class ParsedNumber<JInt>;
 template class ParsedNumber<JFloat>;
+template class ParsedNumber<JComplex>;
 }}

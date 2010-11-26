@@ -34,6 +34,11 @@ public:
   virtual ~ParsedNumberBase() {}
   virtual string to_string() const = 0;
   virtual Ptr convert_to(j_value_type type) const = 0;
+  template <typename T>
+  Ptr convert() const { 
+    return convert_to(JTypeTrait<T>::value_type);
+  }
+
   virtual bool operator==(const ParsedNumberBase& that) const = 0;
 
   j_value_type get_value_type() const { return value_type; }
@@ -57,7 +62,7 @@ public:
 template <typename To>
 struct ConvertParsedNumberTo { 
   To operator()(ParsedNumberBase::Ptr parsed) const { 
-    return static_cast<ParsedNumber<To>&>(*parsed->convert_to(JTypeTrait<To>::value_type)).get_nr();
+    return static_cast<ParsedNumber<To>&>(*parsed->convert<To>()).get_nr();
   }
 };
   

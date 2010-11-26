@@ -64,6 +64,13 @@ struct SignumMonadOp: public std::unary_function<Arg, JInt> {
   }
 };
 
+template <>
+struct SignumMonadOp<JComplex>: public std::unary_function<JComplex, JComplex> {
+  JComplex operator()(JComplex arg) const { 
+    return arg/abs(arg);
+  }
+};
+    
 template <> 
 struct SignumMonadOp<JBox>: BadScalarMonadOp<JBox> {};
 
@@ -102,6 +109,13 @@ struct ReciprocalMonadOp: public std::unary_function<Arg, JFloat> {
 };
 
 template <>
+struct ReciprocalMonadOp<JComplex>: public std::unary_function<JComplex, JComplex> {
+  JComplex operator()(JComplex arg) const {
+    return JComplex(1.0, 0) / arg;
+  }
+};
+
+template <>
 struct ReciprocalMonadOp<JBox>: public BadScalarMonadOp<JBox> {};
 
 template <>
@@ -111,6 +125,13 @@ template <typename Arg>
 struct DivideDyadOp: public std::binary_function<Arg, Arg, JFloat> {
   JFloat operator()(Arg arg1, Arg arg2) const {
     return static_cast<JFloat>(arg1)/static_cast<JFloat>(arg2);
+  }
+};
+
+template <>
+struct DivideDyadOp<JComplex>: public std::binary_function<JComplex, JComplex, JComplex> {
+  JComplex operator()(JComplex arg1, JComplex arg2) const {
+    return arg1/arg2;
   }
 };
 
@@ -165,6 +186,9 @@ template <>
 struct LesserofDyadOp<JBox>: public BadScalarDyadOp<JBox> {};
 
 template <>
+struct LesserofDyadOp<JComplex>: public BadScalarDyadOp<JComplex> {};
+
+template <>
 struct LesserofDyadOp<JChar>: public BadScalarDyadOp<JChar> {};
 
 }
@@ -203,6 +227,9 @@ struct GreaterofDyadOp: public std::binary_function<Arg, Arg, Arg> {
 
 template <>
 struct GreaterofDyadOp<JBox>: public BadScalarDyadOp<JBox> {};
+
+template <>
+struct GreaterofDyadOp<JComplex>: public BadScalarDyadOp<JComplex> {};
 
 template <>
 struct GreaterofDyadOp<JChar>: public BadScalarDyadOp<JChar> {};
@@ -270,6 +297,9 @@ template <>
 struct DyadOp<JBox>: public BadScalarDyadOp<JBox> {};
 
 template <>
+struct DyadOp<JComplex>: public BadScalarDyadOp<JComplex> {};
+
+template <>
 struct DyadOp<JChar>: public BadScalarDyadOp<JChar> {};
 
 }
@@ -293,6 +323,9 @@ struct DyadOp: public std::binary_function<T, T, JInt> {
     return arg1 > arg2;
   }
 };
+
+template <> 
+struct DyadOp<JComplex> : public BadScalarDyadOp<JComplex> {};
 
 template <> 
 struct DyadOp<JBox> : public BadScalarDyadOp<JBox> {};
@@ -322,6 +355,12 @@ struct DecrementMonadOp: public std::unary_function<Arg, Arg> {
 };
 
 template <>
+struct DecrementMonadOp<JComplex>: public std::unary_function<JComplex, JComplex> {
+  JComplex operator()(JComplex arg) const { 
+    return arg - JComplex(1, 0);
+  }
+};
+template <>
 struct DecrementMonadOp<JBox>: BadScalarMonadOp<JBox> {};
 
 template <>
@@ -336,6 +375,9 @@ struct LessequalDyadOp: public std::binary_function<Arg, Arg, JInt> {
 
 template <>
 struct LessequalDyadOp<JBox>: BadScalarDyadOp<JBox> {};
+
+template <>
+struct LessequalDyadOp<JComplex>: BadScalarDyadOp<JComplex> {};
 
 template <>
 struct LessequalDyadOp<JChar>: BadScalarDyadOp<JChar> {};
@@ -358,6 +400,13 @@ struct IncrementMonadOp: public std::unary_function<Arg, Arg> {
 };
 
 template <>
+struct IncrementMonadOp<JComplex>: public std::unary_function<JComplex, JComplex> {
+  JComplex operator()(JComplex arg) const { 
+    return arg + JComplex(1, 0);
+  }
+};
+
+template <>
 struct IncrementMonadOp<JBox>: BadScalarMonadOp<JBox> {};
 
 template <>
@@ -369,6 +418,9 @@ struct MoreequalDyadOp: public std::binary_function<Arg, Arg, JInt> {
     return arg1 >= arg2 ? 1 : 0;
   }
 };
+
+template <>
+struct MoreequalDyadOp<JComplex>: BadScalarDyadOp<JComplex> {};
 
 template <>
 struct MoreequalDyadOp<JBox>: BadScalarDyadOp<JBox> {};
@@ -383,7 +435,7 @@ public:
     JArithmeticVerb<JInt>(ScalarMonad<IncrementMoreequalVerbNS::IncrementMonadOp>::Instantiate(),
 			  ScalarDyad<IncrementMoreequalVerbNS::MoreequalDyadOp>::Instantiate(), 0) {}
 };
-			  
+
 }
 		  
 #endif

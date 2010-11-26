@@ -613,6 +613,21 @@ BOOST_AUTO_TEST_CASE ( floatingpointparse ) {
   BOOST_CHECK_THROW( parser.parse(&iter, test6.end()), MatchFailure);
 }
 
+BOOST_AUTO_TEST_CASE ( complexparser ) {
+  ComplexNumberParser<string::iterator> parser;
+  string test1("122j23");
+  string::iterator iter(test1.begin());
+  
+  BOOST_CHECK_EQUAL(parser.parse(&iter, test1.end()), JComplex(122,23));
+  string test2("122j0");
+  iter = test2.begin();
+  BOOST_CHECK_EQUAL(parser.parse(&iter, test2.end()), JComplex(122,0));
+
+  string test3("122j");
+  iter = test3.begin();
+  BOOST_CHECK_THROW(parser.parse(&iter, test3.end()), MatchFailure);
+}
+  
 BOOST_AUTO_TEST_CASE ( numberparser ) { 
   NumberParser<string::iterator> parser;
   string test1("_11329");
@@ -638,6 +653,24 @@ BOOST_AUTO_TEST_CASE ( noun_parser ) {
   BOOST_CHECK_EQUAL(JArray<JFloat>(Dimensions(1,6), 12.0, 12.0, -1234e10, -1.1, -5.3e10, 3.0), *n2);
 }
 
+
+BOOST_AUTO_TEST_CASE ( test_complex_noun_parser ) {
+  ParseNoun<string::iterator> parser;
+  string test1("1 2 3j4 3.23j34.3 100 100.2");
+  string::iterator iter(test1.begin());
+  
+  shared_ptr<vector<JComplex> > v(make_shared<vector<JComplex> >());
+  v->push_back(JComplex(1));
+  v->push_back(JComplex(2));
+  v->push_back(JComplex(3,4));
+  v->push_back(JComplex(3.23,34.3));
+  v->push_back(JComplex(100));
+  v->push_back(JComplex(100.2));
+  
+  BOOST_CHECK_EQUAL(*parser.parse(&iter, test1.end()),
+		    JArray<JComplex>(Dimensions(1,6), v));
+}
+  
 BOOST_AUTO_TEST_CASE ( builtin_parser ) {
   JMachine::Ptr m = JMachine::new_machine();
   string test1("+/ i.");
@@ -669,7 +702,7 @@ BOOST_AUTO_TEST_CASE ( sequence_parser ) {
     (JTokenizer<string::iterator>::Instantiate(builtins.begin(), builtins.end()));
   string::iterator iter = test1.begin();
   
-  JTokenizer<string::iterator>::return_type res( parser->parse(&iter, test1.end( ) ) );
+  JTokenizer<string::iterator>::result_type res( parser->parse(&iter, test1.end( ) ) );
   
   // JTokenSequence* js(static_cast<JTokenSequence*>(res.get()));
   // BOOST_CHECK_EQUAL(distance(js->begin(), js->end()), 6);

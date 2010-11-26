@@ -128,7 +128,9 @@ string trim_string(const string& str) {
 template class OperationScalarIterator<JInt>;
 template class OperationScalarIterator<JFloat>;
 template class OperationScalarIterator<JBox>;
+template class OperationScalarIterator<JComplex>;
 template class OperationIterator<JInt>;
 template class OperationIterator<JFloat>;
 template class OperationIterator<JBox>;
+template class OperationIterator<JComplex>;
 }

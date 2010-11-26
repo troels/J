@@ -9,7 +9,7 @@ namespace J {
 
 class JExecutor {
   typedef J::JParser::JTokenizer<string::iterator> parser_type;
-  typedef parser_type::return_type token_sequence;
+  typedef parser_type::result_type token_sequence;
 
   JMachine::Ptr jmachine;
   parser_type::Ptr tokenizer;

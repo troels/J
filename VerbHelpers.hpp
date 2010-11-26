@@ -108,7 +108,7 @@ struct scalar_dyadic_apply {
       
       if (larg.get_dims() == rarg.get_dims()) {
 	Dimensions d(larg.get_dims());
-	shared_ptr<res_vec > v(new res_vec(d.number_of_elems(), JTypeTrait<T>::base_elem()));
+	shared_ptr<res_vec > v(new res_vec(d.number_of_elems(), JTypeTrait<result_type>::base_elem()));
 	transform(larg.begin(), larg.end(), rarg.begin(), v->begin(), OpType<T>());
 	return JNoun::Ptr(new JArray<result_type>(d, v));
       }
@@ -121,7 +121,7 @@ struct scalar_dyadic_apply {
 
       OperationScalarIterator<T> liter(larg, frame), riter(rarg, frame);
       
-      shared_ptr<res_vec > v(new res_vec(frame.number_of_elems(), JTypeTrait<T>::base_elem()));
+      shared_ptr<res_vec > v(new res_vec(frame.number_of_elems(), JTypeTrait<result_type>::base_elem()));
       
       OpType<T> op;
       for(typename res_vec::iterator output(v->begin()), output_end(v->end()); output != output_end; 

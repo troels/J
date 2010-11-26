@@ -66,7 +66,7 @@ class RegexParser: public Parser<Iterator, StringVecPtr> {
   regex our_regex;
 
 public:
-  typedef StringVecPtr return_type;
+  typedef StringVecPtr result_type;
   typedef typename Parser<Iterator, StringVecPtr>::Ptr Ptr;
 
   static Ptr Instantiate(const string& regex) {
@@ -160,7 +160,6 @@ public:
   ParseOr(OurParserPtr parser): reverse_list(), parser_list(new ParserList<OurParser>(parser)) {}
   
   Res parse(Iterator *begin, Iterator end) const {
-    assert(*begin != end);
     Iterator cached_begin = *begin;
     
     ParserListPtr ptr = get_reverse_list();
@@ -186,7 +185,7 @@ public:
 template <typename Iterator, typename Res, typename InterRes = void>
 class InterspersedParser: public Parser<Iterator, shared_ptr<deque<Res> > > { 
 public:
-  typedef shared_ptr<deque<Res> > return_type;
+  typedef shared_ptr<deque<Res> > result_type;
   
 private:
   typename Parser<Iterator, Res>::Ptr parser;
@@ -197,8 +196,8 @@ public:
 		     typename Parser<Iterator, InterRes>::Ptr inter_parser): 
     parser(parser), inter_parser(inter_parser) {}
   
-  return_type parse(Iterator* begin, Iterator end) const {
-    return_type output(new deque<Res>());
+  result_type parse(Iterator* begin, Iterator end) const {
+    result_type output(new deque<Res>());
     Iterator cached_begin = *begin;
     try { 
       output->push_back(parser->parse(begin, end));
@@ -229,18 +228,18 @@ struct VecPtr {
 
 template <typename Iterator, typename Res, typename InterRes = void>
 class InterspersedParser1: public Parser<Iterator, 
-					 typename InterspersedParser<Iterator, Res, InterRes>::return_type> { 
+					 typename InterspersedParser<Iterator, Res, InterRes>::result_type> { 
   InterspersedParser<Iterator, Res, InterRes> parser;
 
 public:
-  typedef typename InterspersedParser<Iterator, Res, InterRes>::return_type return_type;
+  typedef typename InterspersedParser<Iterator, Res, InterRes>::result_type result_type;
   InterspersedParser1(typename Parser<Iterator, Res>::Ptr parser,
 		      typename Parser<Iterator, InterRes>::Ptr inter_parser):
     parser(parser, inter_parser) {}
 
-  return_type parse(Iterator* begin, Iterator end) const { 
+  result_type parse(Iterator* begin, Iterator end) const { 
     Iterator cached_begin = *begin;
-    return_type res(parser.parse(begin, end));
+    result_type res(parser.parse(begin, end));
     if (res->size() == 0) { 
       throw MatchFailure("Failed to match InterspersedParser1");
     }  else {

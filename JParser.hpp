@@ -3,6 +3,7 @@
 
 
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <vector>
 #include <string>
 #include <sstream>
@@ -16,6 +17,7 @@
 #include "ParsedNumbers.hpp"
 #include "JGrammar.hpp"
 #include "ParserCombinators.hpp"
+#include "Aggregates.hpp"
 #include "utils.hpp"
 
 namespace J { namespace JParser { 
@@ -24,6 +26,8 @@ using namespace ::J::JTokens;
 using std::vector;
 using std::string;
 using boost::shared_ptr;
+using boost::make_shared;
+using boost::static_pointer_cast;
 
 template <typename Iterator, typename Res>
 Res parse_number(Iterator begin, Iterator end, Res base) { 
@@ -113,15 +117,15 @@ public:
   }
 };
 
-
 template <typename Iterator>
 class NumberParser: public Parser<Iterator, ParsedNumberBase::Ptr> {
   typedef ParseOr<Iterator, ParsedNumberBase::Ptr> ParserType;
   typename ParserType::Ptr parser;
 
 public:
-  static typename Parser<Iterator, ParsedNumberBase::Ptr>::Ptr Instantiate() {
-    return typename Parser<Iterator, ParsedNumberBase::Ptr>::Ptr(new NumberParser<Iterator>());
+  typedef typename Parser<Iterator, ParsedNumberBase::Ptr>::Ptr Ptr; 
+  static  Ptr Instantiate() {
+    return static_pointer_cast<Parser<Iterator, ParsedNumberBase::Ptr> >(make_shared<NumberParser<Iterator> >());
   }
 
   NumberParser(): parser(ParserType::Instantiate()->
@@ -133,6 +137,69 @@ public:
   }
 };
 
+template <typename Iterator>
+class ComplexNumberParser: public Parser<Iterator, JComplex> {
+  typename NumberParser<Iterator>::Ptr number_parser;
+  typename ParseConstant<Iterator>::Ptr constant_parser;
+
+public:
+  typedef typename Parser<Iterator, JComplex>::Ptr Ptr;
+
+  static Ptr Instantiate() {
+    return static_pointer_cast<ComplexNumberParser<Iterator> >(make_shared<ComplexNumberParser<Iterator> >());
+  }
+
+  ComplexNumberParser(): number_parser(NumberParser<Iterator>::Instantiate()), 
+			 constant_parser(ParseConstant<Iterator>::Instantiate("j")) {}
+  
+  JComplex parse(Iterator* begin, Iterator end) const { 
+    ParsedNumberBase::Ptr real_part(number_parser->parse(begin, end));
+    constant_parser->parse(begin, end);
+    ParsedNumberBase::Ptr imaginary_part(number_parser->parse(begin, end));
+      
+    JFloat real_part_float = static_cast<ParsedNumber<JFloat>&>(*real_part->convert<JFloat>()).get_nr();
+    JFloat imaginary_part_float = static_cast<ParsedNumber<JFloat>&>(*imaginary_part->convert<JFloat>()).get_nr();
+    
+    return JComplex(real_part_float, imaginary_part_float);
+  }
+};
+
+template <typename Iterator>
+class ComplexNumberWrapper: public Parser<Iterator, ParsedNumberBase::Ptr> {
+  typename ComplexNumberParser<Iterator>::Ptr parser;
+public:
+  typedef Parser<Iterator, ParsedNumberBase::Ptr> BaseType;
+  static typename BaseType::Ptr Instantiate() {
+    return static_pointer_cast<BaseType>(make_shared<ComplexNumberWrapper<Iterator> >());
+  }
+
+  ComplexNumberWrapper(): parser(ComplexNumberParser<Iterator>::Instantiate()) {}
+  
+  ParsedNumberBase::Ptr parse(Iterator* begin, Iterator end) const { 
+    return static_pointer_cast<ParsedNumberBase>(make_shared<ParsedNumber<JComplex> >(parser->parse(begin, end)));
+  }
+};
+
+template <typename Iterator>
+class NounPartParser: public Parser<Iterator, ParsedNumberBase::Ptr> {
+  typedef ParseOr<Iterator, ParsedNumberBase::Ptr> ParserType;
+  typename ParserType::Ptr parser;
+  
+public:
+  typedef typename Parser<Iterator, ParsedNumberBase::Ptr>::Ptr  Ptr;
+  static Ptr Instantiate() {
+    return make_shared<NounPartParser<Iterator> >();
+  }
+
+  NounPartParser(): 
+    parser (ParserType::Instantiate()
+	    ->add_or(ComplexNumberWrapper<Iterator>::Instantiate())
+	    ->add_or(NumberParser<Iterator>::Instantiate())) {}
+
+  ParsedNumberBase::Ptr parse(Iterator* begin, Iterator end) const { 
+    return parser->parse(begin, end);
+  }
+};
 
 template <typename Iterator>
 class ParseNoun: public Parser<Iterator, JNoun::Ptr > { 
@@ -140,42 +207,37 @@ class ParseNoun: public Parser<Iterator, JNoun::Ptr > {
   parser_type parser;
   
 public:
-  ParseNoun(): parser(NumberParser<Iterator>::Instantiate(), 
+  ParseNoun(): parser(NounPartParser<Iterator>::Instantiate(), 
 		      WhitespaceParser<Iterator>::Instantiate()) {}
   
   JNoun::Ptr parse(Iterator* begin, Iterator end) const { 
-    typename parser_type::return_type v(parser.parse(begin, end));
+    typename parser_type::result_type v(parser.parse(begin, end));
     assert(v->size() > 0);
-    typename deque<ParsedNumberBase::Ptr>::iterator iter = v->begin();
     
-    j_value_type best_type = (*iter)->get_value_type();
-    ++iter;
+    typedef J::Aggregates::get_value_type<typename parser_type::result_type::element_type::iterator> 
+      value_type_iterator;
+    typename value_type_iterator::result_type value_type_iter(value_type_iterator()(v->begin(), v->end()));
+    
+    optional<j_value_type> best_type(J::Aggregates::find_common_type(value_type_iter.first, value_type_iter.second));
+    
+    if (!best_type) 
+      throw JParserException("Invalid combination of types");
 
-    for(;iter != v->end(); ++iter) { 
-      optional<j_value_type> new_best_type(TypeConversions::get_instance()->
-					   find_best_type_conversion(best_type, (*iter)->get_value_type()));
-      if (new_best_type) 
-	best_type = *new_best_type;
-      else 
-	throw JParserException("Invalid combination of types");
-    }
-
-    return create_jarray(best_type, v->begin(), v->end());
+    return create_jarray(*best_type, v->begin(), v->end());
   }
 };
 
 template <typename Iterator>
 class NounParser: public Parser<Iterator, JTokenBase::Ptr> {
+  ParseNoun<Iterator> parser;
+  
 public:
   typedef typename Parser<Iterator, JTokenBase::Ptr>::Ptr Ptr;
 
   static Ptr Instantiate() { 
-    return Ptr(new NounParser());
+    return static_pointer_cast<Parser<Iterator, JTokenBase::Ptr> >(make_shared<NounParser<Iterator> >());
   }
-
-private:  
-  ParseNoun<Iterator> parser;
-
+  
 public:
   NounParser(): parser() {}
   
@@ -250,8 +312,8 @@ public:
 
   ParenthesizedExpressionParser(Ptr ptr): 
     parser(DelimitedExpressionParser<Iterator, Res, 
-				     typename RegexParser<Iterator>::return_type, 
-				     typename RegexParser<Iterator>::return_type >::Instantiate
+				     typename RegexParser<Iterator>::result_type, 
+				     typename RegexParser<Iterator>::result_type >::Instantiate
     (RegexParser<Iterator>::Instantiate("\\s*\\(\\s*"),
      RegexParser<Iterator>::Instantiate("\\s*\\)\\s*"),
      ptr)) {}
@@ -264,12 +326,12 @@ public:
 
 template <typename Iterator>
 class JTokenizer: public Parser<Iterator, 
-				typename InterspersedParser1<Iterator, JTokenBase::Ptr>::return_type>  {
+				typename InterspersedParser1<Iterator, JTokenBase::Ptr>::result_type>  {
   typedef InterspersedParser1<Iterator, JTokenBase::Ptr> parser_type;
 
 public:
-  typedef typename parser_type::return_type return_type;
-  typedef typename Parser<Iterator, return_type>::Ptr Ptr;
+  typedef typename parser_type::result_type result_type;
+  typedef typename Parser<Iterator, result_type>::Ptr Ptr;
 
 private:
   Ptr parser;
@@ -303,8 +365,8 @@ public:
     return Ptr(new JTokenizer(begin, end));
   }
   
-  return_type parse(Iterator* begin, Iterator end) const {
-    return_type res(parser->parse(begin, end));
+  result_type parse(Iterator* begin, Iterator end) const {
+    result_type res(parser->parse(begin, end));
     res->push_front(JTokenStart::Instantiate());
     return res;
   }

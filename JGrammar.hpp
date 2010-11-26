@@ -66,7 +66,7 @@ struct JTypeTrait<JFloat> {
 
 template <>
 struct JTypeTrait<JComplex> {
-  static JFloat base_elem() { return 0.0; }
+  static JComplex base_elem() { return JComplex(0, 0); }
   static const j_value_type value_type = j_value_type_complex;
 };
 

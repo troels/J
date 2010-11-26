@@ -27,6 +27,8 @@ struct JTypeDispatcher {
       return Op<JFloat>()();
     case j_value_type_box:
       return Op<JBox>()();
+    case j_value_type_complex:
+      return Op<JComplex>()();
     default:
       throw JIllegalValueTypeException();
     }
@@ -41,6 +43,8 @@ struct JTypeDispatcher {
       return Op<JFloat>()(arg);
     case j_value_type_box:
       return Op<JBox>()(arg);
+    case j_value_type_complex:
+      return Op<JComplex>()(arg);
     default:
       throw JIllegalValueTypeException();
     }
@@ -55,6 +59,8 @@ struct JTypeDispatcher {
       return Op<JFloat>()(arg1, arg2);
     case j_value_type_box:
       return Op<JBox>()(arg1, arg2);
+    case j_value_type_complex:
+      return Op<JComplex>()(arg1, arg2);
     default:
       throw JIllegalValueTypeException();
     }
@@ -70,6 +76,8 @@ struct JTypeDispatcher {
       return Op<JFloat>()(arg1, arg2, arg3);
     case j_value_type_box:
       return Op<JBox>()(arg1, arg2, arg3);
+    case j_value_type_complex:
+      return Op<JComplex>()(arg1, arg2, arg3);
     default:
       throw JIllegalValueTypeException();
     }
@@ -84,6 +92,8 @@ struct JTypeDispatcher {
       return Op<JFloat>()(arg1, arg2, arg3, arg4);
     case j_value_type_box:
       return Op<JBox>()(arg1, arg2, arg3, arg4);
+    case j_value_type_complex:
+      return Op<JComplex>()(arg1, arg2, arg3, arg4);
     default:
       throw JIllegalValueTypeException();
     }
@@ -99,6 +109,8 @@ struct JTypeDispatcher {
       return Op<JFloat>()(arg1, arg2, arg3, arg4, arg5);
     case j_value_type_box:
       return Op<JBox>()(arg1, arg2, arg3, arg4, arg5);
+    case j_value_type_complex:
+      return Op<JComplex>()(arg1, arg2, arg3, arg4, arg5);
     default:
       throw JIllegalValueTypeException();
     }
@@ -164,7 +176,20 @@ struct ConvertType<Arg, Arg> {
   }
 };
 
+template <>
+struct ConvertType<JInt, JComplex> {
+  JComplex operator()(JInt arg) const {
+    return JComplex(static_cast<JFloat>(arg));
+  }
+};
 
+template <>
+struct ConvertType<JFloat, JComplex> {
+  JComplex operator()(JFloat arg) const {
+    return JComplex(arg);
+  }
+};
+    
 template <>
 struct ConvertType<JInt, JFloat> {
   JFloat operator()(JInt from) {
