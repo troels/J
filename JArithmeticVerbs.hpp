@@ -32,11 +32,17 @@ struct PlusMonadOp: public std::unary_function<Arg, Arg> {
 };
 
 template <>
-struct PlusMonadOp<JBox>: public std::unary_function<JBox, JBox> {
-  JBox operator()(JBox) const { 
-    throw JIllegalValueTypeException();
+struct PlusMonadOp<JComplex>: public std::unary_function<JComplex, JComplex> {
+  JComplex operator()(JComplex arg) const {
+    return conj(arg);
   }
 };
+
+template <>
+struct PlusMonadOp<JBox>: public BadScalarMonadOp<JBox> {};
+
+template <>
+struct PlusMonadOp<JChar>: public BadScalarMonadOp<JChar> {};
 
 template <typename Arg>
 struct PlusDyadOp: std::binary_function<Arg, Arg, Arg> {
@@ -47,6 +53,9 @@ struct PlusDyadOp: std::binary_function<Arg, Arg, Arg> {
 
 template <>
 struct PlusDyadOp<JBox>: BadScalarDyadOp<JBox> {};
+
+template <>
+struct PlusDyadOp<JChar>: BadScalarDyadOp<JChar> {};
 
 class PlusVerb: public JArithmeticVerb<JInt> { 
 public:
