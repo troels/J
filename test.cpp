@@ -1112,6 +1112,9 @@ BOOST_AUTO_TEST_CASE ( test_ravel_append ) {
 
   BOOST_CHECK_EQUAL(*executor("(2 2 $ 1 2 3 4) ,(\"1) 5"),
 		    *executor("2 3 $ 1 2 5 3 4 5"));
+
+  BOOST_CHECK_EQUAL(*executor("1 2 3, 1j3"),
+		    *executor("1j0 2j0 3j0 1j3"));
 }
 
 BOOST_AUTO_TEST_CASE ( test_less ) {
@@ -1168,8 +1171,22 @@ BOOST_AUTO_TEST_CASE ( test_link ) {
   
   BOOST_CHECK_EQUAL(*executor("10 ; 20; 30; 40"),
 		    *executor("(< 10),(<20), (<30),(<40)"));
+  
+  BOOST_CHECK_EQUAL(*executor("10j2 10 3; 20 3; 1; 0 $ 10"),
+		    *executor("(< 10j2 10 3), (< 20 3),(< 1), (< 0 $ 10)"));
+			      
 }
 
+BOOST_AUTO_TEST_CASE ( test_some_complex_stuff ) {
+  JMachine::Ptr m(JMachine::new_machine());
+  JExecutor executor(m);
+  
+  BOOST_CHECK_EQUAL(*executor("10j3 20j4 + 10j3 20j10"),
+		    *executor("20j6 40j14"));
 
+  BOOST_CHECK_EQUAL(*executor("10j3 20j4 - 10j3 20j10"),
+		    *executor("0j0 0j_6"));
 
+}
+			      
 BOOST_AUTO_TEST_SUITE_END()

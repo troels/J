@@ -6,6 +6,7 @@
 #include <boost/iterator/filter_iterator.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/function.hpp>
 #include <cmath>
 #include <iterator>
 #include <vector>
@@ -122,7 +123,6 @@ private:
   iterator get_iterator(Iterator iter) const {
     return iterator(iter, op_get_value_type());
   }
-
 };
 
 template <typename Iterator>

@@ -56,13 +56,17 @@ JNoun::Ptr RavelAppendVerb::MonadOp::operator()(JMachine::Ptr, const JNoun& arg)
 }
 
 JNoun::Ptr RavelAppendVerb::DyadOp::operator()(JMachine::Ptr, const JNoun& larg, const JNoun& rarg) const { 
-  if (larg.get_value_type() != rarg.get_value_type()) {
-    throw JIllegalValueTypeException("Needs the same types");
-  }
+  optional<j_value_type> ocommon_type = 
+    TypeConversions::get_instance()->find_best_type_conversion(larg.get_value_type(), rarg.get_value_type());
 
+  if (!ocommon_type) 
+    throw JIllegalValueTypeException("Needs the same types");
+  
+  j_value_type common_type = *ocommon_type;
+  
   JNoun::Ptr ptrs[2];
-  ptrs[0] = larg.clone();
-  ptrs[1] = rarg.clone();
+  ptrs[0] = GetNounAsJArrayOfType()(larg, common_type);
+  ptrs[1] = GetNounAsJArrayOfType()(rarg, common_type);
 
   return J::Aggregates::concatenate_nouns(ptrs, ptrs + 2);
 }

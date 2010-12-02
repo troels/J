@@ -217,6 +217,13 @@ struct ConvertJArray {
   }
 };
 
+template <typename Arg>
+struct ConvertJArray<Arg, Arg> { 
+  shared_ptr<JArray<Arg> > operator()(const JArray<Arg>& arr) const {
+    return boost::static_pointer_cast<JArray<Arg> >(arr.clone());
+  }
+};
+  
 class TypeConversions { 
   typedef multimap<j_value_type, j_value_type> our_map;
   our_map type_conversions;
@@ -240,6 +247,7 @@ struct ConversionOpPerformer {
       return boost::static_pointer_cast<JNoun>(ConvertJArray<From, To>()(from));
     }
   };
+
 };
 
 template <typename T>
